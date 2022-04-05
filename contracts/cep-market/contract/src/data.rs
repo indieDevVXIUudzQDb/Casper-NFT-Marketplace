@@ -1,27 +1,24 @@
 use alloc::{
-    collections::BTreeMap,
-    string::{String, ToString},
-    vec::Vec,
+    string::{String, ToString}
 };
 use casper_contract::{
-    contract_api::{runtime::get_call_stack, storage},
+    contract_api::{runtime::get_call_stack},
     unwrap_or_revert::UnwrapOrRevert,
 };
-use casper_types::{system::CallStackElement, ContractPackageHash, Key, URef, U256};
+use casper_types::{system::CallStackElement, ContractPackageHash, Key, U256};
 use contract_utils::{get_key, key_and_value_to_str, key_to_str, set_key, Dict};
 
-use crate::{event::MarketEvent, Meta, TokenId};
+use crate::{event::MarketEvent, NFTContractAddress, TokenId};
 
 const BALANCES_DICT: &str = "balances";
 pub const ALLOWANCES_DICT: &str = "allowances";
-const METADATA_DICT: &str = "metadata";
+const NFT_CONTRACT_ADDRESSES: &str = "nft_contract_addresses";
 const OWNERS_DICT: &str = "owners";
 const OWNED_TOKENS_BY_INDEX_DICT: &str = "owned_tokens_by_index";
 const OWNED_INDEXES_BY_TOKEN_DICT: &str = "owned_indexes_by_token";
-const CONTRACT_PACKAGE_HASH: &str = "contract_package_hash";
 
 pub const NAME: &str = "name";
-pub const META: &str = "meta";
+pub const NFT_CONTRACT_ADDRESS: &str = "nft_contract_address";
 pub const SYMBOL: &str = "symbol";
 pub const TOTAL_SUPPLY: &str = "total_supply";
 
@@ -53,31 +50,31 @@ impl Owners {
     }
 }
 
-pub struct Metadata {
+pub struct NFTContractAddresses {
     dict: Dict,
 }
 
-impl Metadata {
-    pub fn instance() -> Metadata {
-        Metadata {
-            dict: Dict::instance(METADATA_DICT),
+impl NFTContractAddresses {
+    pub fn instance() -> NFTContractAddresses {
+        NFTContractAddresses {
+            dict: Dict::instance(NFT_CONTRACT_ADDRESSES),
         }
     }
 
     pub fn init() {
-        Dict::init(METADATA_DICT)
+        Dict::init(NFT_CONTRACT_ADDRESSES)
     }
 
-    pub fn get(&self, key: &TokenId) -> Option<Meta> {
+    pub fn get(&self, key: &TokenId) -> Option<NFTContractAddress> {
         self.dict.get(&key.to_string())
     }
 
-    pub fn set(&self, key: &TokenId, value: Meta) {
+    pub fn set(&self, key: &TokenId, value: NFTContractAddress) {
         self.dict.set(&key.to_string(), value);
     }
 
     pub fn remove(&self, key: &TokenId) {
-        self.dict.remove::<Meta>(&key.to_string());
+        self.dict.remove::<NFTContractAddress>(&key.to_string());
     }
 }
 
@@ -212,12 +209,12 @@ pub fn set_symbol(symbol: String) {
     set_key(SYMBOL, symbol);
 }
 
-pub fn meta() -> Meta {
-    get_key(META).unwrap_or_revert()
+pub fn nft_contract_address() -> NFTContractAddress {
+    get_key(NFT_CONTRACT_ADDRESS).unwrap_or_revert()
 }
 
-pub fn set_meta(meta: Meta) {
-    set_key(META, meta);
+pub fn set_nft_contract_address(nft_contract_address: NFTContractAddress) {
+    set_key(NFT_CONTRACT_ADDRESS, nft_contract_address);
 }
 
 pub fn total_supply() -> U256 {
@@ -241,6 +238,6 @@ pub fn contract_package_hash() -> ContractPackageHash {
     package_hash.unwrap_or_revert()
 }
 
-pub fn emit(event: &MarketEvent) {
+pub fn emit(_event: &MarketEvent) {
 }
 

@@ -1,9 +1,9 @@
-use crate::{data::{self}, event::MarketEvent, Meta, TokenId};
+use crate::{data::{self}, event::MarketEvent, NFTContractAddress, TokenId};
 use alloc::{string::String, vec::Vec};
 use core::convert::TryInto;
 use casper_types::{ApiError, Key, U256};
 use contract_utils::{ContractContext, ContractStorage};
-use crate::data::{Allowances, Metadata, OwnedTokens, Owners};
+use crate::data::{Allowances, NFTContractAddresses, OwnedTokens, Owners};
 
 #[repr(u16)]
 pub enum Error {
@@ -20,14 +20,14 @@ impl From<Error> for ApiError {
 }
 
 pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
-    fn init(&mut self, name: String, symbol: String, meta: Meta) {
+    fn init(&mut self, name: String, symbol: String, nft_contract_address: NFTContractAddress) {
         data::set_name(name);
         data::set_symbol(symbol);
-        data::set_meta(meta);
+        data::set_nft_contract_address(nft_contract_address);
         data::set_total_supply(U256::zero());
         Owners::init();
         OwnedTokens::init();
-        Metadata::init();
+        NFTContractAddresses::init();
         Allowances::init();
     }
 
@@ -39,8 +39,8 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         data::symbol()
     }
 
-    fn meta(&self) -> Meta {
-        data::meta()
+    fn nft_contract_address(&self) -> NFTContractAddress {
+        data::nft_contract_address()
     }
 
     fn total_supply(&self) -> U256 {
@@ -55,19 +55,18 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Owners::instance().get(&token_id)
     }
 
-    fn token_meta(&self, token_id: TokenId) -> Option<Meta> {
-        Metadata::instance().get(&token_id)
+    fn nft_contract_addresses(&self, token_id: TokenId) -> Option<NFTContractAddress> {
+        NFTContractAddresses::instance().get(&token_id)
     }
 
-    fn set_token_meta(&mut self, token_id: TokenId, meta: Meta) -> Result<(), Error> {
+    fn set_token_nft_contract_address(&mut self, token_id: TokenId, nft_contract_address: NFTContractAddress) -> Result<(), Error> {
         if self.owner_of(token_id).is_none() {
             return Err(Error::TokenIdDoesntExist);
         };
 
-        let metadata_dict = Metadata::instance();
-        metadata_dict.set(&token_id, meta);
+        let nft_contract_addresses_dict = NFTContractAddresses::instance();
+        nft_contract_addresses_dict.set(&token_id, nft_contract_address);
 
-        self.emit(MarketEvent::MetadataUpdate { token_id });
         Ok(())
     }
 
@@ -88,9 +87,9 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         &mut self,
         recipient: Key,
         token_ids: Vec<TokenId>,
-        token_metas: Vec<Meta>,
+        nft_contract_addresses: Vec<NFTContractAddress>,
     ) -> Result<Vec<TokenId>, Error> {
-        if token_ids.len() != token_metas.len() {
+        if token_ids.len() != nft_contract_addresses.len() {
             return Err(Error::WrongArguments);
         };
 
@@ -102,10 +101,10 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
 
         let owners_dict = Owners::instance();
         let owned_tokens_dict = OwnedTokens::instance();
-        let metadata_dict = Metadata::instance();
+        let nft_contract_addresses_dict = NFTContractAddresses::instance();
 
-        for (token_id, token_meta) in token_ids.iter().zip(&token_metas) {
-            metadata_dict.set(token_id, token_meta.clone());
+        for (token_id, nft_contract_address) in token_ids.iter().zip(&nft_contract_addresses) {
+            nft_contract_addresses_dict.set(token_id, nft_contract_address.clone());
             owners_dict.set(token_id, recipient);
             owned_tokens_dict.set_token(&recipient, token_id);
         }
@@ -127,11 +126,11 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         &mut self,
         recipient: Key,
         token_ids: Vec<TokenId>,
-        token_meta: Meta,
+        token_nft_contract_address: NFTContractAddress,
         count: u32,
     ) -> Result<Vec<TokenId>, Error> {
-        let token_metas = vec![token_meta; count.try_into().unwrap()];
-        self.mint(recipient, token_ids, token_metas)
+        let token_nft_contract_address = vec![token_nft_contract_address; count.try_into().unwrap()];
+        self.mint(recipient, token_ids, token_nft_contract_address)
     }
 
     fn burn(&mut self, owner: Key, token_ids: Vec<TokenId>) -> Result<(), Error> {
@@ -149,7 +148,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
     fn burn_internal(&mut self, owner: Key, token_ids: Vec<TokenId>) -> Result<(), Error> {
         let owners_dict = Owners::instance();
         let owned_tokens_dict = OwnedTokens::instance();
-        let metadata_dict = Metadata::instance();
+        let nft_contract_addresses_dict = NFTContractAddresses::instance();
         let allowances_dict = Allowances::instance();
 
         for token_id in &token_ids {
@@ -167,7 +166,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
 
         for token_id in &token_ids {
             owned_tokens_dict.remove_token(&owner, token_id);
-            metadata_dict.remove(token_id);
+            nft_contract_addresses_dict.remove(token_id);
             owners_dict.remove(token_id);
             allowances_dict.remove(&owner, token_id);
         }

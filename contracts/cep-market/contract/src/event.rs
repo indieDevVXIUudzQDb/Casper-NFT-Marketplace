@@ -21,8 +21,5 @@ pub enum MarketEvent {
         sender: Key,
         recipient: Key,
         token_ids: Vec<TokenId>,
-    },
-    MetadataUpdate {
-        token_id: TokenId,
-    },
+    }
 }

@@ -1,14 +1,12 @@
-use std::collections::BTreeMap;
-
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
-use casper_types::{account::AccountHash, bytesrepr::ToBytes, runtime_args, CLTyped, Key, RuntimeArgs, U256, HashAddr, ContractHash};
+use casper_types::{account::AccountHash, bytesrepr::ToBytes, runtime_args, CLTyped, Key, RuntimeArgs, U256, ContractHash};
 use test_env::{TestContract, TestEnv};
 
 pub type TokenId = U256;
-pub type Meta = BTreeMap<String, String>;
+pub type NFTContractAddress = ContractHash;
 
 pub struct MarketContractInstance(TestContract);
 
@@ -19,7 +17,7 @@ impl MarketContractInstance {
         sender: AccountHash,
         name: &str,
         symbol: &str,
-        meta: Meta,
+        nft_contract_address: NFTContractAddress,
     ) -> MarketContractInstance {
         println!("new MarketContractInstance");
         let instance = MarketContractInstance(TestContract::new(
@@ -30,22 +28,22 @@ impl MarketContractInstance {
             runtime_args! {
                 "name" => name,
                 "symbol" => symbol,
-                "meta" => meta            },
+                "nft_contract_address" => nft_contract_address
+            },
         ));
-        let hash = HashAddr::from(instance.0.contract_hash());
-        let token_contract_hash = ContractHash::from(hash);
+        let token_contract_hash = ContractHash::from(instance.0.contract_hash());
         println!("token_contract_hash {}", token_contract_hash);
         instance
     }
 
-    pub fn constructor(&self, sender: AccountHash, name: &str, symbol: &str, meta: Meta) {
+    pub fn constructor(&self, sender: AccountHash, name: &str, symbol: &str, nft_contract_address: NFTContractAddress) {
         self.0.call_contract(
             sender,
             "constructor",
             runtime_args! {
             "name" => name,
             "symbol" => symbol,
-            "meta" => meta},
+            "nft_contract_address" => nft_contract_address},
         );
     }
 
@@ -54,7 +52,7 @@ impl MarketContractInstance {
         sender: AccountHash,
         recipient: T,
         token_id: TokenId,
-        token_meta: Meta,
+        token_nft_contract_address: NFTContractAddress,
     ) {
         self.0.call_contract(
             sender,
@@ -62,7 +60,7 @@ impl MarketContractInstance {
             runtime_args! {
                 "recipient" => recipient.into(),
                 "token_ids" => vec![token_id],
-                "token_metas" => vec![token_meta]
+                "token_nft_contract_addresses" => vec![token_nft_contract_address]
             },
         )
     }
@@ -72,7 +70,7 @@ impl MarketContractInstance {
         sender: AccountHash,
         recipient: T,
         token_ids: Vec<TokenId>,
-        token_meta: Meta,
+        token_nft_contract_address: NFTContractAddress,
         count: u32,
     ) {
         self.0.call_contract(
@@ -81,7 +79,7 @@ impl MarketContractInstance {
             runtime_args! {
                 "recipient" => recipient.into(),
                 "token_ids" => token_ids,
-                "token_meta" => token_meta,
+                "token_nft_contract_address" => token_nft_contract_address,
                 "count" => count
             },
         )
@@ -92,7 +90,7 @@ impl MarketContractInstance {
         sender: AccountHash,
         recipient: T,
         token_ids: Vec<TokenId>,
-        token_metas: Vec<Meta>,
+        token_nft_contract_addresses: Vec<NFTContractAddress>,
     ) {
         self.0.call_contract(
             sender,
@@ -100,7 +98,7 @@ impl MarketContractInstance {
             runtime_args! {
                 "recipient" => recipient.into(),
                 "token_ids" => token_ids,
-                "token_metas" => token_metas
+                "token_nft_contract_addresses" => token_nft_contract_addresses
             },
         )
     }
@@ -176,13 +174,13 @@ impl MarketContractInstance {
         )
     }
 
-    pub fn update_token_meta(&self, sender: AccountHash, token_id: TokenId, token_meta: Meta) {
+    pub fn update_token_nft_contract_address(&self, sender: AccountHash, token_id: TokenId, token_nft_contract_address: NFTContractAddress) {
         self.0.call_contract(
             sender,
-            "update_token_meta",
+            "update_token_nft_contract_address",
             runtime_args! {
                 "token_id" => token_id,
-                "token_meta" => token_meta
+                "token_nft_contract_address" => token_nft_contract_address
             },
         )
     }
@@ -204,8 +202,8 @@ impl MarketContractInstance {
         self.0.query_dictionary("owners", token_id.to_string())
     }
 
-    pub fn token_meta(&self, token_id: TokenId) -> Option<Meta> {
-        self.0.query_dictionary("metadata", token_id.to_string())
+    pub fn token_nft_contract_address(&self, token_id: TokenId) -> Option<NFTContractAddress> {
+        self.0.query_dictionary("nft_contract_addresses", token_id.to_string())
     }
 
     pub fn name(&self) -> String {
@@ -220,8 +218,8 @@ impl MarketContractInstance {
         self.0.query_named_key(String::from("total_supply"))
     }
 
-    pub fn meta(&self) -> Meta {
-        self.0.query_named_key(String::from("meta"))
+    pub fn nft_contract_address(&self) -> Key {
+        self.0.query_named_key(String::from("nft_contract_address"))
     }
 }
 

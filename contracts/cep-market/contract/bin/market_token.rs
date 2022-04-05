@@ -13,7 +13,7 @@ use casper_types::{
     runtime_args, CLType, CLTyped, CLValue, ContractPackageHash, EntryPoint, EntryPointAccess,
     EntryPointType, EntryPoints, Group, Key, Parameter, RuntimeArgs, URef, U256,
 };
-use contract::{Meta, TokenId, MarketContract};
+use contract::{TokenId, MarketContract, NFTContractAddress};
 use contract_utils::{ContractContext, OnChainContractStorage};
 
 #[derive(Default)]
@@ -27,8 +27,8 @@ impl ContractContext<OnChainContractStorage> for NFTToken {
 
 impl MarketContract<OnChainContractStorage> for NFTToken {}
 impl NFTToken {
-    fn constructor(&mut self, name: String, symbol: String, meta: Meta) {
-        MarketContract::init(self, name, symbol, meta);
+    fn constructor(&mut self, name: String, symbol: String, nft_contract_address: NFTContractAddress) {
+        MarketContract::init(self, name, symbol, nft_contract_address);
     }
 }
 
@@ -36,8 +36,8 @@ impl NFTToken {
 fn constructor() {
     let name = runtime::get_named_arg::<String>("name");
     let symbol = runtime::get_named_arg::<String>("symbol");
-    let meta = runtime::get_named_arg::<Meta>("meta");
-    NFTToken::default().constructor(name, symbol, meta);
+    let nft_contract_address = runtime::get_named_arg::<NFTContractAddress>("nft_contract_address");
+    NFTToken::default().constructor(name, symbol, nft_contract_address);
 }
 
 #[no_mangle]
@@ -53,8 +53,8 @@ fn symbol() {
 }
 
 #[no_mangle]
-fn meta() {
-    let ret = NFTToken::default().meta();
+fn nft_contract_address() {
+    let ret = NFTToken::default().nft_contract_address();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
@@ -87,18 +87,18 @@ fn owner_of() {
 }
 
 #[no_mangle]
-fn token_meta() {
+fn token_nft_contract_address() {
     let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = NFTToken::default().token_meta(token_id);
+    let ret = NFTToken::default().nft_contract_addresses(token_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn update_token_meta() {
+fn update_token_nft_contract_address() {
     let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let token_meta = runtime::get_named_arg::<Meta>("token_meta");
+    let token_contract_address = runtime::get_named_arg::<NFTContractAddress>("token_nft_contract_address");
     NFTToken::default()
-        .set_token_meta(token_id, token_meta)
+        .set_token_nft_contract_address(token_id, token_contract_address)
         .unwrap_or_revert();
 }
 
@@ -106,9 +106,9 @@ fn update_token_meta() {
 fn mint() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    let token_metas = runtime::get_named_arg::<Vec<Meta>>("token_metas");
+    let token_nft_contract_addresses = runtime::get_named_arg::<Vec<NFTContractAddress>>("token_nft_contract_addresses");
     NFTToken::default()
-        .mint(recipient, token_ids, token_metas)
+        .mint(recipient, token_ids, token_nft_contract_addresses)
         .unwrap_or_revert();
 }
 
@@ -116,10 +116,10 @@ fn mint() {
 fn mint_copies() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let token_ids = runtime::get_named_arg::<Vec<U256>>("token_ids");
-    let token_meta = runtime::get_named_arg::<Meta>("token_meta");
+    let token_nft_contract_address = runtime::get_named_arg::<NFTContractAddress>("token_nft_contract_address");
     let count = runtime::get_named_arg::<u32>("count");
     NFTToken::default()
-        .mint_copies(recipient, token_ids, token_meta, count)
+        .mint_copies(recipient, token_ids, token_nft_contract_address, count)
         .unwrap_or_revert();
 }
 
@@ -173,14 +173,14 @@ fn call() {
     // Read arguments for the constructor call.
     let name: String = runtime::get_named_arg("name");
     let symbol: String = runtime::get_named_arg("symbol");
-    let meta: Meta = runtime::get_named_arg("meta");
+    let nft_contract_address: NFTContractAddress = runtime::get_named_arg("nft_contract_address");
     let contract_name: String = runtime::get_named_arg("contract_name");
 
     // Prepare constructor args
     let constructor_args = runtime_args! {
         "name" => name,
         "symbol" => symbol,
-        "meta" => meta
+        "nft_contract_address" => nft_contract_address
     };
 
     let (contract_hash, _) = storage::new_contract(
@@ -227,7 +227,7 @@ fn get_entry_points() -> EntryPoints {
         vec![
             Parameter::new("name", String::cl_type()),
             Parameter::new("symbol", String::cl_type()),
-            Parameter::new("meta", Meta::cl_type()),
+            Parameter::new("nft_contract_address", NFTContractAddress::cl_type()),
         ],
         <()>::cl_type(),
         EntryPointAccess::Groups(vec![Group::new("constructor")]),
@@ -248,9 +248,9 @@ fn get_entry_points() -> EntryPoints {
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "meta",
+        "nft_contract_address",
         vec![],
-        Meta::cl_type(),
+        NFTContractAddress::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
@@ -276,17 +276,17 @@ fn get_entry_points() -> EntryPoints {
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "token_meta",
+        "token_nft_contract_address",
         vec![Parameter::new("token_id", TokenId::cl_type())],
-        Meta::cl_type(),
+        NFTContractAddress::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "update_token_meta",
+        "update_token_nft_contract_address",
         vec![
             Parameter::new("token_id", TokenId::cl_type()),
-            Parameter::new("token_meta", Meta::cl_type()),
+            Parameter::new("token_nft_contract_address", NFTContractAddress::cl_type()),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -297,7 +297,7 @@ fn get_entry_points() -> EntryPoints {
         vec![
             Parameter::new("recipient", Key::cl_type()),
             Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
-            Parameter::new("token_metas", CLType::List(Box::new(Meta::cl_type()))),
+            Parameter::new("token_nft_contract_addresses", CLType::List(Box::new(NFTContractAddress::cl_type()))),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -308,7 +308,7 @@ fn get_entry_points() -> EntryPoints {
         vec![
             Parameter::new("recipient", Key::cl_type()),
             Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
-            Parameter::new("token_meta", Meta::cl_type()),
+            Parameter::new("token_nft_contract_address", NFTContractAddress::cl_type()),
             Parameter::new("count", CLType::U32),
         ],
         <()>::cl_type(),
