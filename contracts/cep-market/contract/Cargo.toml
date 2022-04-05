@@ -12,7 +12,7 @@ contract-utils = { path = "../utils/contract-utils" }
 
 [[bin]]
 name = "contract"
-path = "bin/market_token.rs"
+path = "bin/market_item.rs"
 bench = false
 doctest = false
 test = false

@@ -17,16 +17,16 @@ use contract::{TokenId, MarketContract, NFTContractAddress};
 use contract_utils::{ContractContext, OnChainContractStorage};
 
 #[derive(Default)]
-struct NFTToken(OnChainContractStorage);
+struct MarketItem(OnChainContractStorage);
 
-impl ContractContext<OnChainContractStorage> for NFTToken {
+impl ContractContext<OnChainContractStorage> for MarketItem {
     fn storage(&self) -> &OnChainContractStorage {
         &self.0
     }
 }
 
-impl MarketContract<OnChainContractStorage> for NFTToken {}
-impl NFTToken {
+impl MarketContract<OnChainContractStorage> for MarketItem {}
+impl MarketItem {
     fn constructor(&mut self, name: String, symbol: String, nft_contract_address: NFTContractAddress) {
         MarketContract::init(self, name, symbol, nft_contract_address);
     }
@@ -37,37 +37,37 @@ fn constructor() {
     let name = runtime::get_named_arg::<String>("name");
     let symbol = runtime::get_named_arg::<String>("symbol");
     let nft_contract_address = runtime::get_named_arg::<NFTContractAddress>("nft_contract_address");
-    NFTToken::default().constructor(name, symbol, nft_contract_address);
+    MarketItem::default().constructor(name, symbol, nft_contract_address);
 }
 
 #[no_mangle]
 fn name() {
-    let ret = NFTToken::default().name();
+    let ret = MarketItem::default().name();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn symbol() {
-    let ret = NFTToken::default().symbol();
+    let ret = MarketItem::default().symbol();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn nft_contract_address() {
-    let ret = NFTToken::default().nft_contract_address();
+    let ret = MarketItem::default().nft_contract_address();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn total_supply() {
-    let ret = NFTToken::default().total_supply();
+    let ret = MarketItem::default().total_supply();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn balance_of() {
     let owner = runtime::get_named_arg::<Key>("owner");
-    let ret = NFTToken::default().balance_of(owner);
+    let ret = MarketItem::default().balance_of(owner);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
@@ -75,21 +75,21 @@ fn balance_of() {
 fn get_token_by_index() {
     let owner = runtime::get_named_arg::<Key>("owner");
     let index = runtime::get_named_arg::<U256>("index");
-    let ret = NFTToken::default().get_token_by_index(owner, index);
+    let ret = MarketItem::default().get_token_by_index(owner, index);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn owner_of() {
     let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = NFTToken::default().owner_of(token_id);
+    let ret = MarketItem::default().owner_of(token_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn token_nft_contract_address() {
     let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = NFTToken::default().nft_contract_addresses(token_id);
+    let ret = MarketItem::default().nft_contract_addresses(token_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
@@ -97,7 +97,7 @@ fn token_nft_contract_address() {
 fn update_token_nft_contract_address() {
     let token_id = runtime::get_named_arg::<TokenId>("token_id");
     let token_contract_address = runtime::get_named_arg::<NFTContractAddress>("token_nft_contract_address");
-    NFTToken::default()
+    MarketItem::default()
         .set_token_nft_contract_address(token_id, token_contract_address)
         .unwrap_or_revert();
 }
@@ -107,7 +107,7 @@ fn mint() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
     let token_nft_contract_addresses = runtime::get_named_arg::<Vec<NFTContractAddress>>("token_nft_contract_addresses");
-    NFTToken::default()
+    MarketItem::default()
         .mint(recipient, token_ids, token_nft_contract_addresses)
         .unwrap_or_revert();
 }
@@ -118,7 +118,7 @@ fn mint_copies() {
     let token_ids = runtime::get_named_arg::<Vec<U256>>("token_ids");
     let token_nft_contract_address = runtime::get_named_arg::<NFTContractAddress>("token_nft_contract_address");
     let count = runtime::get_named_arg::<u32>("count");
-    NFTToken::default()
+    MarketItem::default()
         .mint_copies(recipient, token_ids, token_nft_contract_address, count)
         .unwrap_or_revert();
 }
@@ -127,7 +127,7 @@ fn mint_copies() {
 fn burn() {
     let owner = runtime::get_named_arg::<Key>("owner");
     let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
+    MarketItem::default()
         .burn(owner, token_ids)
         .unwrap_or_revert();
 }
@@ -136,7 +136,7 @@ fn burn() {
 fn transfer() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
+    MarketItem::default()
         .transfer(recipient, token_ids)
         .unwrap_or_revert();
 }
@@ -146,7 +146,7 @@ fn transfer_from() {
     let sender = runtime::get_named_arg::<Key>("sender");
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
+    MarketItem::default()
         .transfer_from(sender, recipient, token_ids)
         .unwrap_or_revert();
 }
@@ -155,7 +155,7 @@ fn transfer_from() {
 fn approve() {
     let spender = runtime::get_named_arg::<Key>("spender");
     let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    NFTToken::default()
+    MarketItem::default()
         .approve(spender, token_ids)
         .unwrap_or_revert();
 }
@@ -164,7 +164,7 @@ fn approve() {
 fn get_approved() {
     let owner = runtime::get_named_arg::<Key>("owner");
     let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = NFTToken::default().get_approved(owner, token_id);
+    let ret = MarketItem::default().get_approved(owner, token_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
