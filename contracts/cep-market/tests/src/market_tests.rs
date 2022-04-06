@@ -63,6 +63,7 @@ fn test_mint_one() {
     let first_user_token = token.get_token_by_index(Key::Account(user), U256::from(0));
     let second_user_token = token.get_token_by_index(Key::Account(user), U256::from(1));
     assert_eq!(first_user_token, Some(token_id));
+    assert_eq!(token.token_nft_contract_address(token_id).unwrap(), get_nft_contract_hash());
     assert_eq!(token.total_supply(), U256::one());
     assert_eq!(token.balance_of(Key::Account(user)), U256::one());
     assert_eq!(second_user_token, None);
