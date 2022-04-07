@@ -40,8 +40,6 @@ fn deploy(meta: Meta) -> (TestEnv, MarketContractInstance, AccountHash) {
     (env, token, owner)
 }
 
-// #[test]
-// fn test_create_market_item() {
 
 #[test]
 fn test_deploy() {
@@ -53,13 +51,13 @@ fn test_deploy() {
 }
 
 #[test]
-fn test_mint_one() {
+fn test_create_market_item() {
     let red_dragon = meta::red_dragon();
     let (env, token, owner) = deploy(red_dragon);
     let user = env.next_user();
     let item_id = TokenId::zero();
 
-    token.mint_one(owner, user, item_id, get_nft_contract_hash(), U256::from("200000"));
+    token.create_market_item(owner, user, item_id, get_nft_contract_hash(), U256::from("200000"));
     let first_user_token = token.get_item_by_index(Key::Account(user), U256::from(0));
     let second_user_token = token.get_item_by_index(Key::Account(user), U256::from(1));
     assert_eq!(first_user_token, Some(item_id));

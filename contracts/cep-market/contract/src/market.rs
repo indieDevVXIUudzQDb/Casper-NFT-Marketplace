@@ -99,7 +99,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         true
     }
 
-    fn mint(
+    fn create_market_item(
         &mut self,
         recipient: Key,
         item_ids: Vec<TokenId>,
@@ -131,13 +131,13 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
             item_asking_prices_dict.set(item_id, *item_asking_price);
         }
 
-        let minted_tokens_count: U256 = From::<u64>::from(item_ids.len().try_into().unwrap());
+        let created_items_count: U256 = From::<u64>::from(item_ids.len().try_into().unwrap());
         let new_total_supply = data::total_supply()
-            .checked_add(minted_tokens_count)
+            .checked_add(created_items_count)
             .unwrap();
         data::set_total_supply(new_total_supply);
 
-        self.emit(MarketEvent::Mint {
+        self.emit(MarketEvent::CreateItem {
             recipient,
             item_ids: item_ids.clone(),
         });

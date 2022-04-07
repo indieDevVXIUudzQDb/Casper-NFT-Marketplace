@@ -105,13 +105,13 @@ fn item_asking_price() {
 
 
 #[no_mangle]
-fn mint() {
+fn create_market_item() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
     let item_nft_contract_addresses = runtime::get_named_arg::<Vec<NFTContractAddress>>("item_nft_contract_addresses");
     let item_asking_prices = runtime::get_named_arg::<Vec<U256>>("item_asking_prices");
     MarketItem::default()
-        .mint(recipient, item_ids, item_nft_contract_addresses, item_asking_prices)
+        .create_market_item(recipient, item_ids, item_nft_contract_addresses, item_asking_prices)
         .unwrap_or_revert();
 }
 
@@ -282,7 +282,7 @@ fn get_entry_points() -> EntryPoints {
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "mint",
+        "create_market_item",
         vec![
             Parameter::new("recipient", Key::cl_type()),
             Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),

@@ -49,7 +49,7 @@ impl MarketContractInstance {
         );
     }
 
-    pub fn mint_one<T: Into<Key>>(
+    pub fn create_market_item<T: Into<Key>>(
         &self,
         sender: AccountHash,
         recipient: T,
@@ -59,7 +59,7 @@ impl MarketContractInstance {
     ) {
         self.0.call_contract(
             sender,
-            "mint",
+            "create_market_item",
             runtime_args! {
                 "recipient" => recipient.into(),
                 "item_ids" => vec![item_id],
@@ -69,7 +69,7 @@ impl MarketContractInstance {
         )
     }
 
-    pub fn mint_many<T: Into<Key>>(
+    pub fn create_market_items<T: Into<Key>>(
         &self,
         sender: AccountHash,
         recipient: T,
@@ -79,7 +79,7 @@ impl MarketContractInstance {
     ) {
         self.0.call_contract(
             sender,
-            "mint",
+            "create_market_item",
             runtime_args! {
                 "recipient" => recipient.into(),
                 "item_ids" => item_ids,

@@ -4,7 +4,7 @@ use casper_types::Key;
 use crate::TokenId;
 
 pub enum MarketEvent {
-    Mint {
+    CreateItem {
         recipient: Key,
         item_ids: Vec<TokenId>,
     },
