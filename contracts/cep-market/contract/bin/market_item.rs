@@ -73,72 +73,72 @@ fn balance_of() {
 }
 
 #[no_mangle]
-fn get_token_by_index() {
+fn get_item_by_index() {
     let owner = runtime::get_named_arg::<Key>("owner");
     let index = runtime::get_named_arg::<U256>("index");
-    let ret = MarketItem::default().get_token_by_index(owner, index);
+    let ret = MarketItem::default().get_item_by_index(owner, index);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn owner_of() {
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = MarketItem::default().owner_of(token_id);
+    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let ret = MarketItem::default().owner_of(item_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn token_nft_contract_address() {
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = MarketItem::default().token_nft_contract_address(token_id);
+fn item_nft_contract_address() {
+    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let ret = MarketItem::default().item_nft_contract_address(item_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
-fn update_token_nft_contract_address() {
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let token_contract_address = runtime::get_named_arg::<NFTContractAddress>("token_nft_contract_address");
+fn update_item_nft_contract_address() {
+    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let item_contract_address = runtime::get_named_arg::<NFTContractAddress>("item_nft_contract_address");
     MarketItem::default()
-        .set_token_nft_contract_address(token_id, token_contract_address)
+        .set_item_nft_contract_address(item_id, item_contract_address)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 fn mint() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
-    let token_nft_contract_addresses = runtime::get_named_arg::<Vec<NFTContractAddress>>("token_nft_contract_addresses");
+    let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
+    let item_nft_contract_addresses = runtime::get_named_arg::<Vec<NFTContractAddress>>("item_nft_contract_addresses");
     MarketItem::default()
-        .mint(recipient, token_ids, token_nft_contract_addresses)
+        .mint(recipient, item_ids, item_nft_contract_addresses)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 fn mint_copies() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<U256>>("token_ids");
-    let token_nft_contract_address = runtime::get_named_arg::<NFTContractAddress>("token_nft_contract_address");
+    let item_ids = runtime::get_named_arg::<Vec<U256>>("item_ids");
+    let item_nft_contract_address = runtime::get_named_arg::<NFTContractAddress>("item_nft_contract_address");
     let count = runtime::get_named_arg::<u32>("count");
     MarketItem::default()
-        .mint_copies(recipient, token_ids, token_nft_contract_address, count)
+        .mint_copies(recipient, item_ids, item_nft_contract_address, count)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 fn burn() {
     let owner = runtime::get_named_arg::<Key>("owner");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
+    let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
     MarketItem::default()
-        .burn(owner, token_ids)
+        .burn(owner, item_ids)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 fn transfer() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
+    let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
     MarketItem::default()
-        .transfer(recipient, token_ids)
+        .transfer(recipient, item_ids)
         .unwrap_or_revert();
 }
 
@@ -146,26 +146,26 @@ fn transfer() {
 fn transfer_from() {
     let sender = runtime::get_named_arg::<Key>("sender");
     let recipient = runtime::get_named_arg::<Key>("recipient");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
+    let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
     MarketItem::default()
-        .transfer_from(sender, recipient, token_ids)
+        .transfer_from(sender, recipient, item_ids)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 fn approve() {
     let spender = runtime::get_named_arg::<Key>("spender");
-    let token_ids = runtime::get_named_arg::<Vec<TokenId>>("token_ids");
+    let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
     MarketItem::default()
-        .approve(spender, token_ids)
+        .approve(spender, item_ids)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 fn get_approved() {
     let owner = runtime::get_named_arg::<Key>("owner");
-    let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = MarketItem::default().get_approved(owner, token_id);
+    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let ret = MarketItem::default().get_approved(owner, item_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
@@ -271,23 +271,23 @@ fn get_entry_points() -> EntryPoints {
     ));
     entry_points.add_entry_point(EntryPoint::new(
         "owner_of",
-        vec![Parameter::new("token_id", TokenId::cl_type())],
+        vec![Parameter::new("item_id", TokenId::cl_type())],
         CLType::Option(Box::new(CLType::Key)),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "token_nft_contract_address",
-        vec![Parameter::new("token_id", TokenId::cl_type())],
+        "item_nft_contract_address",
+        vec![Parameter::new("item_id", TokenId::cl_type())],
         NFTContractAddress::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "update_token_nft_contract_address",
+        "update_item_nft_contract_address",
         vec![
-            Parameter::new("token_id", TokenId::cl_type()),
-            Parameter::new("token_nft_contract_address", NFTContractAddress::cl_type()),
+            Parameter::new("item_id", TokenId::cl_type()),
+            Parameter::new("item_nft_contract_address", NFTContractAddress::cl_type()),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -297,8 +297,8 @@ fn get_entry_points() -> EntryPoints {
         "mint",
         vec![
             Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
-            Parameter::new("token_nft_contract_addresses", CLType::List(Box::new(NFTContractAddress::cl_type()))),
+            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
+            Parameter::new("item_nft_contract_addresses", CLType::List(Box::new(NFTContractAddress::cl_type()))),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -308,8 +308,8 @@ fn get_entry_points() -> EntryPoints {
         "mint_copies",
         vec![
             Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
-            Parameter::new("token_nft_contract_address", NFTContractAddress::cl_type()),
+            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
+            Parameter::new("item_nft_contract_address", NFTContractAddress::cl_type()),
             Parameter::new("count", CLType::U32),
         ],
         <()>::cl_type(),
@@ -320,7 +320,7 @@ fn get_entry_points() -> EntryPoints {
         "burn",
         vec![
             Parameter::new("owner", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
+            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -330,7 +330,7 @@ fn get_entry_points() -> EntryPoints {
         "transfer",
         vec![
             Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
+            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -341,7 +341,7 @@ fn get_entry_points() -> EntryPoints {
         vec![
             Parameter::new("sender", Key::cl_type()),
             Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
+            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -351,7 +351,7 @@ fn get_entry_points() -> EntryPoints {
         "approve",
         vec![
             Parameter::new("spender", Key::cl_type()),
-            Parameter::new("token_ids", CLType::List(Box::new(TokenId::cl_type()))),
+            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,
@@ -361,14 +361,14 @@ fn get_entry_points() -> EntryPoints {
         "get_approved",
         vec![
             Parameter::new("owner", Key::cl_type()),
-            Parameter::new("token_id", TokenId::cl_type()),
+            Parameter::new("item_id", TokenId::cl_type()),
         ],
         CLType::Option(Box::new(CLType::Key)),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "get_token_by_index",
+        "get_item_by_index",
         vec![
             Parameter::new("owner", Key::cl_type()),
             Parameter::new("index", U256::cl_type()),

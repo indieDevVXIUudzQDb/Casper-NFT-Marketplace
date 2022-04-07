@@ -6,20 +6,20 @@ use crate::TokenId;
 pub enum MarketEvent {
     Mint {
         recipient: Key,
-        token_ids: Vec<TokenId>,
+        item_ids: Vec<TokenId>,
     },
     Burn {
         owner: Key,
-        token_ids: Vec<TokenId>,
+        item_ids: Vec<TokenId>,
     },
     Approve {
         owner: Key,
         spender: Key,
-        token_ids: Vec<TokenId>,
+        item_ids: Vec<TokenId>,
     },
     Transfer {
         sender: Key,
         recipient: Key,
-        token_ids: Vec<TokenId>,
+        item_ids: Vec<TokenId>,
     }
 }

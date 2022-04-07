@@ -57,16 +57,16 @@ fn test_mint_one() {
     let red_dragon = meta::red_dragon();
     let (env, token, owner) = deploy(red_dragon);
     let user = env.next_user();
-    let token_id = TokenId::zero();
+    let item_id = TokenId::zero();
 
-    token.mint_one(owner, user, token_id, get_nft_contract_hash());
-    let first_user_token = token.get_token_by_index(Key::Account(user), U256::from(0));
-    let second_user_token = token.get_token_by_index(Key::Account(user), U256::from(1));
-    assert_eq!(first_user_token, Some(token_id));
+    token.mint_one(owner, user, item_id, get_nft_contract_hash());
+    let first_user_token = token.get_item_by_index(Key::Account(user), U256::from(0));
+    let second_user_token = token.get_item_by_index(Key::Account(user), U256::from(1));
+    assert_eq!(first_user_token, Some(item_id));
     assert_eq!(token.meta(), meta::red_dragon());
-    assert_eq!(token.token_nft_contract_address(token_id).unwrap(), get_nft_contract_hash());
+    assert_eq!(token.item_nft_contract_address(item_id).unwrap(), get_nft_contract_hash());
     assert_eq!(token.total_supply(), U256::one());
     assert_eq!(token.balance_of(Key::Account(user)), U256::one());
     assert_eq!(second_user_token, None);
-    assert_eq!(token.owner_of(token_id).unwrap(), Key::Account(user));
+    assert_eq!(token.owner_of(item_id).unwrap(), Key::Account(user));
 }

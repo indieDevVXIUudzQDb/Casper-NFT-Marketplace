@@ -33,8 +33,8 @@ impl MarketContractInstance {
                 "meta" => meta
             },
         ));
-        let token_contract_hash = ContractHash::from(instance.0.contract_hash());
-        println!("token_contract_hash {}", token_contract_hash);
+        let item_contract_hash = ContractHash::from(instance.0.contract_hash());
+        println!("item_contract_hash {}", item_contract_hash);
         instance
     }
 
@@ -53,16 +53,16 @@ impl MarketContractInstance {
         &self,
         sender: AccountHash,
         recipient: T,
-        token_id: TokenId,
-        token_nft_contract_address: NFTContractAddress,
+        item_id: TokenId,
+        item_nft_contract_address: NFTContractAddress,
     ) {
         self.0.call_contract(
             sender,
             "mint",
             runtime_args! {
                 "recipient" => recipient.into(),
-                "token_ids" => vec![token_id],
-                "token_nft_contract_addresses" => vec![token_nft_contract_address]
+                "item_ids" => vec![item_id],
+                "item_nft_contract_addresses" => vec![item_nft_contract_address]
             },
         )
     }
@@ -71,8 +71,8 @@ impl MarketContractInstance {
         &self,
         sender: AccountHash,
         recipient: T,
-        token_ids: Vec<TokenId>,
-        token_nft_contract_address: NFTContractAddress,
+        item_ids: Vec<TokenId>,
+        item_nft_contract_address: NFTContractAddress,
         count: u32,
     ) {
         self.0.call_contract(
@@ -80,8 +80,8 @@ impl MarketContractInstance {
             "mint_copies",
             runtime_args! {
                 "recipient" => recipient.into(),
-                "token_ids" => token_ids,
-                "token_nft_contract_address" => token_nft_contract_address,
+                "item_ids" => item_ids,
+                "item_nft_contract_address" => item_nft_contract_address,
                 "count" => count
             },
         )
@@ -91,38 +91,38 @@ impl MarketContractInstance {
         &self,
         sender: AccountHash,
         recipient: T,
-        token_ids: Vec<TokenId>,
-        token_nft_contract_addresses: Vec<NFTContractAddress>,
+        item_ids: Vec<TokenId>,
+        item_nft_contract_addresses: Vec<NFTContractAddress>,
     ) {
         self.0.call_contract(
             sender,
             "mint",
             runtime_args! {
                 "recipient" => recipient.into(),
-                "token_ids" => token_ids,
-                "token_nft_contract_addresses" => token_nft_contract_addresses
+                "item_ids" => item_ids,
+                "item_nft_contract_addresses" => item_nft_contract_addresses
             },
         )
     }
 
-    pub fn burn_one<T: Into<Key>>(&self, sender: AccountHash, owner: T, token_id: TokenId) {
+    pub fn burn_one<T: Into<Key>>(&self, sender: AccountHash, owner: T, item_id: TokenId) {
         self.0.call_contract(
             sender,
             "burn",
             runtime_args! {
                 "owner" => owner.into(),
-                "token_ids" => vec![token_id]
+                "item_ids" => vec![item_id]
             },
         )
     }
 
-    pub fn burn_many<T: Into<Key>>(&self, sender: AccountHash, owner: T, token_ids: Vec<TokenId>) {
+    pub fn burn_many<T: Into<Key>>(&self, sender: AccountHash, owner: T, item_ids: Vec<TokenId>) {
         self.0.call_contract(
             sender,
             "burn",
             runtime_args! {
                 "owner" => owner.into(),
-                "token_ids" => token_ids
+                "item_ids" => item_ids
             },
         )
     }
@@ -131,14 +131,14 @@ impl MarketContractInstance {
         &self,
         sender: AccountHash,
         recipient: T,
-        token_ids: Vec<TokenId>,
+        item_ids: Vec<TokenId>,
     ) {
         self.0.call_contract(
             sender,
             "transfer",
             runtime_args! {
                 "recipient" => recipient.into(),
-                "token_ids" => token_ids
+                "item_ids" => item_ids
             },
         )
     }
@@ -148,7 +148,7 @@ impl MarketContractInstance {
         sender: AccountHash,
         owner: T,
         recipient: T,
-        token_ids: Vec<TokenId>,
+        item_ids: Vec<TokenId>,
     ) {
         self.0.call_contract(
             sender,
@@ -156,38 +156,38 @@ impl MarketContractInstance {
             runtime_args! {
                 "sender" => owner.into(),
                 "recipient" => recipient.into(),
-                "token_ids" => token_ids
+                "item_ids" => item_ids
             },
         )
     }
 
-    pub fn approve<T: Into<Key>>(&self, sender: AccountHash, spender: T, token_ids: Vec<TokenId>) {
+    pub fn approve<T: Into<Key>>(&self, sender: AccountHash, spender: T, item_ids: Vec<TokenId>) {
         self.0.call_contract(
             sender,
             "approve",
-            runtime_args! {"spender" => spender.into(), "token_ids" => token_ids},
+            runtime_args! {"spender" => spender.into(), "item_ids" => item_ids},
         )
     }
 
-    pub fn get_approved<T: Into<Key>>(&self, owner: T, token_id: TokenId) -> Option<Key> {
+    pub fn get_approved<T: Into<Key>>(&self, owner: T, item_id: TokenId) -> Option<Key> {
         self.0.query_dictionary(
             "allowances",
-            key_and_value_to_str::<String>(&owner.into(), &token_id.to_string()),
+            key_and_value_to_str::<String>(&owner.into(), &item_id.to_string()),
         )
     }
 
-    pub fn update_token_nft_contract_address(&self, sender: AccountHash, token_id: TokenId, token_nft_contract_address: NFTContractAddress) {
+    pub fn update_item_nft_contract_address(&self, sender: AccountHash, item_id: TokenId, item_nft_contract_address: NFTContractAddress) {
         self.0.call_contract(
             sender,
-            "update_token_nft_contract_address",
+            "update_item_nft_contract_address",
             runtime_args! {
-                "token_id" => token_id,
-                "token_nft_contract_address" => token_nft_contract_address
+                "item_id" => item_id,
+                "item_nft_contract_address" => item_nft_contract_address
             },
         )
     }
 
-    pub fn get_token_by_index<T: Into<Key>>(&self, account: T, index: U256) -> Option<TokenId> {
+    pub fn get_item_by_index<T: Into<Key>>(&self, account: T, index: U256) -> Option<TokenId> {
         self.0.query_dictionary(
             "owned_tokens_by_index",
             key_and_value_to_str(&account.into(), &index),
@@ -200,12 +200,12 @@ impl MarketContractInstance {
             .unwrap_or_default()
     }
 
-    pub fn owner_of(&self, token_id: TokenId) -> Option<Key> {
-        self.0.query_dictionary("owners", token_id.to_string())
+    pub fn owner_of(&self, item_id: TokenId) -> Option<Key> {
+        self.0.query_dictionary("owners", item_id.to_string())
     }
 
-    pub fn token_nft_contract_address(&self, token_id: TokenId) -> Option<NFTContractAddress> {
-        self.0.query_dictionary("nft_contract_addresses", token_id.to_string())
+    pub fn item_nft_contract_address(&self, item_id: TokenId) -> Option<NFTContractAddress> {
+        self.0.query_dictionary("nft_contract_addresses", item_id.to_string())
     }
 
     pub fn name(&self) -> String {

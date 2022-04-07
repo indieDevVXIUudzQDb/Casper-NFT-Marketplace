@@ -51,32 +51,32 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         OwnedTokens::instance().get_balances(&owner)
     }
 
-    fn owner_of(&self, token_id: TokenId) -> Option<Key> {
-        Owners::instance().get(&token_id)
+    fn owner_of(&self, item_id: TokenId) -> Option<Key> {
+        Owners::instance().get(&item_id)
     }
 
-    fn token_nft_contract_address(&self, token_id: TokenId) -> Option<NFTContractAddress> {
-        NFTContractAddresses::instance().get(&token_id)
+    fn item_nft_contract_address(&self, item_id: TokenId) -> Option<NFTContractAddress> {
+        NFTContractAddresses::instance().get(&item_id)
     }
 
-    fn set_token_nft_contract_address(&mut self, token_id: TokenId, nft_contract_address: NFTContractAddress) -> Result<(), Error> {
-        if self.owner_of(token_id).is_none() {
+    fn set_item_nft_contract_address(&mut self, item_id: TokenId, nft_contract_address: NFTContractAddress) -> Result<(), Error> {
+        if self.owner_of(item_id).is_none() {
             return Err(Error::TokenIdDoesntExist);
         };
 
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
-        nft_contract_addresses_dict.set(&token_id, nft_contract_address);
+        nft_contract_addresses_dict.set(&item_id, nft_contract_address);
 
         Ok(())
     }
 
-    fn get_token_by_index(&self, owner: Key, index: U256) -> Option<TokenId> {
-        OwnedTokens::instance().get_token_by_index(&owner, &index)
+    fn get_item_by_index(&self, owner: Key, index: U256) -> Option<TokenId> {
+        OwnedTokens::instance().get_item_by_index(&owner, &index)
     }
 
-    fn validate_token_ids(&self, token_ids: Vec<TokenId>) -> bool {
-        for token_id in &token_ids {
-            if self.owner_of(*token_id).is_some() {
+    fn validate_item_ids(&self, item_ids: Vec<TokenId>) -> bool {
+        for item_id in &item_ids {
+            if self.owner_of(*item_id).is_some() {
                 return false;
             }
         }
@@ -86,15 +86,15 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
     fn mint(
         &mut self,
         recipient: Key,
-        token_ids: Vec<TokenId>,
+        item_ids: Vec<TokenId>,
         nft_contract_addresses: Vec<NFTContractAddress>,
     ) -> Result<Vec<TokenId>, Error> {
-        if token_ids.len() != nft_contract_addresses.len() {
+        if item_ids.len() != nft_contract_addresses.len() {
             return Err(Error::WrongArguments);
         };
 
-        for token_id in &token_ids {
-            if self.owner_of(*token_id).is_some() {
+        for item_id in &item_ids {
+            if self.owner_of(*item_id).is_some() {
                 return Err(Error::TokenIdAlreadyExists);
             }
         }
@@ -103,13 +103,13 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         let owned_tokens_dict = OwnedTokens::instance();
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
 
-        for (token_id, meta) in token_ids.iter().zip(&nft_contract_addresses) {
-            nft_contract_addresses_dict.set(token_id, meta.clone());
-            owners_dict.set(token_id, recipient);
-            owned_tokens_dict.set_token(&recipient, token_id);
+        for (item_id, meta) in item_ids.iter().zip(&nft_contract_addresses) {
+            nft_contract_addresses_dict.set(item_id, meta.clone());
+            owners_dict.set(item_id, recipient);
+            owned_tokens_dict.set_token(&recipient, item_id);
         }
 
-        let minted_tokens_count: U256 = From::<u64>::from(token_ids.len().try_into().unwrap());
+        let minted_tokens_count: U256 = From::<u64>::from(item_ids.len().try_into().unwrap());
         let new_total_supply = data::total_supply()
             .checked_add(minted_tokens_count)
             .unwrap();
@@ -117,42 +117,42 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
 
         self.emit(MarketEvent::Mint {
             recipient,
-            token_ids: token_ids.clone(),
+            item_ids: item_ids.clone(),
         });
-        Ok(token_ids)
+        Ok(item_ids)
     }
 
     fn mint_copies(
         &mut self,
         recipient: Key,
-        token_ids: Vec<TokenId>,
-        token_nft_contract_address: NFTContractAddress,
+        item_ids: Vec<TokenId>,
+        item_nft_contract_address: NFTContractAddress,
         count: u32,
     ) -> Result<Vec<TokenId>, Error> {
-        let token_nft_contract_address = vec![token_nft_contract_address; count.try_into().unwrap()];
-        self.mint(recipient, token_ids, token_nft_contract_address)
+        let item_nft_contract_address = vec![item_nft_contract_address; count.try_into().unwrap()];
+        self.mint(recipient, item_ids, item_nft_contract_address)
     }
 
-    fn burn(&mut self, owner: Key, token_ids: Vec<TokenId>) -> Result<(), Error> {
+    fn burn(&mut self, owner: Key, item_ids: Vec<TokenId>) -> Result<(), Error> {
         let spender = self.get_caller();
         if spender != owner {
-            for token_id in &token_ids {
-                if !self.is_approved(owner, *token_id, spender) {
+            for item_id in &item_ids {
+                if !self.is_approved(owner, *item_id, spender) {
                     return Err(Error::PermissionDenied);
                 }
             }
         }
-        self.burn_internal(owner, token_ids)
+        self.burn_internal(owner, item_ids)
     }
 
-    fn burn_internal(&mut self, owner: Key, token_ids: Vec<TokenId>) -> Result<(), Error> {
+    fn burn_internal(&mut self, owner: Key, item_ids: Vec<TokenId>) -> Result<(), Error> {
         let owners_dict = Owners::instance();
         let owned_tokens_dict = OwnedTokens::instance();
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
         let allowances_dict = Allowances::instance();
 
-        for token_id in &token_ids {
-            match owners_dict.get(token_id) {
+        for item_id in &item_ids {
+            match owners_dict.get(item_id) {
                 Some(owner_of_key) => {
                     if owner_of_key != owner {
                         return Err(Error::PermissionDenied);
@@ -164,79 +164,79 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
             }
         }
 
-        for token_id in &token_ids {
-            owned_tokens_dict.remove_token(&owner, token_id);
-            nft_contract_addresses_dict.remove(token_id);
-            owners_dict.remove(token_id);
-            allowances_dict.remove(&owner, token_id);
+        for item_id in &item_ids {
+            owned_tokens_dict.remove_token(&owner, item_id);
+            nft_contract_addresses_dict.remove(item_id);
+            owners_dict.remove(item_id);
+            allowances_dict.remove(&owner, item_id);
         }
 
-        let burnt_tokens_count: U256 = From::<u64>::from(token_ids.len().try_into().unwrap());
+        let burnt_tokens_count: U256 = From::<u64>::from(item_ids.len().try_into().unwrap());
         let new_total_supply = data::total_supply()
             .checked_sub(burnt_tokens_count)
             .unwrap();
         data::set_total_supply(new_total_supply);
 
-        self.emit(MarketEvent::Burn { owner, token_ids });
+        self.emit(MarketEvent::Burn { owner, item_ids });
         Ok(())
     }
 
-    fn approve(&mut self, spender: Key, token_ids: Vec<TokenId>) -> Result<(), Error> {
+    fn approve(&mut self, spender: Key, item_ids: Vec<TokenId>) -> Result<(), Error> {
         let caller = self.get_caller();
-        for token_id in &token_ids {
-            match self.owner_of(*token_id) {
+        for item_id in &item_ids {
+            match self.owner_of(*item_id) {
                 None => return Err(Error::WrongArguments),
                 Some(owner) if owner != caller => return Err(Error::PermissionDenied),
-                Some(_) => Allowances::instance().set(&caller, token_id, spender),
+                Some(_) => Allowances::instance().set(&caller, item_id, spender),
             }
         }
         self.emit(MarketEvent::Approve {
             owner: caller,
             spender,
-            token_ids,
+            item_ids,
         });
         Ok(())
     }
 
-    fn get_approved(&self, owner: Key, token_id: TokenId) -> Option<Key> {
-        Allowances::instance().get(&owner, &token_id)
+    fn get_approved(&self, owner: Key, item_id: TokenId) -> Option<Key> {
+        Allowances::instance().get(&owner, &item_id)
     }
 
-    fn transfer(&mut self, recipient: Key, token_ids: Vec<TokenId>) -> Result<(), Error> {
-        self.transfer_from(self.get_caller(), recipient, token_ids)
+    fn transfer(&mut self, recipient: Key, item_ids: Vec<TokenId>) -> Result<(), Error> {
+        self.transfer_from(self.get_caller(), recipient, item_ids)
     }
 
     fn transfer_from(
         &mut self,
         owner: Key,
         recipient: Key,
-        token_ids: Vec<TokenId>,
+        item_ids: Vec<TokenId>,
     ) -> Result<(), Error> {
         let spender = self.get_caller();
 
         if owner != spender {
             let allowances_dict = Allowances::instance();
-            for token_id in &token_ids {
-                if !self.is_approved(owner, *token_id, spender) {
+            for item_id in &item_ids {
+                if !self.is_approved(owner, *item_id, spender) {
                     return Err(Error::PermissionDenied);
                 }
-                allowances_dict.remove(&owner, token_id);
+                allowances_dict.remove(&owner, item_id);
             }
         }
-        self.transfer_from_internal(owner, recipient, token_ids)
+        self.transfer_from_internal(owner, recipient, item_ids)
     }
 
     fn transfer_from_internal(
         &mut self,
         owner: Key,
         recipient: Key,
-        token_ids: Vec<TokenId>,
+        item_ids: Vec<TokenId>,
     ) -> Result<(), Error> {
         let owners_dict = Owners::instance();
         let owned_tokens_dict = OwnedTokens::instance();
 
-        for token_id in &token_ids {
-            match owners_dict.get(token_id) {
+        for item_id in &item_ids {
+            match owners_dict.get(item_id) {
                 Some(owner_of_key) => {
                     if owner_of_key != owner {
                         return Err(Error::PermissionDenied);
@@ -248,23 +248,23 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
             }
         }
 
-        for token_id in &token_ids {
-            owned_tokens_dict.remove_token(&owner, token_id);
-            owned_tokens_dict.set_token(&recipient, token_id);
-            owners_dict.set(token_id, recipient);
+        for item_id in &item_ids {
+            owned_tokens_dict.remove_token(&owner, item_id);
+            owned_tokens_dict.set_token(&recipient, item_id);
+            owners_dict.set(item_id, recipient);
         }
 
         self.emit(MarketEvent::Transfer {
             sender: owner,
             recipient,
-            token_ids,
+            item_ids,
         });
         Ok(())
     }
 
-    fn is_approved(&self, owner: Key, token_id: TokenId, spender: Key) -> bool {
+    fn is_approved(&self, owner: Key, item_id: TokenId, spender: Key) -> bool {
         let allowances_dict = Allowances::instance();
-        if let Some(spender_of) = allowances_dict.get(&owner, &token_id) {
+        if let Some(spender_of) = allowances_dict.get(&owner, &item_id) {
             if spender_of == spender {
                 return true;
             }

@@ -100,7 +100,7 @@ impl OwnedTokens {
         Dict::init(BALANCES_DICT);
     }
 
-    pub fn get_token_by_index(&self, owner: &Key, index: &U256) -> Option<TokenId> {
+    pub fn get_item_by_index(&self, owner: &Key, index: &U256) -> Option<TokenId> {
         self.tokens_dict.get(&key_and_value_to_str(owner, index))
     }
 
@@ -137,7 +137,7 @@ impl OwnedTokens {
                 self.set_balances(owner, length - 1);
             }
             core::cmp::Ordering::Greater => {
-                let last = self.get_token_by_index(owner, &(length - 1));
+                let last = self.get_item_by_index(owner, &(length - 1));
                 self.indexes_dict.set(
                     &key_and_value_to_str(owner, &last.unwrap_or_revert()),
                     index,
@@ -172,24 +172,24 @@ impl Allowances {
         Dict::init(ALLOWANCES_DICT)
     }
 
-    pub fn get(&self, owner: &Key, token_id: &TokenId) -> Option<Key> {
+    pub fn get(&self, owner: &Key, item_id: &TokenId) -> Option<Key> {
         self.dict.get(&key_and_value_to_str::<String>(
             owner,
-            &token_id.to_string(),
+            &item_id.to_string(),
         ))
     }
 
-    pub fn set(&self, owner: &Key, token_id: &TokenId, value: Key) {
+    pub fn set(&self, owner: &Key, item_id: &TokenId, value: Key) {
         self.dict.set(
-            &key_and_value_to_str::<String>(owner, &token_id.to_string()),
+            &key_and_value_to_str::<String>(owner, &item_id.to_string()),
             value,
         );
     }
 
-    pub fn remove(&self, owner: &Key, token_id: &TokenId) {
+    pub fn remove(&self, owner: &Key, item_id: &TokenId) {
         self.dict.remove::<Key>(&key_and_value_to_str::<String>(
             owner,
-            &token_id.to_string(),
+            &item_id.to_string(),
         ));
     }
 }
