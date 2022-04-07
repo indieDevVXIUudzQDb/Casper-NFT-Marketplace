@@ -8,7 +8,7 @@ use casper_contract::{
 use casper_types::{system::CallStackElement, ContractPackageHash, Key, U256};
 use contract_utils::{get_key, key_and_value_to_str, key_to_str, set_key, Dict};
 
-use crate::{event::MarketEvent, NFTContractAddress, TokenId};
+use crate::{event::MarketEvent, Meta, NFTContractAddress, TokenId};
 
 const BALANCES_DICT: &str = "balances";
 pub const ALLOWANCES_DICT: &str = "allowances";
@@ -18,9 +18,10 @@ const OWNED_TOKENS_BY_INDEX_DICT: &str = "owned_tokens_by_index";
 const OWNED_INDEXES_BY_TOKEN_DICT: &str = "owned_indexes_by_token";
 
 pub const NAME: &str = "name";
-pub const NFT_CONTRACT_ADDRESS: &str = "nft_contract_address";
+pub const NFT_CONTRACT_ADDRESS: &str = "meta";
 pub const SYMBOL: &str = "symbol";
 pub const TOTAL_SUPPLY: &str = "total_supply";
+pub const META: &str = "meta";
 
 pub struct Owners {
     dict: Dict,
@@ -209,12 +210,12 @@ pub fn set_symbol(symbol: String) {
     set_key(SYMBOL, symbol);
 }
 
-pub fn nft_contract_address() -> NFTContractAddress {
-    get_key(NFT_CONTRACT_ADDRESS).unwrap_or_revert()
+pub fn meta() -> Meta {
+    get_key(META).unwrap_or_revert()
 }
 
-pub fn set_nft_contract_address(nft_contract_address: NFTContractAddress) {
-    set_key(NFT_CONTRACT_ADDRESS, nft_contract_address);
+pub fn set_meta(meta: Meta) {
+    set_key(META, meta);
 }
 
 pub fn total_supply() -> U256 {

@@ -1,4 +1,4 @@
-use crate::{data::{self}, event::MarketEvent, NFTContractAddress, TokenId};
+use crate::{data::{self}, event::MarketEvent, Meta, NFTContractAddress, TokenId};
 use alloc::{string::String, vec::Vec};
 use core::convert::TryInto;
 use casper_types::{ApiError, Key, U256};
@@ -20,10 +20,10 @@ impl From<Error> for ApiError {
 }
 
 pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
-    fn init(&mut self, name: String, symbol: String, nft_contract_address: NFTContractAddress) {
+    fn init(&mut self, name: String, symbol: String, meta: Meta) {
         data::set_name(name);
         data::set_symbol(symbol);
-        data::set_nft_contract_address(nft_contract_address);
+        data::set_meta(meta);
         data::set_total_supply(U256::zero());
         Owners::init();
         OwnedTokens::init();
@@ -39,8 +39,8 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         data::symbol()
     }
 
-    fn nft_contract_address(&self) -> NFTContractAddress {
-        data::nft_contract_address()
+    fn meta(&self) -> Meta {
+        data::meta()
     }
 
     fn total_supply(&self) -> U256 {
@@ -55,7 +55,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Owners::instance().get(&token_id)
     }
 
-    fn nft_contract_addresses(&self, token_id: TokenId) -> Option<NFTContractAddress> {
+    fn token_nft_contract_address(&self, token_id: TokenId) -> Option<NFTContractAddress> {
         NFTContractAddresses::instance().get(&token_id)
     }
 
@@ -103,8 +103,8 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         let owned_tokens_dict = OwnedTokens::instance();
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
 
-        for (token_id, nft_contract_address) in token_ids.iter().zip(&nft_contract_addresses) {
-            nft_contract_addresses_dict.set(token_id, nft_contract_address.clone());
+        for (token_id, meta) in token_ids.iter().zip(&nft_contract_addresses) {
+            nft_contract_addresses_dict.set(token_id, meta.clone());
             owners_dict.set(token_id, recipient);
             owned_tokens_dict.set_token(&recipient, token_id);
         }

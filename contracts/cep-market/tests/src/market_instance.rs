@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
@@ -7,6 +8,7 @@ use test_env::{TestContract, TestEnv};
 
 pub type TokenId = U256;
 pub type NFTContractAddress = ContractHash;
+pub type Meta = BTreeMap<String, String>;
 
 pub struct MarketContractInstance(TestContract);
 
@@ -17,7 +19,7 @@ impl MarketContractInstance {
         sender: AccountHash,
         name: &str,
         symbol: &str,
-        nft_contract_address: NFTContractAddress,
+        meta: Meta,
     ) -> MarketContractInstance {
         println!("new MarketContractInstance");
         let instance = MarketContractInstance(TestContract::new(
@@ -28,7 +30,7 @@ impl MarketContractInstance {
             runtime_args! {
                 "name" => name,
                 "symbol" => symbol,
-                "nft_contract_address" => nft_contract_address
+                "meta" => meta
             },
         ));
         let token_contract_hash = ContractHash::from(instance.0.contract_hash());
@@ -36,14 +38,14 @@ impl MarketContractInstance {
         instance
     }
 
-    pub fn constructor(&self, sender: AccountHash, name: &str, symbol: &str, nft_contract_address: NFTContractAddress) {
+    pub fn constructor(&self, sender: AccountHash, name: &str, symbol: &str, meta: Meta) {
         self.0.call_contract(
             sender,
             "constructor",
             runtime_args! {
             "name" => name,
             "symbol" => symbol,
-            "nft_contract_address" => nft_contract_address},
+            "meta" => meta},
         );
     }
 
@@ -218,8 +220,8 @@ impl MarketContractInstance {
         self.0.query_named_key(String::from("total_supply"))
     }
 
-    pub fn nft_contract_address(&self) -> Key {
-        self.0.query_named_key(String::from("nft_contract_address"))
+    pub fn meta(&self) -> Meta {
+        self.0.query_named_key(String::from("meta"))
     }
 }
 

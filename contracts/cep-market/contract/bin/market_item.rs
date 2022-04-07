@@ -13,7 +13,8 @@ use casper_types::{
     runtime_args, CLType, CLTyped, CLValue, ContractPackageHash, EntryPoint, EntryPointAccess,
     EntryPointType, EntryPoints, Group, Key, Parameter, RuntimeArgs, URef, U256,
 };
-use contract::{TokenId, MarketContract, NFTContractAddress};
+use contract::{TokenId, MarketContract, NFTContractAddress, Meta};
+use contract::data::{META, NAME, SYMBOL};
 use contract_utils::{ContractContext, OnChainContractStorage};
 
 #[derive(Default)]
@@ -27,17 +28,17 @@ impl ContractContext<OnChainContractStorage> for MarketItem {
 
 impl MarketContract<OnChainContractStorage> for MarketItem {}
 impl MarketItem {
-    fn constructor(&mut self, name: String, symbol: String, nft_contract_address: NFTContractAddress) {
-        MarketContract::init(self, name, symbol, nft_contract_address);
+    fn constructor(&mut self, name: String, symbol: String, meta: Meta) {
+        MarketContract::init(self, name, symbol, meta);
     }
 }
 
 #[no_mangle]
 fn constructor() {
-    let name = runtime::get_named_arg::<String>("name");
-    let symbol = runtime::get_named_arg::<String>("symbol");
-    let nft_contract_address = runtime::get_named_arg::<NFTContractAddress>("nft_contract_address");
-    MarketItem::default().constructor(name, symbol, nft_contract_address);
+    let name = runtime::get_named_arg::<String>(NAME);
+    let symbol = runtime::get_named_arg::<String>(SYMBOL);
+    let meta = runtime::get_named_arg::<Meta>(META);
+    MarketItem::default().constructor(name, symbol, meta);
 }
 
 #[no_mangle]
@@ -53,8 +54,8 @@ fn symbol() {
 }
 
 #[no_mangle]
-fn nft_contract_address() {
-    let ret = MarketItem::default().nft_contract_address();
+fn meta() {
+    let ret = MarketItem::default().meta();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
@@ -89,7 +90,7 @@ fn owner_of() {
 #[no_mangle]
 fn token_nft_contract_address() {
     let token_id = runtime::get_named_arg::<TokenId>("token_id");
-    let ret = MarketItem::default().nft_contract_addresses(token_id);
+    let ret = MarketItem::default().token_nft_contract_address(token_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
@@ -171,16 +172,16 @@ fn get_approved() {
 #[no_mangle]
 fn call() {
     // Read arguments for the constructor call.
-    let name: String = runtime::get_named_arg("name");
-    let symbol: String = runtime::get_named_arg("symbol");
-    let nft_contract_address: NFTContractAddress = runtime::get_named_arg("nft_contract_address");
+    let name: String = runtime::get_named_arg(NAME);
+    let symbol: String = runtime::get_named_arg(SYMBOL);
+    let meta: Meta = runtime::get_named_arg(META);
     let contract_name: String = runtime::get_named_arg("contract_name");
 
     // Prepare constructor args
     let constructor_args = runtime_args! {
         "name" => name,
         "symbol" => symbol,
-        "nft_contract_address" => nft_contract_address
+        "meta" => meta
     };
 
     let (contract_hash, _) = storage::new_contract(
@@ -227,7 +228,7 @@ fn get_entry_points() -> EntryPoints {
         vec![
             Parameter::new("name", String::cl_type()),
             Parameter::new("symbol", String::cl_type()),
-            Parameter::new("nft_contract_address", NFTContractAddress::cl_type()),
+            Parameter::new("meta", Meta::cl_type()),
         ],
         <()>::cl_type(),
         EntryPointAccess::Groups(vec![Group::new("constructor")]),
@@ -248,9 +249,9 @@ fn get_entry_points() -> EntryPoints {
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "nft_contract_address",
+        "meta",
         vec![],
-        NFTContractAddress::cl_type(),
+        Meta::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
