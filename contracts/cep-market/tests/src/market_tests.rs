@@ -59,12 +59,13 @@ fn test_mint_one() {
     let user = env.next_user();
     let item_id = TokenId::zero();
 
-    token.mint_one(owner, user, item_id, get_nft_contract_hash());
+    token.mint_one(owner, user, item_id, get_nft_contract_hash(), U256::from("200000"));
     let first_user_token = token.get_item_by_index(Key::Account(user), U256::from(0));
     let second_user_token = token.get_item_by_index(Key::Account(user), U256::from(1));
     assert_eq!(first_user_token, Some(item_id));
     assert_eq!(token.meta(), meta::red_dragon());
     assert_eq!(token.item_nft_contract_address(item_id).unwrap(), get_nft_contract_hash());
+    assert_eq!(token.item_asking_price(item_id).unwrap(), U256::from("200000"));
     assert_eq!(token.total_supply(), U256::one());
     assert_eq!(token.balance_of(Key::Account(user)), U256::one());
     assert_eq!(second_user_token, None);

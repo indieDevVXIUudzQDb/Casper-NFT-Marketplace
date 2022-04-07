@@ -27,6 +27,7 @@ impl ContractContext<OnChainContractStorage> for MarketItem {
 }
 
 impl MarketContract<OnChainContractStorage> for MarketItem {}
+
 impl MarketItem {
     fn constructor(&mut self, name: String, symbol: String, meta: Meta) {
         MarketContract::init(self, name, symbol, meta);
@@ -94,33 +95,23 @@ fn item_nft_contract_address() {
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
+
 #[no_mangle]
-fn update_item_nft_contract_address() {
+fn item_asking_price() {
     let item_id = runtime::get_named_arg::<TokenId>("item_id");
-    let item_contract_address = runtime::get_named_arg::<NFTContractAddress>("item_nft_contract_address");
-    MarketItem::default()
-        .set_item_nft_contract_address(item_id, item_contract_address)
-        .unwrap_or_revert();
+    let ret = MarketItem::default().item_asking_price(item_id);
+    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
+
 
 #[no_mangle]
 fn mint() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
     let item_nft_contract_addresses = runtime::get_named_arg::<Vec<NFTContractAddress>>("item_nft_contract_addresses");
+    let item_asking_prices = runtime::get_named_arg::<Vec<U256>>("item_asking_prices");
     MarketItem::default()
-        .mint(recipient, item_ids, item_nft_contract_addresses)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn mint_copies() {
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let item_ids = runtime::get_named_arg::<Vec<U256>>("item_ids");
-    let item_nft_contract_address = runtime::get_named_arg::<NFTContractAddress>("item_nft_contract_address");
-    let count = runtime::get_named_arg::<u32>("count");
-    MarketItem::default()
-        .mint_copies(recipient, item_ids, item_nft_contract_address, count)
+        .mint(recipient, item_ids, item_nft_contract_addresses, item_asking_prices)
         .unwrap_or_revert();
 }
 
@@ -284,12 +275,9 @@ fn get_entry_points() -> EntryPoints {
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "update_item_nft_contract_address",
-        vec![
-            Parameter::new("item_id", TokenId::cl_type()),
-            Parameter::new("item_nft_contract_address", NFTContractAddress::cl_type()),
-        ],
-        <()>::cl_type(),
+        "item_asking_price",
+        vec![Parameter::new("item_id", TokenId::cl_type())],
+        U256::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
@@ -299,18 +287,7 @@ fn get_entry_points() -> EntryPoints {
             Parameter::new("recipient", Key::cl_type()),
             Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
             Parameter::new("item_nft_contract_addresses", CLType::List(Box::new(NFTContractAddress::cl_type()))),
-        ],
-        <()>::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "mint_copies",
-        vec![
-            Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
-            Parameter::new("item_nft_contract_address", NFTContractAddress::cl_type()),
-            Parameter::new("count", CLType::U32),
+            Parameter::new("item_asking_prices", CLType::List(Box::new(U256::cl_type()))),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,

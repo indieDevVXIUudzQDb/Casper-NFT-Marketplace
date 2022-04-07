@@ -13,6 +13,7 @@ use crate::{event::MarketEvent, Meta, NFTContractAddress, TokenId};
 const BALANCES_DICT: &str = "balances";
 pub const ALLOWANCES_DICT: &str = "allowances";
 const NFT_CONTRACT_ADDRESSES: &str = "nft_contract_addresses";
+const ITEM_ASKING_PRICE_DATA: &str = "item_asking_prices";
 const OWNERS_DICT: &str = "owners";
 const OWNED_TOKENS_BY_INDEX_DICT: &str = "owned_tokens_by_index";
 const OWNED_INDEXES_BY_TOKEN_DICT: &str = "owned_indexes_by_token";
@@ -76,6 +77,34 @@ impl NFTContractAddresses {
 
     pub fn remove(&self, key: &TokenId) {
         self.dict.remove::<NFTContractAddress>(&key.to_string());
+    }
+}
+
+pub struct ItemAskingPriceData {
+    dict: Dict,
+}
+
+impl ItemAskingPriceData {
+    pub fn instance() -> ItemAskingPriceData {
+        ItemAskingPriceData {
+            dict: Dict::instance(ITEM_ASKING_PRICE_DATA),
+        }
+    }
+
+    pub fn init() {
+        Dict::init(ITEM_ASKING_PRICE_DATA)
+    }
+
+    pub fn get(&self, key: &TokenId) -> Option<U256> {
+        self.dict.get(&key.to_string())
+    }
+
+    pub fn set(&self, key: &TokenId, value: U256) {
+        self.dict.set(&key.to_string(), value);
+    }
+
+    pub fn remove(&self, key: &TokenId) {
+        self.dict.remove::<U256>(&key.to_string());
     }
 }
 

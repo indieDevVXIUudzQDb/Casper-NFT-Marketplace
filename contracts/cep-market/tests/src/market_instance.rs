@@ -55,6 +55,7 @@ impl MarketContractInstance {
         recipient: T,
         item_id: TokenId,
         item_nft_contract_address: NFTContractAddress,
+        item_asking_price: U256,
     ) {
         self.0.call_contract(
             sender,
@@ -62,27 +63,8 @@ impl MarketContractInstance {
             runtime_args! {
                 "recipient" => recipient.into(),
                 "item_ids" => vec![item_id],
-                "item_nft_contract_addresses" => vec![item_nft_contract_address]
-            },
-        )
-    }
-
-    pub fn mint_copies<T: Into<Key>>(
-        &self,
-        sender: AccountHash,
-        recipient: T,
-        item_ids: Vec<TokenId>,
-        item_nft_contract_address: NFTContractAddress,
-        count: u32,
-    ) {
-        self.0.call_contract(
-            sender,
-            "mint_copies",
-            runtime_args! {
-                "recipient" => recipient.into(),
-                "item_ids" => item_ids,
-                "item_nft_contract_address" => item_nft_contract_address,
-                "count" => count
+                "item_nft_contract_addresses" => vec![item_nft_contract_address],
+                "item_asking_prices" => vec![item_asking_price]
             },
         )
     }
@@ -93,6 +75,7 @@ impl MarketContractInstance {
         recipient: T,
         item_ids: Vec<TokenId>,
         item_nft_contract_addresses: Vec<NFTContractAddress>,
+        item_asking_prices: Vec<U256>,
     ) {
         self.0.call_contract(
             sender,
@@ -100,7 +83,8 @@ impl MarketContractInstance {
             runtime_args! {
                 "recipient" => recipient.into(),
                 "item_ids" => item_ids,
-                "item_nft_contract_addresses" => item_nft_contract_addresses
+                "item_nft_contract_addresses" => item_nft_contract_addresses,
+                "item_asking_prices" => item_asking_prices
             },
         )
     }
@@ -176,17 +160,6 @@ impl MarketContractInstance {
         )
     }
 
-    pub fn update_item_nft_contract_address(&self, sender: AccountHash, item_id: TokenId, item_nft_contract_address: NFTContractAddress) {
-        self.0.call_contract(
-            sender,
-            "update_item_nft_contract_address",
-            runtime_args! {
-                "item_id" => item_id,
-                "item_nft_contract_address" => item_nft_contract_address
-            },
-        )
-    }
-
     pub fn get_item_by_index<T: Into<Key>>(&self, account: T, index: U256) -> Option<TokenId> {
         self.0.query_dictionary(
             "owned_tokens_by_index",
@@ -206,6 +179,10 @@ impl MarketContractInstance {
 
     pub fn item_nft_contract_address(&self, item_id: TokenId) -> Option<NFTContractAddress> {
         self.0.query_dictionary("nft_contract_addresses", item_id.to_string())
+    }
+
+    pub fn item_asking_price(&self, item_id: TokenId) -> Option<U256> {
+        self.0.query_dictionary("item_asking_prices", item_id.to_string())
     }
 
     pub fn name(&self) -> String {

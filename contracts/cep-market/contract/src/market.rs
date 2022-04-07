@@ -3,7 +3,7 @@ use alloc::{string::String, vec::Vec};
 use core::convert::TryInto;
 use casper_types::{ApiError, Key, U256};
 use contract_utils::{ContractContext, ContractStorage};
-use crate::data::{Allowances, NFTContractAddresses, OwnedTokens, Owners};
+use crate::data::{Allowances, ItemAskingPriceData, NFTContractAddresses, OwnedTokens, Owners};
 
 #[repr(u16)]
 pub enum Error {
@@ -28,6 +28,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Owners::init();
         OwnedTokens::init();
         NFTContractAddresses::init();
+        ItemAskingPriceData::init();
         Allowances::init();
     }
 
@@ -70,6 +71,21 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Ok(())
     }
 
+    fn item_asking_price(&self, item_id: TokenId) -> Option<U256> {
+        ItemAskingPriceData::instance().get(&item_id)
+    }
+
+    fn set_item_asking_price(&mut self, item_id: TokenId, item_asking_price: U256) -> Result<(), Error> {
+        if self.owner_of(item_id).is_none() {
+            return Err(Error::TokenIdDoesntExist);
+        };
+
+        let item_asking_price_dict = ItemAskingPriceData::instance();
+        item_asking_price_dict.set(&item_id, item_asking_price);
+
+        Ok(())
+    }
+
     fn get_item_by_index(&self, owner: Key, index: U256) -> Option<TokenId> {
         OwnedTokens::instance().get_item_by_index(&owner, &index)
     }
@@ -88,6 +104,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         recipient: Key,
         item_ids: Vec<TokenId>,
         nft_contract_addresses: Vec<NFTContractAddress>,
+        item_asking_prices: Vec<U256>,
     ) -> Result<Vec<TokenId>, Error> {
         if item_ids.len() != nft_contract_addresses.len() {
             return Err(Error::WrongArguments);
@@ -102,11 +119,16 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         let owners_dict = Owners::instance();
         let owned_tokens_dict = OwnedTokens::instance();
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
+        let item_asking_prices_dict = ItemAskingPriceData::instance();
 
         for (item_id, meta) in item_ids.iter().zip(&nft_contract_addresses) {
             nft_contract_addresses_dict.set(item_id, meta.clone());
             owners_dict.set(item_id, recipient);
             owned_tokens_dict.set_token(&recipient, item_id);
+        }
+
+        for (item_id, item_asking_price) in item_ids.iter().zip(&item_asking_prices) {
+            item_asking_prices_dict.set(item_id, *item_asking_price);
         }
 
         let minted_tokens_count: U256 = From::<u64>::from(item_ids.len().try_into().unwrap());
@@ -122,16 +144,6 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Ok(item_ids)
     }
 
-    fn mint_copies(
-        &mut self,
-        recipient: Key,
-        item_ids: Vec<TokenId>,
-        item_nft_contract_address: NFTContractAddress,
-        count: u32,
-    ) -> Result<Vec<TokenId>, Error> {
-        let item_nft_contract_address = vec![item_nft_contract_address; count.try_into().unwrap()];
-        self.mint(recipient, item_ids, item_nft_contract_address)
-    }
 
     fn burn(&mut self, owner: Key, item_ids: Vec<TokenId>) -> Result<(), Error> {
         let spender = self.get_caller();
