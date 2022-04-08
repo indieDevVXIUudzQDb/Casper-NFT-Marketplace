@@ -185,6 +185,10 @@ impl MarketContractInstance {
         self.0.query_dictionary("item_asking_prices", item_id.to_string())
     }
 
+    pub fn item_status(&self, item_id: TokenId) -> Option<String> {
+        self.0.query_dictionary("item_statuses", item_id.to_string())
+    }
+
     pub fn name(&self) -> String {
         self.0.query_named_key(String::from("name"))
     }

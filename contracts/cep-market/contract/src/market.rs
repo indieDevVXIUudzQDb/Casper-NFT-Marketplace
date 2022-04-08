@@ -1,9 +1,9 @@
-use crate::{data::{self}, event::MarketEvent, Meta, NFTContractAddress, TokenId};
+use crate::{data::{self}, event::MarketEvent, ITEM_STATUS_AVAILABLE, Meta, NFTContractAddress, TokenId};
 use alloc::{string::String, vec::Vec};
 use core::convert::TryInto;
 use casper_types::{ApiError, Key, U256};
 use contract_utils::{ContractContext, ContractStorage};
-use crate::data::{Allowances, ItemAskingPriceData, NFTContractAddresses, OwnedTokens, Owners};
+use crate::data::{Allowances, ItemAskingPriceData, ItemStatusData, NFTContractAddresses, OwnedTokens, Owners};
 
 #[repr(u16)]
 pub enum Error {
@@ -29,6 +29,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         OwnedTokens::init();
         NFTContractAddresses::init();
         ItemAskingPriceData::init();
+        ItemStatusData::init();
         Allowances::init();
     }
 
@@ -73,6 +74,10 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
 
     fn item_asking_price(&self, item_id: TokenId) -> Option<U256> {
         ItemAskingPriceData::instance().get(&item_id)
+    }
+
+    fn item_status(&self, item_id: TokenId) -> Option<String> {
+        ItemStatusData::instance().get(&item_id)
     }
 
     fn set_item_asking_price(&mut self, item_id: TokenId, item_asking_price: U256) -> Result<(), Error> {
@@ -120,6 +125,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         let owned_tokens_dict = OwnedTokens::instance();
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
         let item_asking_prices_dict = ItemAskingPriceData::instance();
+        let item_status_dict = ItemStatusData::instance();
 
         for (item_id, meta) in item_ids.iter().zip(&nft_contract_addresses) {
             nft_contract_addresses_dict.set(item_id, meta.clone());
@@ -129,6 +135,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
 
         for (item_id, item_asking_price) in item_ids.iter().zip(&item_asking_prices) {
             item_asking_prices_dict.set(item_id, *item_asking_price);
+            item_status_dict.set(item_id, String::from(ITEM_STATUS_AVAILABLE));
         }
 
         let created_items_count: U256 = From::<u64>::from(item_ids.len().try_into().unwrap());

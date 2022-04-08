@@ -105,6 +105,14 @@ fn item_asking_price() {
 
 
 #[no_mangle]
+fn item_status() {
+    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let ret = MarketItem::default().item_status(item_id);
+    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
+}
+
+
+#[no_mangle]
 fn create_market_item() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");

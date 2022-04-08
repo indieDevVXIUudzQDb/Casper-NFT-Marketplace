@@ -7,6 +7,9 @@ use crate::market_instance::{MarketContractInstance, TokenId, Meta};
 
 const NAME: &str = "DragonsNFT";
 const SYMBOL: &str = "DGNFT";
+pub const ITEM_STATUS_AVAILABLE: &str= "available";
+pub const ITEM_STATUS_CANCELLED: &str= "cancelled";
+pub const ITEM_STATUS_SOLD: &str= "sold";
 
 mod meta {
     use super::{BTreeMap, Meta};
@@ -62,6 +65,7 @@ fn test_create_market_item() {
     assert_eq!(item.meta(), meta::red_dragon());
     assert_eq!(item.item_nft_contract_address(item_id).unwrap(), get_nft_contract_hash());
     assert_eq!(item.item_asking_price(item_id).unwrap(), U256::from("200000"));
+    assert_eq!(item.item_status(item_id).unwrap(), ITEM_STATUS_AVAILABLE);
     assert_eq!(item.total_supply(), U256::one());
     assert_eq!(item.balance_of(Key::Account(user)), U256::one());
     assert_eq!(second_user_item, None);

@@ -14,9 +14,11 @@ const BALANCES_DICT: &str = "balances";
 pub const ALLOWANCES_DICT: &str = "allowances";
 const NFT_CONTRACT_ADDRESSES: &str = "nft_contract_addresses";
 const ITEM_ASKING_PRICE_DATA: &str = "item_asking_prices";
+const ITEM_STATUS_DATA: &str = "item_statuses";
 const OWNERS_DICT: &str = "owners";
 const OWNED_TOKENS_BY_INDEX_DICT: &str = "owned_tokens_by_index";
 const OWNED_INDEXES_BY_TOKEN_DICT: &str = "owned_indexes_by_token";
+
 
 pub const NAME: &str = "name";
 pub const NFT_CONTRACT_ADDRESS: &str = "meta";
@@ -105,6 +107,35 @@ impl ItemAskingPriceData {
 
     pub fn remove(&self, key: &TokenId) {
         self.dict.remove::<U256>(&key.to_string());
+    }
+}
+
+
+pub struct ItemStatusData {
+    dict: Dict,
+}
+
+impl ItemStatusData {
+    pub fn instance() -> ItemStatusData {
+        ItemStatusData {
+            dict: Dict::instance(ITEM_STATUS_DATA),
+        }
+    }
+
+    pub fn init() {
+        Dict::init(ITEM_STATUS_DATA)
+    }
+
+    pub fn get(&self, key: &TokenId) -> Option<String> {
+        self.dict.get(&key.to_string())
+    }
+
+    pub fn set(&self, key: &TokenId, value: String) {
+        self.dict.set(&key.to_string(), value);
+    }
+
+    pub fn remove(&self, key: &TokenId) {
+        self.dict.remove::<String>(&key.to_string());
     }
 }
 
