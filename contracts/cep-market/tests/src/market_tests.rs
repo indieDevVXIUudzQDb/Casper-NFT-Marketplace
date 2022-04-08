@@ -58,13 +58,14 @@ fn test_create_market_item() {
     let user = env.next_user();
     let item_id = TokenId::zero();
 
-    item.create_market_item(owner, user, item_id, get_nft_contract_hash(), U256::from("200000"));
+    item.create_market_item(owner, user, item_id, get_nft_contract_hash(), U256::from("200000"), U256::from("1"));
     let first_user_item = item.get_item_by_index(Key::Account(user), U256::from(0));
     let second_user_item = item.get_item_by_index(Key::Account(user), U256::from(1));
     assert_eq!(first_user_item, Some(item_id));
     assert_eq!(item.meta(), meta::red_dragon());
     assert_eq!(item.item_nft_contract_address(item_id).unwrap(), get_nft_contract_hash());
     assert_eq!(item.item_asking_price(item_id).unwrap(), U256::from("200000"));
+    assert_eq!(item.item_token_id(item_id).unwrap(), U256::from("1"));
     assert_eq!(item.item_status(item_id).unwrap(), ITEM_STATUS_AVAILABLE);
     assert_eq!(item.total_supply(), U256::one());
     assert_eq!(item.balance_of(Key::Account(user)), U256::one());

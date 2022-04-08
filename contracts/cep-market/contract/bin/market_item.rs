@@ -105,6 +105,14 @@ fn item_asking_price() {
 
 
 #[no_mangle]
+fn item_token_id() {
+    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let ret = MarketItem::default().item_token_id(item_id);
+    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
+}
+
+
+#[no_mangle]
 fn item_status() {
     let item_id = runtime::get_named_arg::<TokenId>("item_id");
     let ret = MarketItem::default().item_status(item_id);
@@ -118,8 +126,9 @@ fn create_market_item() {
     let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
     let item_nft_contract_addresses = runtime::get_named_arg::<Vec<NFTContractAddress>>("item_nft_contract_addresses");
     let item_asking_prices = runtime::get_named_arg::<Vec<U256>>("item_asking_prices");
+    let item_token_ids = runtime::get_named_arg::<Vec<U256>>("item_token_ids");
     MarketItem::default()
-        .create_market_item(recipient, item_ids, item_nft_contract_addresses, item_asking_prices)
+        .create_market_item(recipient, item_ids, item_nft_contract_addresses, item_asking_prices, item_token_ids)
         .unwrap_or_revert();
 }
 
@@ -245,12 +254,20 @@ fn get_entry_points() -> EntryPoints {
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
+        "item_token_id",
+        vec![Parameter::new("item_id", TokenId::cl_type())],
+        U256::cl_type(),
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    ));
+    entry_points.add_entry_point(EntryPoint::new(
         "create_market_item",
         vec![
             Parameter::new("recipient", Key::cl_type()),
             Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
             Parameter::new("item_nft_contract_addresses", CLType::List(Box::new(NFTContractAddress::cl_type()))),
             Parameter::new("item_asking_prices", CLType::List(Box::new(U256::cl_type()))),
+            Parameter::new("item_token_id", CLType::List(Box::new(U256::cl_type()))),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,

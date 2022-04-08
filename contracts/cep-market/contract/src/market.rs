@@ -3,7 +3,7 @@ use alloc::{string::String, vec::Vec};
 use core::convert::TryInto;
 use casper_types::{ApiError, Key, U256};
 use contract_utils::{ContractContext, ContractStorage};
-use crate::data::{Allowances, ItemAskingPriceData, ItemStatusData, NFTContractAddresses, OwnedTokens, Owners};
+use crate::data::{Allowances, ItemAskingPriceData, ItemStatusData, ItemTokenIdData, NFTContractAddresses, OwnedTokens, Owners};
 
 #[repr(u16)]
 pub enum Error {
@@ -30,6 +30,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         NFTContractAddresses::init();
         ItemAskingPriceData::init();
         ItemStatusData::init();
+        ItemTokenIdData::init();
         Allowances::init();
     }
 
@@ -76,6 +77,10 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         ItemAskingPriceData::instance().get(&item_id)
     }
 
+    fn item_token_id(&self, item_id: TokenId) -> Option<U256> {
+        ItemTokenIdData::instance().get(&item_id)
+    }
+
     fn item_status(&self, item_id: TokenId) -> Option<String> {
         ItemStatusData::instance().get(&item_id)
     }
@@ -110,6 +115,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         item_ids: Vec<TokenId>,
         nft_contract_addresses: Vec<NFTContractAddress>,
         item_asking_prices: Vec<U256>,
+        item_token_ids: Vec<U256>,
     ) -> Result<Vec<TokenId>, Error> {
         if item_ids.len() != nft_contract_addresses.len() {
             return Err(Error::WrongArguments);
@@ -125,6 +131,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         let owned_tokens_dict = OwnedTokens::instance();
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
         let item_asking_prices_dict = ItemAskingPriceData::instance();
+        let item_token_ids_dict = ItemTokenIdData::instance();
         let item_status_dict = ItemStatusData::instance();
 
         for (item_id, meta) in item_ids.iter().zip(&nft_contract_addresses) {
@@ -136,6 +143,10 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         for (item_id, item_asking_price) in item_ids.iter().zip(&item_asking_prices) {
             item_asking_prices_dict.set(item_id, *item_asking_price);
             item_status_dict.set(item_id, String::from(ITEM_STATUS_AVAILABLE));
+        }
+
+        for (item_id, item_token_id) in item_ids.iter().zip(&item_token_ids) {
+            item_token_ids_dict.set(item_id, *item_token_id);
         }
 
         let created_items_count: U256 = From::<u64>::from(item_ids.len().try_into().unwrap());
