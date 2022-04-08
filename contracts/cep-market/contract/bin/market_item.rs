@@ -124,51 +124,6 @@ fn create_market_item() {
 }
 
 #[no_mangle]
-fn burn() {
-    let owner = runtime::get_named_arg::<Key>("owner");
-    let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
-    MarketItem::default()
-        .burn(owner, item_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn transfer() {
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
-    MarketItem::default()
-        .transfer(recipient, item_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn transfer_from() {
-    let sender = runtime::get_named_arg::<Key>("sender");
-    let recipient = runtime::get_named_arg::<Key>("recipient");
-    let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
-    MarketItem::default()
-        .transfer_from(sender, recipient, item_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn approve() {
-    let spender = runtime::get_named_arg::<Key>("spender");
-    let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
-    MarketItem::default()
-        .approve(spender, item_ids)
-        .unwrap_or_revert();
-}
-
-#[no_mangle]
-fn get_approved() {
-    let owner = runtime::get_named_arg::<Key>("owner");
-    let item_id = runtime::get_named_arg::<TokenId>("item_id");
-    let ret = MarketItem::default().get_approved(owner, item_id);
-    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
-}
-
-#[no_mangle]
 fn call() {
     // Read arguments for the constructor call.
     let name: String = runtime::get_named_arg(NAME);
@@ -298,57 +253,6 @@ fn get_entry_points() -> EntryPoints {
             Parameter::new("item_asking_prices", CLType::List(Box::new(U256::cl_type()))),
         ],
         <()>::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "burn",
-        vec![
-            Parameter::new("owner", Key::cl_type()),
-            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
-        ],
-        <()>::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "transfer",
-        vec![
-            Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
-        ],
-        <()>::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "transfer_from",
-        vec![
-            Parameter::new("sender", Key::cl_type()),
-            Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
-        ],
-        <()>::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "approve",
-        vec![
-            Parameter::new("spender", Key::cl_type()),
-            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
-        ],
-        <()>::cl_type(),
-        EntryPointAccess::Public,
-        EntryPointType::Contract,
-    ));
-    entry_points.add_entry_point(EntryPoint::new(
-        "get_approved",
-        vec![
-            Parameter::new("owner", Key::cl_type()),
-            Parameter::new("item_id", TokenId::cl_type()),
-        ],
-        CLType::Option(Box::new(CLType::Key)),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
