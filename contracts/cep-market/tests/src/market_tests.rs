@@ -30,6 +30,7 @@ mod meta {
 
 
 fn get_nft_contract_hash() -> ContractHash {
+    // TODO replace with contract hash from cep47
     let my_bytes = [0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8];
     ContractHash::new(my_bytes)
 }
@@ -104,3 +105,31 @@ fn test_create_multiple_items() {
     assert_eq!(item.item_token_id(item_id_3).unwrap(), U256::from("3"));
 
 }
+
+
+#[test]
+fn test_sell_market_item() {
+    let red_dragon = meta::red_dragon();
+    let (env, item, market_owner) = deploy(red_dragon);
+    let seller = env.next_user();
+    let buyer = env.next_user();
+    let item_id = TokenId::from("1");
+
+    item.create_market_item(market_owner, seller, item_id, get_nft_contract_hash(), U256::from("200000"), U256::from("1"));
+    let first_user_item = item.get_owned_item_by_index(Key::Account(seller), U256::from(0));
+    assert_eq!(first_user_item, Some(item_id));
+    assert_eq!(item.item_status(item_id).unwrap(), ITEM_STATUS_AVAILABLE);
+
+    item.create_market_sale(market_owner, buyer, item_id);
+    assert_eq!(item.item_status(item_id).unwrap(), ITEM_STATUS_SOLD);
+
+}
+
+#[test]
+fn test_should_fail_sell_market_item_insufficient_funds() {}
+
+#[test]
+fn test_should_fail_sell_market_item_not_available() {}
+
+#[test]
+fn test_cancel_market_item() {}

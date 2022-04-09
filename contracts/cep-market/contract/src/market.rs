@@ -1,4 +1,4 @@
-use crate::{data::{self}, event::MarketEvent, ITEM_STATUS_AVAILABLE, Meta, NFTContractAddress, TokenId};
+use crate::{data::{self}, event::MarketEvent, ITEM_STATUS_AVAILABLE, ITEM_STATUS_SOLD, Meta, NFTContractAddress, TokenId};
 use alloc::{string::String, vec::Vec};
 use core::convert::TryInto;
 use casper_types::{ApiError, Key, U256};
@@ -27,7 +27,6 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         data::set_total_supply(U256::zero());
         Owners::init();
         OwnedTokens::init();
-        ItemData::init();
         NFTContractAddresses::init();
         ItemAskingPriceData::init();
         ItemStatusData::init();
@@ -124,6 +123,17 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Ok(())
     }
 
+    fn set_item_status(&mut self, item_id: TokenId, value: String) -> Result<(), Error> {
+        if self.owner_of(item_id).is_none() {
+            return Err(Error::TokenIdDoesntExist);
+        };
+
+        let item_status_dict = ItemStatusData::instance();
+        item_status_dict.set(&item_id, value);
+
+        Ok(())
+    }
+
     fn get_item_by_index(&self, owner: Key, index: U256) -> Option<TokenId> {
         OwnedTokens::instance().get_item_by_index(&owner, &index)
     }
@@ -157,7 +167,6 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
 
         let owners_dict = Owners::instance();
         let owned_tokens_dict = OwnedTokens::instance();
-        let items_dict = ItemData::instance();
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
         let item_asking_prices_dict = ItemAskingPriceData::instance();
         let item_token_ids_dict = ItemTokenIdData::instance();
@@ -190,6 +199,26 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
             item_ids: item_ids.clone(),
         });
         Ok(item_ids)
+    }
+
+    fn create_market_sale(
+        &mut self,
+        recipient: Key,
+        item_id: TokenId,
+    ) -> Result<TokenId, Error> {
+
+        if self.owner_of(item_id).is_none() {
+            return Err(Error::TokenIdDoesntExist);
+        }
+        let result = self.set_item_status(item_id, String::from(ITEM_STATUS_SOLD));
+        if result.is_err(){
+            return Err(Error::TokenIdDoesntExist);
+        }
+        self.emit(MarketEvent::SoldItem {
+            recipient,
+            item_id
+        });
+        Ok(item_id)
     }
 
     fn emit(&mut self, event: MarketEvent) {

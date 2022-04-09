@@ -139,6 +139,15 @@ fn create_market_item() {
 }
 
 #[no_mangle]
+fn create_market_sale() {
+    let recipient = runtime::get_named_arg::<Key>("recipient");
+    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    MarketItem::default()
+        .create_market_sale(recipient,item_id)
+        .unwrap_or_revert();
+}
+
+#[no_mangle]
 fn call() {
     // Read arguments for the constructor call.
     let name: String = runtime::get_named_arg(NAME);
@@ -281,6 +290,16 @@ fn get_entry_points() -> EntryPoints {
             Parameter::new("item_nft_contract_addresses", CLType::List(Box::new(NFTContractAddress::cl_type()))),
             Parameter::new("item_asking_prices", CLType::List(Box::new(U256::cl_type()))),
             Parameter::new("item_token_id", CLType::List(Box::new(U256::cl_type()))),
+        ],
+        <()>::cl_type(),
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    ));
+    entry_points.add_entry_point(EntryPoint::new(
+        "create_market_sale",
+        vec![
+            Parameter::new("recipient", Key::cl_type()),
+            Parameter::new("item_id", TokenId::cl_type()),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,

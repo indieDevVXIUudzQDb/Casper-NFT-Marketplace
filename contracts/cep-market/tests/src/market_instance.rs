@@ -8,7 +8,6 @@ use casper_engine_test_support::WasmTestBuilder;
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{account::AccountHash, bytesrepr::ToBytes, runtime_args, CLTyped, Key, RuntimeArgs, U256, ContractHash};
 use test_env::{TestContract, TestEnv};
-use crate::{MarketItemList};
 
 pub type TokenId = U256;
 pub type NFTContractAddress = ContractHash;
@@ -112,6 +111,22 @@ impl MarketContractInstance {
             },
         );
         // println!("{:?}", result.get_exec_results());
+    }
+
+    pub fn create_market_sale<T: Into<Key>>(
+        &self,
+        sender: AccountHash,
+        recipient: T,
+        item_id: TokenId
+    ) -> WasmTestBuilder<InMemoryGlobalState> {
+        self.0.call_contract(
+            sender,
+            "create_market_sale",
+            runtime_args! {
+                "recipient" => recipient.into(),
+                "item_id" => item_id,
+            },
+        )
     }
 
 
