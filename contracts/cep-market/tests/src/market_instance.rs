@@ -8,6 +8,7 @@ use casper_engine_test_support::WasmTestBuilder;
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{account::AccountHash, bytesrepr::ToBytes, runtime_args, CLTyped, Key, RuntimeArgs, U256, ContractHash};
 use test_env::{TestContract, TestEnv};
+use crate::{MarketItemList};
 
 pub type TokenId = U256;
 pub type NFTContractAddress = ContractHash;
@@ -157,6 +158,12 @@ impl MarketContractInstance {
     pub fn item_status(&self, item_id: TokenId) -> Option<String> {
         self.0.query_dictionary(ITEM_STATUS_DATA, item_id.to_string())
     }
+
+    //TODO
+    // pub fn get_market_items(&self) -> Option<String> {
+    //     // self.0.query_named_key("items_by_index".to_string())
+    //     self.0.query_dictionary("items_by_index", TokenId::zero().to_string())
+    // }
 
     pub fn name(&self) -> String {
         self.0.query_named_key(String::from(NAME))

@@ -118,6 +118,12 @@ fn item_status() {
     let ret = MarketItem::default().item_status(item_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
+//
+// #[no_mangle]
+// fn available_items() {
+//     let ret = MarketItem::default().available_items();
+//     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
+// }
 
 
 #[no_mangle]
@@ -260,6 +266,13 @@ fn get_entry_points() -> EntryPoints {
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
+    // entry_points.add_entry_point(EntryPoint::new(
+    //     "available_items",
+    //     vec![],
+    //     MarketItemList::cl_type(),
+    //     EntryPointAccess::Public,
+    //     EntryPointType::Contract,
+    // ));
     entry_points.add_entry_point(EntryPoint::new(
         "create_market_item",
         vec![

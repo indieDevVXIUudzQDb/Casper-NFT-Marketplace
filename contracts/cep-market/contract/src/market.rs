@@ -27,6 +27,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         data::set_total_supply(U256::zero());
         Owners::init();
         OwnedTokens::init();
+        ItemData::init();
         NFTContractAddresses::init();
         ItemAskingPriceData::init();
         ItemStatusData::init();
@@ -85,6 +86,33 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         ItemStatusData::instance().get(&item_id)
     }
 
+    // CLType::List(Box::new(MarketItemInstance::cl_type()))
+    // fn available_items(&self) -> MarketItemList {
+    //     // let length = Items::instance().get_length();
+    //     // let mut market_items = Vec::new();
+    //     let mut market_items = MarketItemList{
+    //         ids: Vec::new()
+    //     };
+    //     let mut index = U256::zero();
+    //     loop {
+    //         let item = Items::instance().get_item(&index);
+    //         if item != None {
+    //            // let market_item = market_item::init(
+    //            //     self.item_nft_contract_address(index).unwrap(),
+    //            //      self.item_asking_price(index).unwrap(),
+    //            //     self.item_token_id(index).unwrap(),
+    //            //     self.item_status(index).unwrap(),
+    //            // );
+    //             // market_items.push(market_item);
+    //             market_items.ids.push(self.item_token_id(index).unwrap());
+    //         } else {
+    //             break;
+    //         }
+    //         index += U256::from("1");
+    //     }
+    //     market_items
+    // }
+
     fn set_item_asking_price(&mut self, item_id: TokenId, item_asking_price: U256) -> Result<(), Error> {
         if self.owner_of(item_id).is_none() {
             return Err(Error::TokenIdDoesntExist);
@@ -129,6 +157,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
 
         let owners_dict = Owners::instance();
         let owned_tokens_dict = OwnedTokens::instance();
+        let items_dict = ItemData::instance();
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
         let item_asking_prices_dict = ItemAskingPriceData::instance();
         let item_token_ids_dict = ItemTokenIdData::instance();
@@ -138,6 +167,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
             nft_contract_addresses_dict.set(item_id, meta.clone());
             owners_dict.set(item_id, recipient);
             owned_tokens_dict.set_token(&recipient, item_id);
+            // items_dict.set(item_id,"hello world".to_string());
         }
 
         for (item_id, item_asking_price) in item_ids.iter().zip(&item_asking_prices) {

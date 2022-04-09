@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use casper_types::{account::AccountHash, ContractHash, Key, U256};
+use casper_types::CLType::String;
 use test_env::TestEnv;
 
 use crate::market_instance::{MarketContractInstance, TokenId, Meta};
@@ -75,7 +76,7 @@ fn test_create_market_item() {
 }
 
 #[test]
-fn test_fetch_available_items() {
+fn test_create_multiple_items() {
     let red_dragon = meta::red_dragon();
     let (env, item, market_owner) = deploy(red_dragon);
     let user_1 = env.next_user();
@@ -102,9 +103,4 @@ fn test_fetch_available_items() {
     assert_eq!(item.item_token_id(item_id_2).unwrap(), U256::from("2"));
     assert_eq!(item.item_token_id(item_id_3).unwrap(), U256::from("3"));
 
-    let available_items = item.get_available_items();
-
-    assert_eq!(available_items, Some(U256::from("0")));
-    assert_eq!(available_items, Some(U256::from("1")));
-    assert_eq!(available_items, Some(U256::from("2")));
 }
