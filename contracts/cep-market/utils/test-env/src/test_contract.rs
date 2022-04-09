@@ -1,4 +1,6 @@
 use std::path::PathBuf;
+use casper_engine_test_support::WasmTestBuilder;
+use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 
 use casper_types::{
     account::AccountHash, bytesrepr::FromBytes, CLTyped, ContractHash, RuntimeArgs,
@@ -52,11 +54,12 @@ impl TestContract {
             .query_account_named_key(self.contract_owner, &[key])
     }
 
-    pub fn call_contract(&self, sender: AccountHash, entry_point: &str, session_args: RuntimeArgs) {
+    pub fn call_contract(&self, sender: AccountHash, entry_point: &str, session_args: RuntimeArgs) -> WasmTestBuilder<InMemoryGlobalState> {
         let session_code = DeploySource::ByHash {
             hash: ContractHash::new(self.contract_hash()),
             method: entry_point.to_string(),
         };
-        self.env.run(sender, session_code, session_args);
+        let result = self.env.run(sender, session_code, session_args);
+        result.clone()
     }
 }

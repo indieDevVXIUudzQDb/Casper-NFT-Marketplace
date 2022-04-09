@@ -1,8 +1,11 @@
 use std::collections::BTreeMap;
+use std::fmt::Debug;
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
+use casper_engine_test_support::WasmTestBuilder;
+use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{account::AccountHash, bytesrepr::ToBytes, runtime_args, CLTyped, Key, RuntimeArgs, U256, ContractHash};
 use test_env::{TestContract, TestEnv};
 
@@ -73,7 +76,7 @@ impl MarketContractInstance {
         item_nft_contract_address: NFTContractAddress,
         item_asking_price: U256,
         item_token_id: U256,
-    ) {
+    ) -> WasmTestBuilder<InMemoryGlobalState> {
         self.0.call_contract(
             sender,
             "create_market_item",
@@ -96,7 +99,7 @@ impl MarketContractInstance {
         item_asking_prices: Vec<U256>,
         item_token_ids: Vec<U256>,
     ) {
-        self.0.call_contract(
+        let _result = self.0.call_contract(
             sender,
             "create_market_item",
             runtime_args! {
@@ -106,10 +109,23 @@ impl MarketContractInstance {
                 "item_asking_prices" => item_asking_prices,
                 "item_token_ids" => item_token_ids
             },
+        );
+        // println!("{:?}", result.get_exec_results());
+    }
+
+
+    pub fn get_available_items<T: Into<Key>>(
+        &self,
+        sender: AccountHash
+    ) -> WasmTestBuilder<InMemoryGlobalState> {
+        self.0.call_contract(
+            sender,
+            "get_available_items",
+            runtime_args! {},
         )
     }
 
-    pub fn get_item_by_index<T: Into<Key>>(&self, account: T, index: U256) -> Option<TokenId> {
+    pub fn get_owned_item_by_index<T: Into<Key>>(&self, account: T, index: U256) -> Option<TokenId> {
         self.0.query_dictionary(
             OWNED_TOKENS_BY_INDEX_DICT,
             key_and_value_to_str(&account.into(), &index),

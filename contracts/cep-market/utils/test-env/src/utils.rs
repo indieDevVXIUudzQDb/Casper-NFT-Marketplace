@@ -1,10 +1,8 @@
 use std::path::PathBuf;
 
-use casper_engine_test_support::{
-    DeployItemBuilder, ExecuteRequestBuilder, InMemoryWasmTestBuilder, ARG_AMOUNT,
-    DEFAULT_ACCOUNT_ADDR, DEFAULT_PAYMENT,
-};
+use casper_engine_test_support::{DeployItemBuilder, ExecuteRequestBuilder, InMemoryWasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR, DEFAULT_PAYMENT, WasmTestBuilder};
 use casper_execution_engine::core::engine_state::ExecuteRequest;
+use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{
     account::AccountHash, bytesrepr::FromBytes, runtime_args, system::mint, CLTyped, ContractHash,
     Key, RuntimeArgs, StoredValue, U512,
@@ -53,7 +51,7 @@ pub fn deploy(
     args: RuntimeArgs,
     success: bool,
     block_time: Option<u64>,
-) {
+) -> WasmTestBuilder<InMemoryGlobalState> {
     let mut deploy_builder = DeployItemBuilder::new()
         .with_empty_payment_bytes(runtime_args! {ARG_AMOUNT => *DEFAULT_PAYMENT})
         .with_address(*deployer)
@@ -78,6 +76,7 @@ pub fn deploy(
         exec.expect_failure()
     }
     .commit();
+    exec.clone()
 }
 
 pub fn query_dictionary_item(
