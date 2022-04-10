@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use casper_types::CLType::String;
-use casper_types::{account::AccountHash, ContractHash, Key, U256};
+use casper_types::{account::AccountHash, ContractHash, HashAddr, Key, U256};
 use cep47_tests::cep47_instance::CEP47Instance;
 
 use test_env::TestEnv;
@@ -28,16 +28,13 @@ mod meta {
         meta.insert("color".to_string(), "red".to_string());
         meta
     }
-}
 
-fn get_nft_contract_hash() -> ContractHash {
-    // TODO replace with contract hash from cep47
-    let my_bytes = [
-        0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8,
-        0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8,
-        0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8,
-    ];
-    ContractHash::new(my_bytes)
+    pub fn blue_dragon() -> Meta {
+        let mut meta = BTreeMap::new();
+        meta.insert("color".to_string(), "blue".to_string());
+        meta
+    }
+
 }
 
 fn deploy_nft_contract(env: &TestEnv) -> (CEP47Instance, AccountHash) {
@@ -66,7 +63,6 @@ fn test_mint_one() {
     let user = env.next_user();
     let token_id = TokenId::zero();
     let token_meta = meta::red_dragon();
-
     nft_contract.mint_one(nft_contract_owner, user, token_id, token_meta);
     let first_user_token = nft_contract.get_token_by_index(Key::Account(user), U256::from(0));
     let second_user_token = nft_contract.get_token_by_index(Key::Account(user), U256::from(1));
@@ -89,29 +85,36 @@ fn test_deploy() {
 
 #[test]
 fn test_create_market_item() {
-    let red_dragon = meta::red_dragon();
     let env = TestEnv::new();
-    let (market_contract, market_owner) = deploy_market_contract(&env, red_dragon);
+    // Create NFT
+    let (nft_contract, nft_contract_owner) = deploy_nft_contract(&env);
+    let user = env.next_user();
+    let token_id = TokenId::zero();
+    let token_meta = meta::red_dragon();
+    nft_contract.mint_one(nft_contract_owner, user, token_id, token_meta);
+    let nft_contract_hash = ContractHash::from(nft_contract.contract().contract_hash());
+    // Create Market
+    let (market_contract, market_owner) = deploy_market_contract(&env, meta::contract_meta());
     let user = env.next_user();
     let item_id = TokenId::from("1");
-
     market_contract.create_market_item(
         market_owner,
         user,
         item_id,
-        get_nft_contract_hash(),
+        nft_contract_hash,
         U256::from("200000"),
         U256::from("1"),
     );
+
     let first_user_item =
         market_contract.get_owned_item_by_index(Key::Account(user), U256::from(0));
     let second_user_item =
         market_contract.get_owned_item_by_index(Key::Account(user), U256::from(1));
     assert_eq!(first_user_item, Some(item_id));
-    assert_eq!(market_contract.meta(), meta::red_dragon());
+    assert_eq!(market_contract.meta(), meta::contract_meta());
     assert_eq!(
         market_contract.item_nft_contract_address(item_id).unwrap(),
-        get_nft_contract_hash()
+        nft_contract_hash
     );
     assert_eq!(
         market_contract.item_asking_price(item_id).unwrap(),
@@ -136,34 +139,55 @@ fn test_create_market_item() {
 
 #[test]
 fn test_create_multiple_items() {
-    let red_dragon = meta::red_dragon();
     let env = TestEnv::new();
-    let (market_contract, market_owner) = deploy_market_contract(&env, red_dragon);
+    // Create NFT
+    let (nft_contract, nft_contract_owner) = deploy_nft_contract(&env);
+    let nft_token_holder = env.next_user();
+    let token_id_1 = TokenId::zero();
+    let token_id_2 = TokenId::from("1");
+    let token_meta_1 = meta::red_dragon();
+    let token_meta_2 = meta::blue_dragon();
+    nft_contract.mint_one(nft_contract_owner, nft_token_holder, token_id_1, token_meta_1);
+    nft_contract.mint_one(nft_contract_owner, nft_token_holder, token_id_2, token_meta_2);
+    let nft_contract_hash = ContractHash::from(nft_contract.contract().contract_hash());
+
+    // let my_bytes = [0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8, 0x1Au8];
+    // let nft_contract_hash = ContractHash::new(my_bytes);
+
+    // Create Market
+    let (market_contract, market_owner) = deploy_market_contract(&env, meta::contract_meta());
     let user_1 = env.next_user();
     let user_2 = env.next_user();
-    let item_id_1 = TokenId::zero();
-    let item_id_2 = TokenId::from("1");
-    let item_id_3 = TokenId::from("2");
-    let item_ids = vec![item_id_1, item_id_2];
-    let nft_contract_hashes = vec![get_nft_contract_hash(), get_nft_contract_hash()];
-    let item_asking_prices = vec![U256::from("200000"), U256::from("300000")];
-    let item_token_ids = vec![U256::from("1"), U256::from("2")];
-    market_contract.create_market_items(
+    let item_id_1 = TokenId::from("2");
+    let item_id_2 = TokenId::from("3");
+    let item_id_3 = TokenId::from("4");
+
+    market_contract.create_market_item(
         market_owner,
         user_1,
-        item_ids.clone(),
-        nft_contract_hashes.clone(),
-        item_asking_prices.clone(),
-        item_token_ids.clone(),
+        item_id_1.clone(),
+        nft_contract_hash.clone(),
+        U256::from("200000"),
+        U256::from("1"),
+    );
+    market_contract.create_market_item(
+        market_owner,
+        user_1,
+        item_id_2.clone(),
+        nft_contract_hash.clone(),
+        U256::from("200000"),
+        U256::from("2"),
     );
     market_contract.create_market_item(
         market_owner,
         user_2,
         item_id_3.clone(),
-        get_nft_contract_hash(),
+        nft_contract_hash.clone(),
         U256::from("400000"),
         U256::from("3"),
     );
+
+
 
     let user_1_item_1 =
         market_contract.get_owned_item_by_index(Key::Account(user_1), U256::from("0"));
@@ -172,9 +196,9 @@ fn test_create_multiple_items() {
     let user_2_item_1 =
         market_contract.get_owned_item_by_index(Key::Account(user_2), U256::from("0"));
 
-    assert_eq!(user_1_item_1, Some(U256::from("0")));
-    assert_eq!(user_1_item_2, Some(U256::from("1")));
-    assert_eq!(user_2_item_1, Some(U256::from("2")));
+    assert_eq!(user_1_item_1, Some(U256::from("2")));
+    assert_eq!(user_1_item_2, Some(U256::from("3")));
+    assert_eq!(user_2_item_1, Some(U256::from("4")));
 
     assert_eq!(
         market_contract.item_token_id(item_id_1).unwrap(),
@@ -194,7 +218,15 @@ fn test_create_multiple_items() {
 fn test_sell_market_item() {
     let red_dragon = meta::red_dragon();
     let env = TestEnv::new();
-    let (market_contract, market_owner) = deploy_market_contract(&env, red_dragon);
+    // Create NFT
+    let (nft_contract, nft_contract_owner) = deploy_nft_contract(&env);
+    let user = env.next_user();
+    let token_id = TokenId::zero();
+    let token_meta = meta::red_dragon();
+    nft_contract.mint_one(nft_contract_owner, user, token_id, token_meta);
+    let nft_contract_hash = ContractHash::from(nft_contract.contract().contract_hash());
+    // Create Market
+    let (market_contract, market_owner) = deploy_market_contract(&env, meta::contract_meta());
     let seller = env.next_user();
     let buyer = env.next_user();
     let item_id = TokenId::from("1");
@@ -203,7 +235,7 @@ fn test_sell_market_item() {
         market_owner,
         seller,
         item_id,
-        get_nft_contract_hash(),
+        nft_contract_hash,
         U256::from("200000"),
         U256::from("1"),
     );

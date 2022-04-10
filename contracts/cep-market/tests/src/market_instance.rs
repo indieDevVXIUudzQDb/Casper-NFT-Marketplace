@@ -42,7 +42,6 @@ impl MarketContractInstance {
         symbol: &str,
         meta: Meta,
     ) -> MarketContractInstance {
-        println!("new MarketContractInstance");
         let instance = MarketContractInstance(TestContract::new(
             env,
             "contract.wasm",
@@ -54,8 +53,6 @@ impl MarketContractInstance {
                 "meta" => meta
             },
         ));
-        let item_contract_hash = ContractHash::from(instance.0.contract_hash());
-        println!("item_contract_hash {}", item_contract_hash);
         instance
     }
 
@@ -100,8 +97,8 @@ impl MarketContractInstance {
         item_nft_contract_addresses: Vec<NFTContractAddress>,
         item_asking_prices: Vec<U256>,
         item_token_ids: Vec<U256>,
-    ) {
-        let _result = self.0.call_contract(
+    ) -> WasmTestBuilder<InMemoryGlobalState> {
+        self.0.call_contract(
             sender,
             "create_market_item",
             runtime_args! {
@@ -111,8 +108,7 @@ impl MarketContractInstance {
                 "item_asking_prices" => item_asking_prices,
                 "item_token_ids" => item_token_ids
             },
-        );
-        // println!("{:?}", result.get_exec_results());
+        )
     }
 
     pub fn create_market_sale<T: Into<Key>>(

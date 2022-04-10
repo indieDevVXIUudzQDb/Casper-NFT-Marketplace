@@ -191,6 +191,10 @@ impl CEP47Instance {
         )
     }
 
+    pub fn contract(&self)->&TestContract {
+        return &self.0;
+    }
+
     pub fn update_token_meta(
         &self,
         sender: AccountHash,
