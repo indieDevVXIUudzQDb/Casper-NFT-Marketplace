@@ -1,5 +1,5 @@
 [package]
-name = "tests"
+name = "cep47-tests"
 version = "0.1.0"
 edition = "2018"
 
@@ -10,12 +10,11 @@ casper-contract = { version = "1.4.3", default-features = false, features = ["te
 casper-engine-test-support = { version = "2.0.3", features = ["test-support"] }
 casper-execution-engine = "1.4.2"
 casper-types = "1.4.4"
-test-env = { path = "../utils/test-env" }
-contract-utils = { path = "../utils/contract-utils" }
-cep47-tests = { path = "../utils/cep47-tests" }
+casper-hashing = "1.4.3"
+test-env = { path = "../test-env" }
+contract-utils = { path = "../contract-utils" }
 hex = "0.4.3"
 blake2 = "0.9.1"
-
 
 [features]
 default = ["casper-contract/std", "casper-types/std", "casper-contract/test-support"]

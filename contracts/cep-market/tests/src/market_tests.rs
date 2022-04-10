@@ -2,6 +2,8 @@ use std::collections::BTreeMap;
 
 use casper_types::{account::AccountHash, ContractHash, Key, U256};
 use casper_types::CLType::String;
+use cep47_tests::cep47_instance::{CEP47Instance};
+
 use test_env::TestEnv;
 
 use crate::market_instance::{MarketContractInstance, TokenId, Meta};
@@ -35,12 +37,35 @@ fn get_nft_contract_hash() -> ContractHash {
     ContractHash::new(my_bytes)
 }
 
+fn deploy_nft_contract() -> (TestEnv, CEP47Instance, AccountHash) {
+    let env = TestEnv::new();
+    let owner = env.next_user();
+    let token = CEP47Instance::new(&env, NAME, owner, NAME, SYMBOL, meta::contract_meta());
+    (env, token, owner)
+}
 
 fn deploy(meta: Meta) -> (TestEnv, MarketContractInstance, AccountHash) {
     let env = TestEnv::new();
     let market_owner = env.next_user();
     let market_contract = MarketContractInstance::new(&env, NAME, market_owner, NAME, SYMBOL, meta);
     (env, market_contract, market_owner)
+}
+
+#[test]
+fn test_mint_one() {
+    let (env, token, owner) = deploy_nft_contract();
+    let user = env.next_user();
+    let token_id = TokenId::zero();
+    let token_meta = meta::red_dragon();
+
+    token.mint_one(owner, user, token_id, token_meta);
+    let first_user_token = token.get_token_by_index(Key::Account(user), U256::from(0));
+    let second_user_token = token.get_token_by_index(Key::Account(user), U256::from(1));
+    assert_eq!(first_user_token, Some(token_id));
+    assert_eq!(token.total_supply(), U256::one());
+    assert_eq!(token.balance_of(Key::Account(user)), U256::one());
+    assert_eq!(second_user_token, None);
+    assert_eq!(token.owner_of(token_id).unwrap(), Key::Account(user));
 }
 
 
@@ -114,6 +139,8 @@ fn test_sell_market_item() {
     let seller = env.next_user();
     let buyer = env.next_user();
     let item_id = TokenId::from("1");
+
+
 
     market_contract.create_market_item(market_owner, seller, item_id, get_nft_contract_hash(), U256::from("200000"), U256::from("1"));
     let first_user_item = market_contract.get_owned_item_by_index(Key::Account(seller), U256::from(0));
