@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 
-use casper_engine_test_support::{DeployItemBuilder, ExecuteRequestBuilder, InMemoryWasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR, DEFAULT_PAYMENT, WasmTestBuilder};
+use casper_engine_test_support::{
+    DeployItemBuilder, ExecuteRequestBuilder, InMemoryWasmTestBuilder, WasmTestBuilder, ARG_AMOUNT,
+    DEFAULT_ACCOUNT_ADDR, DEFAULT_PAYMENT,
+};
 use casper_execution_engine::core::engine_state::ExecuteRequest;
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{

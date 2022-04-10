@@ -105,7 +105,12 @@ impl CEP47Instance {
         )
     }
 
-    pub fn burn_one<T: Into<Key>>(&self, sender: AccountHash, owner: T, token_id: TokenId) -> WasmTestBuilder<InMemoryGlobalState> {
+    pub fn burn_one<T: Into<Key>>(
+        &self,
+        sender: AccountHash,
+        owner: T,
+        token_id: TokenId,
+    ) -> WasmTestBuilder<InMemoryGlobalState> {
         self.0.call_contract(
             sender,
             "burn",
@@ -116,7 +121,12 @@ impl CEP47Instance {
         )
     }
 
-    pub fn burn_many<T: Into<Key>>(&self, sender: AccountHash, owner: T, token_ids: Vec<TokenId>) -> WasmTestBuilder<InMemoryGlobalState> {
+    pub fn burn_many<T: Into<Key>>(
+        &self,
+        sender: AccountHash,
+        owner: T,
+        token_ids: Vec<TokenId>,
+    ) -> WasmTestBuilder<InMemoryGlobalState> {
         self.0.call_contract(
             sender,
             "burn",
@@ -161,7 +171,12 @@ impl CEP47Instance {
         )
     }
 
-    pub fn approve<T: Into<Key>>(&self, sender: AccountHash, spender: T, token_ids: Vec<TokenId>) -> WasmTestBuilder<InMemoryGlobalState> {
+    pub fn approve<T: Into<Key>>(
+        &self,
+        sender: AccountHash,
+        spender: T,
+        token_ids: Vec<TokenId>,
+    ) -> WasmTestBuilder<InMemoryGlobalState> {
         self.0.call_contract(
             sender,
             "approve",
@@ -176,7 +191,12 @@ impl CEP47Instance {
         )
     }
 
-    pub fn update_token_meta(&self, sender: AccountHash, token_id: TokenId, token_meta: Meta) -> WasmTestBuilder<InMemoryGlobalState> {
+    pub fn update_token_meta(
+        &self,
+        sender: AccountHash,
+        token_id: TokenId,
+        token_meta: Meta,
+    ) -> WasmTestBuilder<InMemoryGlobalState> {
         self.0.call_contract(
             sender,
             "update_token_meta",

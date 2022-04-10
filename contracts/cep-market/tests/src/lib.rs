@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
-use casper_types::{CLType, CLTyped, U256};
 use casper_types::bytesrepr::{FromBytes, ToBytes};
+use casper_types::{CLType, CLTyped, U256};
+use std::collections::BTreeMap;
 
 #[cfg(test)]
 pub mod market_tests;
@@ -38,4 +38,3 @@ pub mod market_instance;
 //         Ok(vec)
 //     }
 // }
-

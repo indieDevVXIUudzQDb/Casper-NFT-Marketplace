@@ -11,5 +11,5 @@ pub enum MarketEvent {
     SoldItem {
         recipient: Key,
         item_id: TokenId,
-    }
+    },
 }

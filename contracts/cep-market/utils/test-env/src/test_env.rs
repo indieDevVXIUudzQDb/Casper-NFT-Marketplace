@@ -1,6 +1,8 @@
 use std::sync::{Arc, Mutex};
 
-use casper_engine_test_support::{InMemoryWasmTestBuilder, DEFAULT_RUN_GENESIS_REQUEST, WasmTestBuilder};
+use casper_engine_test_support::{
+    InMemoryWasmTestBuilder, WasmTestBuilder, DEFAULT_RUN_GENESIS_REQUEST,
+};
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{
     account::AccountHash, bytesrepr::FromBytes, CLTyped, Key, PublicKey, RuntimeArgs, SecretKey,
@@ -20,7 +22,12 @@ impl TestEnv {
         }
     }
 
-    pub fn run(&self, sender: AccountHash, session_code: DeploySource, session_args: RuntimeArgs) -> WasmTestBuilder<InMemoryGlobalState> {
+    pub fn run(
+        &self,
+        sender: AccountHash,
+        session_code: DeploySource,
+        session_args: RuntimeArgs,
+    ) -> WasmTestBuilder<InMemoryGlobalState> {
         let result = deploy(
             &mut self.state.lock().unwrap().builder,
             &sender,

@@ -1,12 +1,15 @@
-use std::collections::BTreeMap;
-use std::fmt::Debug;
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
 use casper_engine_test_support::WasmTestBuilder;
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
-use casper_types::{account::AccountHash, bytesrepr::ToBytes, runtime_args, CLTyped, Key, RuntimeArgs, U256, ContractHash};
+use casper_types::{
+    account::AccountHash, bytesrepr::ToBytes, runtime_args, CLTyped, ContractHash, Key,
+    RuntimeArgs, U256,
+};
+use std::collections::BTreeMap;
+use std::fmt::Debug;
 use test_env::{TestContract, TestEnv};
 
 pub type TokenId = U256;
@@ -27,7 +30,6 @@ pub const NFT_CONTRACT_ADDRESS: &str = "meta";
 pub const SYMBOL: &str = "symbol";
 pub const TOTAL_SUPPLY: &str = "total_supply";
 pub const META: &str = "meta";
-
 
 pub struct MarketContractInstance(TestContract);
 
@@ -117,7 +119,7 @@ impl MarketContractInstance {
         &self,
         sender: AccountHash,
         recipient: T,
-        item_id: TokenId
+        item_id: TokenId,
     ) -> WasmTestBuilder<InMemoryGlobalState> {
         self.0.call_contract(
             sender,
@@ -129,19 +131,19 @@ impl MarketContractInstance {
         )
     }
 
-
     pub fn get_available_items<T: Into<Key>>(
         &self,
-        sender: AccountHash
+        sender: AccountHash,
     ) -> WasmTestBuilder<InMemoryGlobalState> {
-        self.0.call_contract(
-            sender,
-            "get_available_items",
-            runtime_args! {},
-        )
+        self.0
+            .call_contract(sender, "get_available_items", runtime_args! {})
     }
 
-    pub fn get_owned_item_by_index<T: Into<Key>>(&self, account: T, index: U256) -> Option<TokenId> {
+    pub fn get_owned_item_by_index<T: Into<Key>>(
+        &self,
+        account: T,
+        index: U256,
+    ) -> Option<TokenId> {
         self.0.query_dictionary(
             OWNED_TOKENS_BY_INDEX_DICT,
             key_and_value_to_str(&account.into(), &index),
@@ -159,19 +161,23 @@ impl MarketContractInstance {
     }
 
     pub fn item_nft_contract_address(&self, item_id: TokenId) -> Option<NFTContractAddress> {
-        self.0.query_dictionary(NFT_CONTRACT_ADDRESSES, item_id.to_string())
+        self.0
+            .query_dictionary(NFT_CONTRACT_ADDRESSES, item_id.to_string())
     }
 
     pub fn item_asking_price(&self, item_id: TokenId) -> Option<U256> {
-        self.0.query_dictionary(ITEM_ASKING_PRICE_DATA, item_id.to_string())
+        self.0
+            .query_dictionary(ITEM_ASKING_PRICE_DATA, item_id.to_string())
     }
 
     pub fn item_token_id(&self, item_id: TokenId) -> Option<U256> {
-        self.0.query_dictionary(ITEM_TOKEN_ID_DATA, item_id.to_string())
+        self.0
+            .query_dictionary(ITEM_TOKEN_ID_DATA, item_id.to_string())
     }
 
     pub fn item_status(&self, item_id: TokenId) -> Option<String> {
-        self.0.query_dictionary(ITEM_STATUS_DATA, item_id.to_string())
+        self.0
+            .query_dictionary(ITEM_STATUS_DATA, item_id.to_string())
     }
 
     //TODO

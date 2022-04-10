@@ -1,10 +1,5 @@
-use alloc::{
-    string::{String, ToString}
-};
-use casper_contract::{
-    contract_api::{runtime::get_call_stack},
-    unwrap_or_revert::UnwrapOrRevert,
-};
+use alloc::string::{String, ToString};
+use casper_contract::{contract_api::runtime::get_call_stack, unwrap_or_revert::UnwrapOrRevert};
 use casper_types::{system::CallStackElement, ContractPackageHash, Key, U256};
 use contract_utils::{get_key, key_and_value_to_str, key_to_str, set_key, Dict};
 
@@ -111,7 +106,6 @@ impl ItemAskingPriceData {
     }
 }
 
-
 pub struct ItemTokenIdData {
     dict: Dict,
 }
@@ -139,7 +133,6 @@ impl ItemTokenIdData {
         self.dict.remove::<U256>(&key.to_string());
     }
 }
-
 
 pub struct ItemStatusData {
     dict: Dict,
@@ -189,7 +182,6 @@ impl ItemStatusData {
 //         self.dict.set(&key.to_string(), value);
 //     }
 // }
-
 
 pub struct OwnedTokens {
     tokens_dict: Dict,
@@ -285,10 +277,8 @@ impl Allowances {
     }
 
     pub fn get(&self, owner: &Key, item_id: &TokenId) -> Option<Key> {
-        self.dict.get(&key_and_value_to_str::<String>(
-            owner,
-            &item_id.to_string(),
-        ))
+        self.dict
+            .get(&key_and_value_to_str::<String>(owner, &item_id.to_string()))
     }
 
     pub fn set(&self, owner: &Key, item_id: &TokenId, value: Key) {
@@ -299,10 +289,8 @@ impl Allowances {
     }
 
     pub fn remove(&self, owner: &Key, item_id: &TokenId) {
-        self.dict.remove::<Key>(&key_and_value_to_str::<String>(
-            owner,
-            &item_id.to_string(),
-        ));
+        self.dict
+            .remove::<Key>(&key_and_value_to_str::<String>(owner, &item_id.to_string()));
     }
 }
 
@@ -351,6 +339,4 @@ pub fn contract_package_hash() -> ContractPackageHash {
     package_hash.unwrap_or_revert()
 }
 
-pub fn emit(_event: &MarketEvent) {
-}
-
+pub fn emit(_event: &MarketEvent) {}

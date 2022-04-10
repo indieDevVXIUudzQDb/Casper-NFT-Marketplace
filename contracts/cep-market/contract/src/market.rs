@@ -1,9 +1,16 @@
-use crate::{data::{self}, event::MarketEvent, ITEM_STATUS_AVAILABLE, ITEM_STATUS_SOLD, Meta, NFTContractAddress, TokenId};
+use crate::data::{
+    Allowances, ItemAskingPriceData, ItemStatusData, ItemTokenIdData, NFTContractAddresses,
+    OwnedTokens, Owners,
+};
+use crate::{
+    data::{self},
+    event::MarketEvent,
+    Meta, NFTContractAddress, TokenId, ITEM_STATUS_AVAILABLE, ITEM_STATUS_SOLD,
+};
 use alloc::{string::String, vec::Vec};
-use core::convert::TryInto;
 use casper_types::{ApiError, Key, U256};
 use contract_utils::{ContractContext, ContractStorage};
-use crate::data::{Allowances, ItemAskingPriceData, ItemStatusData, ItemTokenIdData, NFTContractAddresses, OwnedTokens, Owners};
+use core::convert::TryInto;
 
 #[repr(u16)]
 pub enum Error {
@@ -62,7 +69,11 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         NFTContractAddresses::instance().get(&item_id)
     }
 
-    fn set_item_nft_contract_address(&mut self, item_id: TokenId, nft_contract_address: NFTContractAddress) -> Result<(), Error> {
+    fn set_item_nft_contract_address(
+        &mut self,
+        item_id: TokenId,
+        nft_contract_address: NFTContractAddress,
+    ) -> Result<(), Error> {
         if self.owner_of(item_id).is_none() {
             return Err(Error::TokenIdDoesntExist);
         };
@@ -112,7 +123,11 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
     //     market_items
     // }
 
-    fn set_item_asking_price(&mut self, item_id: TokenId, item_asking_price: U256) -> Result<(), Error> {
+    fn set_item_asking_price(
+        &mut self,
+        item_id: TokenId,
+        item_asking_price: U256,
+    ) -> Result<(), Error> {
         if self.owner_of(item_id).is_none() {
             return Err(Error::TokenIdDoesntExist);
         };
@@ -201,23 +216,15 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Ok(item_ids)
     }
 
-    fn create_market_sale(
-        &mut self,
-        recipient: Key,
-        item_id: TokenId,
-    ) -> Result<TokenId, Error> {
-
+    fn create_market_sale(&mut self, recipient: Key, item_id: TokenId) -> Result<TokenId, Error> {
         if self.owner_of(item_id).is_none() {
             return Err(Error::TokenIdDoesntExist);
         }
         let result = self.set_item_status(item_id, String::from(ITEM_STATUS_SOLD));
-        if result.is_err(){
+        if result.is_err() {
             return Err(Error::TokenIdDoesntExist);
         }
-        self.emit(MarketEvent::SoldItem {
-            recipient,
-            item_id
-        });
+        self.emit(MarketEvent::SoldItem { recipient, item_id });
         Ok(item_id)
     }
 

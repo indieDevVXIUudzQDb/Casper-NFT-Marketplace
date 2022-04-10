@@ -8,10 +8,10 @@ mod market;
 pub use contract_utils;
 pub use market::{Error, MarketContract};
 
-use alloc::{collections::BTreeMap, string::String};
 use alloc::vec::Vec;
-use casper_types::{CLType, CLTyped, ContractHash, U256};
+use alloc::{collections::BTreeMap, string::String};
 use casper_types::bytesrepr::{FromBytes, ToBytes};
+use casper_types::{CLType, CLTyped, ContractHash, U256};
 
 pub type TokenId = U256;
 pub type NFTContractAddress = ContractHash;
