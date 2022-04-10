@@ -216,7 +216,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Ok(item_ids)
     }
 
-    fn create_market_sale(&mut self, recipient: Key, item_id: TokenId) -> Result<TokenId, Error> {
+    fn process_market_sale(&mut self, recipient: Key, item_id: TokenId) -> Result<TokenId, Error> {
         if self.owner_of(item_id).is_none() {
             return Err(Error::TokenIdDoesntExist);
         }

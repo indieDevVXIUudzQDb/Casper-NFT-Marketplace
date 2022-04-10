@@ -1,7 +1,8 @@
 use std::collections::BTreeMap;
 
 use casper_types::CLType::String;
-use casper_types::{account::AccountHash, ContractHash, HashAddr, Key, U256};
+use casper_types::{account::AccountHash, ContractHash, HashAddr, Key, PublicKey, U256};
+use casper_types::account::Account;
 use cep47_tests::cep47_instance::CEP47Instance;
 
 use test_env::TestEnv;
@@ -216,20 +217,19 @@ fn test_create_multiple_items() {
 
 #[test]
 fn test_sell_market_item() {
-    let red_dragon = meta::red_dragon();
     let env = TestEnv::new();
     // Create NFT
     let (nft_contract, nft_contract_owner) = deploy_nft_contract(&env);
-    let user = env.next_user();
+    let buyer = env.next_user();
+    let seller = env.next_user();
     let token_id = TokenId::zero();
     let token_meta = meta::red_dragon();
-    nft_contract.mint_one(nft_contract_owner, user, token_id, token_meta);
+    nft_contract.mint_one(nft_contract_owner, seller, token_id, token_meta);
     let nft_contract_hash = ContractHash::from(nft_contract.contract().contract_hash());
     // Create Market
+    let env = TestEnv::new();
     let (market_contract, market_owner) = deploy_market_contract(&env, meta::contract_meta());
-    let seller = env.next_user();
-    let buyer = env.next_user();
-    let item_id = TokenId::from("1");
+    let item_id = TokenId::zero();
 
     market_contract.create_market_item(
         market_owner,
@@ -237,17 +237,18 @@ fn test_sell_market_item() {
         item_id,
         nft_contract_hash,
         U256::from("200000"),
-        U256::from("1"),
+        U256::zero(),
     );
     let first_user_item =
-        market_contract.get_owned_item_by_index(Key::Account(seller), U256::from(0));
+        market_contract.get_owned_item_by_index(Key::Account(seller), U256::zero());
     assert_eq!(first_user_item, Some(item_id));
     assert_eq!(
         market_contract.item_status(item_id).unwrap(),
         ITEM_STATUS_AVAILABLE
     );
-
-    market_contract.create_market_sale(market_owner, buyer, item_id);
+    assert_eq!(nft_contract.owner_of(token_id).unwrap(), Key::Account(seller));
+    market_contract.process_market_sale(market_owner, buyer, item_id);
+    // assert_eq!(nft_contract.owner_of(token_id).unwrap(), Key::Account(buyer));
     assert_eq!(
         market_contract.item_status(item_id).unwrap(),
         ITEM_STATUS_SOLD

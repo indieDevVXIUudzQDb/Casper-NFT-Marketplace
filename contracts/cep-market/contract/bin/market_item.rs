@@ -13,7 +13,7 @@ use casper_types::{
     runtime_args, CLType, CLTyped, CLValue, ContractPackageHash, EntryPoint, EntryPointAccess,
     EntryPointType, EntryPoints, Group, Key, Parameter, RuntimeArgs, URef, U256,
 };
-use contract::data::{META, NAME, SYMBOL};
+use contract::data::{META, MARKET_NAME, SYMBOL};
 use contract::{MarketContract, Meta, NFTContractAddress, TokenId};
 use contract_utils::{ContractContext, OnChainContractStorage};
 
@@ -36,7 +36,7 @@ impl MarketItem {
 
 #[no_mangle]
 fn constructor() {
-    let name = runtime::get_named_arg::<String>(NAME);
+    let name = runtime::get_named_arg::<String>(MARKET_NAME);
     let symbol = runtime::get_named_arg::<String>(SYMBOL);
     let meta = runtime::get_named_arg::<Meta>(META);
     MarketItem::default().constructor(name, symbol, meta);
@@ -142,27 +142,27 @@ fn create_market_item() {
 }
 
 #[no_mangle]
-fn create_market_sale() {
+fn process_market_sale() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let item_id = runtime::get_named_arg::<TokenId>("item_id");
     MarketItem::default()
-        .create_market_sale(recipient, item_id)
+        .process_market_sale(recipient, item_id)
         .unwrap_or_revert();
 }
 
 #[no_mangle]
 fn call() {
     // Read arguments for the constructor call.
-    let name: String = runtime::get_named_arg(NAME);
+    let name: String = runtime::get_named_arg(MARKET_NAME);
     let symbol: String = runtime::get_named_arg(SYMBOL);
     let meta: Meta = runtime::get_named_arg(META);
     let contract_name: String = runtime::get_named_arg("contract_name");
 
     // Prepare constructor args
     let constructor_args = runtime_args! {
-        "name" => name,
-        "symbol" => symbol,
-        "meta" => meta
+        MARKET_NAME => name,
+        SYMBOL => symbol,
+        META => meta
     };
 
     let (contract_hash, _) = storage::new_contract(
@@ -207,9 +207,9 @@ fn get_entry_points() -> EntryPoints {
     entry_points.add_entry_point(EntryPoint::new(
         "constructor",
         vec![
-            Parameter::new("name", String::cl_type()),
-            Parameter::new("symbol", String::cl_type()),
-            Parameter::new("meta", Meta::cl_type()),
+            Parameter::new(MARKET_NAME, String::cl_type()),
+            Parameter::new(SYMBOL, String::cl_type()),
+            Parameter::new(META, Meta::cl_type()),
         ],
         <()>::cl_type(),
         EntryPointAccess::Groups(vec![Group::new("constructor")]),
@@ -305,7 +305,7 @@ fn get_entry_points() -> EntryPoints {
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "create_market_sale",
+        "process_market_sale",
         vec![
             Parameter::new("recipient", Key::cl_type()),
             Parameter::new("item_id", TokenId::cl_type()),

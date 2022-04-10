@@ -16,20 +16,20 @@ pub type TokenId = U256;
 pub type NFTContractAddress = ContractHash;
 pub type Meta = BTreeMap<String, String>;
 
-const BALANCES_DICT: &str = "balances";
-pub const ALLOWANCES_DICT: &str = "allowances";
+const BALANCES_DICT: &str = "item_balances";
+pub const ALLOWANCES_DICT: &str = "item_allowances";
 const NFT_CONTRACT_ADDRESSES: &str = "nft_contract_addresses";
 const ITEM_ASKING_PRICE_DATA: &str = "item_asking_prices";
 const ITEM_TOKEN_ID_DATA: &str = "item_token_ids";
 const ITEM_STATUS_DATA: &str = "item_statuses";
-const OWNERS_DICT: &str = "owners";
-const OWNED_TOKENS_BY_INDEX_DICT: &str = "owned_tokens_by_index";
-// const OWNED_INDEXES_BY_TOKEN_DICT: &str = "owned_indexes_by_token";
-pub const NAME: &str = "name";
-pub const NFT_CONTRACT_ADDRESS: &str = "meta";
-pub const SYMBOL: &str = "symbol";
-pub const TOTAL_SUPPLY: &str = "total_supply";
-pub const META: &str = "meta";
+const OWNERS_DICT: &str = "item_owners";
+const OWNED_ITEMS_BY_INDEX_DICT: &str = "owned_items_by_index";
+const OWNED_INDEXES_BY_ITEM_DICT: &str = "owned_indexes_by_item";
+pub const NFT_CONTRACT_ADDRESS: &str = "nft_contract_address";
+pub const TOTAL_SUPPLY: &str = "item_total_supply";
+pub const MARKET_NAME: &str = "market_name";
+pub const SYMBOL: &str = "market_symbol";
+pub const META: &str = "market_meta";
 
 pub struct MarketContractInstance(TestContract);
 
@@ -48,9 +48,9 @@ impl MarketContractInstance {
             contract_name,
             sender,
             runtime_args! {
-                "name" => name,
-                "symbol" => symbol,
-                "meta" => meta
+                MARKET_NAME => name,
+                SYMBOL => symbol,
+                META => meta
             },
         ));
         instance
@@ -61,9 +61,9 @@ impl MarketContractInstance {
             sender,
             "constructor",
             runtime_args! {
-            "name" => name,
-            "symbol" => symbol,
-            "meta" => meta},
+            MARKET_NAME => name,
+            SYMBOL => symbol,
+            META => meta},
         );
     }
 
@@ -111,7 +111,7 @@ impl MarketContractInstance {
         )
     }
 
-    pub fn create_market_sale<T: Into<Key>>(
+    pub fn process_market_sale<T: Into<Key>>(
         &self,
         sender: AccountHash,
         recipient: T,
@@ -119,7 +119,7 @@ impl MarketContractInstance {
     ) -> WasmTestBuilder<InMemoryGlobalState> {
         self.0.call_contract(
             sender,
-            "create_market_sale",
+            "process_market_sale",
             runtime_args! {
                 "recipient" => recipient.into(),
                 "item_id" => item_id,
@@ -141,7 +141,7 @@ impl MarketContractInstance {
         index: U256,
     ) -> Option<TokenId> {
         self.0.query_dictionary(
-            OWNED_TOKENS_BY_INDEX_DICT,
+            OWNED_ITEMS_BY_INDEX_DICT,
             key_and_value_to_str(&account.into(), &index),
         )
     }
@@ -183,7 +183,7 @@ impl MarketContractInstance {
     // }
 
     pub fn name(&self) -> String {
-        self.0.query_named_key(String::from(NAME))
+        self.0.query_named_key(String::from(MARKET_NAME))
     }
 
     pub fn symbol(&self) -> String {
