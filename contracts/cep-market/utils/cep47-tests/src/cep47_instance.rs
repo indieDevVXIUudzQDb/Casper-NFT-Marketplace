@@ -191,7 +191,7 @@ impl CEP47Instance {
         )
     }
 
-    pub fn contract(&self)->&TestContract {
+    pub fn contract(&self) -> &TestContract {
         return &self.0;
     }
 

@@ -13,7 +13,7 @@ use casper_types::{
     runtime_args, CLType, CLTyped, CLValue, ContractPackageHash, EntryPoint, EntryPointAccess,
     EntryPointType, EntryPoints, Group, Key, Parameter, RuntimeArgs, URef, U256,
 };
-use contract::data::{META, MARKET_NAME, SYMBOL};
+use contract::data::{MARKET_NAME, META, SYMBOL};
 use contract::{MarketContract, Meta, NFTContractAddress, TokenId};
 use contract_utils::{ContractContext, OnChainContractStorage};
 
@@ -33,6 +33,9 @@ impl MarketItem {
         MarketContract::init(self, name, symbol, meta);
     }
 }
+
+const KEY_NAME: &str = "my-key-name";
+const RUNTIME_ARG_NAME: &str = "message";
 
 #[no_mangle]
 fn constructor() {
@@ -200,6 +203,24 @@ fn call() {
         &format!("{}_contract_hash_wrapped", contract_name),
         storage::new_uref(contract_hash).into(),
     );
+
+    // The key shouldn't already exist in the named keys.
+    let missing_key = runtime::get_key(KEY_NAME);
+
+    // This contract expects a single runtime argument to be provided.  The arg is named "message"
+    // and will be of type `String`.
+    let value: String = runtime::get_named_arg(RUNTIME_ARG_NAME);
+
+    // Store this value under a new unforgeable reference a.k.a `URef`.
+    let value_ref = storage::new_uref(value);
+
+    // Store the new `URef` as a named key with a name of `KEY_NAME`.
+    let key = Key::URef(value_ref);
+    runtime::put_key(KEY_NAME, key);
+
+    // The key should now be able to be retrieved.  Note that if `get_key()` returns `None`, then
+    // `unwrap_or_revert()` will exit the process, returning `ApiError::None`.
+    let _retrieved_key = runtime::get_key(KEY_NAME).unwrap_or_revert();
 }
 
 fn get_entry_points() -> EntryPoints {
