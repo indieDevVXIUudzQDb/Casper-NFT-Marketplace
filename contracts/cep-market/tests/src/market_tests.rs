@@ -309,27 +309,39 @@ fn should_store_hello_world() {
         genesis_config.protocol_version(),
         genesis_config.take_ee_config(),
     );
-    // The test framework checks for compiled Wasm files in '<current working dir>/wasm'.  Paths
-    // relative to the current working dir (e.g. 'wasm/contract.wasm') can also be used, as can
-    // absolute paths.
-    let session_args = runtime_args! {
+
+    let nft_deploy_item = DeployItemBuilder::new()
+        .with_empty_payment_bytes(runtime_args! {
+            ARG_AMOUNT => *DEFAULT_PAYMENT
+        })
+        .with_session_code(PathBuf::from(NFT_CONTRACT_WASM), runtime_args! {
+        "name" => MARKET_NAME,
+        "symbol" => SYMBOL,
+        "meta" => meta::contract_meta(),
+        "contract_name" => MARKET_NAME,
+    })
+        .with_authorization_keys(&[account_addr])
+        .with_address(account_addr)
+        .build();
+
+    let nft_execute_request = ExecuteRequestBuilder::from_deploy_item(nft_deploy_item).build();
+
+    let market_deploy_item = DeployItemBuilder::new()
+        .with_empty_payment_bytes(runtime_args! {
+            ARG_AMOUNT => *DEFAULT_PAYMENT
+        })
+        .with_session_code(PathBuf::from(MARKET_CONTRACT_WASM), runtime_args! {
         "market_name" => MARKET_NAME,
         "market_symbol" => SYMBOL,
         "market_meta" => meta::contract_meta(),
         "contract_name" => MARKET_NAME,
         RUNTIME_ARG_NAME => VALUE,
-    };
-
-    let deploy_item = DeployItemBuilder::new()
-        .with_empty_payment_bytes(runtime_args! {
-            ARG_AMOUNT => *DEFAULT_PAYMENT
-        })
-        .with_session_code(PathBuf::from(MARKET_CONTRACT_WASM), session_args)
+    })
         .with_authorization_keys(&[account_addr])
         .with_address(account_addr)
         .build();
 
-    let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy_item).build();
+    let market_execute_request = ExecuteRequestBuilder::from_deploy_item(market_deploy_item).build();
 
     let mut builder = InMemoryWasmTestBuilder::default();
     builder.run_genesis(&run_genesis_request).commit();
@@ -343,7 +355,8 @@ fn should_store_hello_world() {
     assert!(result_of_query.is_err());
 
     // deploy the contract.
-    builder.exec(execute_request).commit().expect_success();
+    builder.exec(nft_execute_request).commit().expect_success();
+    builder.exec(market_execute_request).commit().expect_success();
 
     // make assertions
     let result_of_query = builder
