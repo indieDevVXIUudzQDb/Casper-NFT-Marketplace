@@ -27,7 +27,7 @@ const OWNED_ITEMS_BY_INDEX_DICT: &str = "owned_items_by_index";
 const OWNED_INDEXES_BY_ITEM_DICT: &str = "owned_indexes_by_item";
 pub const NFT_CONTRACT_ADDRESS: &str = "nft_contract_address";
 pub const TOTAL_SUPPLY: &str = "item_total_supply";
-pub const MARKET_NAME: &str = "market_name";
+pub const MARKET_NAME_KEY: &str = "market_name";
 pub const SYMBOL: &str = "market_symbol";
 pub const META: &str = "market_meta";
 
@@ -48,7 +48,7 @@ impl MarketContractInstance {
             contract_name,
             sender,
             runtime_args! {
-                MARKET_NAME => name,
+                MARKET_NAME_KEY => name,
                 SYMBOL => symbol,
                 META => meta
             },
@@ -61,7 +61,7 @@ impl MarketContractInstance {
             sender,
             "constructor",
             runtime_args! {
-            MARKET_NAME => name,
+            MARKET_NAME_KEY => name,
             SYMBOL => symbol,
             META => meta},
         );
@@ -183,7 +183,7 @@ impl MarketContractInstance {
     // }
 
     pub fn name(&self) -> String {
-        self.0.query_named_key(String::from(MARKET_NAME))
+        self.0.query_named_key(String::from(MARKET_NAME_KEY))
     }
 
     pub fn symbol(&self) -> String {

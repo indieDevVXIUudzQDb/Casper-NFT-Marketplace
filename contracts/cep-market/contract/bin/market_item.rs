@@ -319,7 +319,7 @@ fn get_entry_points() -> EntryPoints {
                 "item_asking_prices",
                 CLType::List(Box::new(U256::cl_type())),
             ),
-            Parameter::new("item_token_id", CLType::List(Box::new(U256::cl_type()))),
+            Parameter::new("item_token_ids", CLType::List(Box::new(U256::cl_type()))),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,

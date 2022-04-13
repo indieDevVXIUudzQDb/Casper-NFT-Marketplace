@@ -6,7 +6,7 @@ build-contract:
 	wasm-strip target/wasm32-unknown-unknown/release/contract.wasm 2>/dev/null | true
 
 test-only:
-	cargo test -p tests
+	cargo test -p tests -- --nocapture
 
 copy-wasm-file-to-test:
 	cp target/wasm32-unknown-unknown/release/*.wasm tests/wasm

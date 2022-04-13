@@ -19,9 +19,10 @@ use cep47_tests::cep47_instance::CEP47Instance;
 
 use test_env::TestEnv;
 
-use crate::market_instance::{MarketContractInstance, Meta, TokenId, MARKET_NAME};
+use crate::market_instance::{MarketContractInstance, Meta, TokenId, MARKET_NAME_KEY};
 
 const NAME: &str = "DragonsNFT";
+const MARKET_NAME: &str = "Market";
 const SYMBOL: &str = "DGNFT";
 pub const ITEM_STATUS_AVAILABLE: &str = "available";
 pub const ITEM_STATUS_CANCELLED: &str = "cancelled";
@@ -317,6 +318,7 @@ pub fn query<T: FromBytes + CLTyped>(
         .into_t()
         .expect("Wrong type in query result.")
 }
+
 pub fn contract_hash(name: std::string::String, account: AccountHash, builder: &InMemoryWasmTestBuilder) -> [u8; 32] {
     let key = format!("{}_contract_hash_wrapped", name);
     // query(builder, Key::Account(account), &[key])
@@ -362,7 +364,6 @@ fn should_store_hello_world() {
     }
 
 
-
     let reciever = accounts[1];
 
     let nft_deploy_item = DeployItemBuilder::new()
@@ -384,6 +385,33 @@ fn should_store_hello_world() {
 
     let nft_execute_request = ExecuteRequestBuilder::from_deploy_item(nft_deploy_item).build();
 
+    // deploy NFT contract.
+    builder.exec(nft_execute_request).commit().expect_success();
+
+
+    let deploy_item_builder = DeployItemBuilder::new()
+        .with_empty_payment_bytes(runtime_args! {
+            ARG_AMOUNT => *DEFAULT_PAYMENT
+        })
+        .with_authorization_keys(&[account_addr])
+        .with_address(account_addr);
+
+    let contract_hash_bytes = contract_hash(NAME.to_string(), account_addr, &builder);
+    let nft_contract_hash = ContractHash::from(contract_hash_bytes);
+    let deploy_mint = deploy_item_builder.with_stored_session_hash(
+        nft_contract_hash,
+        "mint",
+        runtime_args! {
+                "recipient" => Key::Account(account_addr),
+                "token_ids" => vec![TokenId::from("1")],
+                "token_metas" => vec![meta::red_dragon()],
+        },
+    ).build();
+    let nft_mint_execute_request =
+        ExecuteRequestBuilder::from_deploy_item(deploy_mint).build();
+    builder.exec(nft_mint_execute_request).commit().expect_success();
+
+
     let market_deploy_item = DeployItemBuilder::new()
         .with_empty_payment_bytes(runtime_args! {
             ARG_AMOUNT => *DEFAULT_PAYMENT
@@ -391,7 +419,7 @@ fn should_store_hello_world() {
         .with_session_code(
             PathBuf::from(MARKET_CONTRACT_WASM),
             runtime_args! {
-                "market_name" => MARKET_NAME,
+                MARKET_NAME_KEY => MARKET_NAME,
                 "market_symbol" => SYMBOL,
                 "market_meta" => meta::contract_meta(),
                 "contract_name" => MARKET_NAME,
@@ -413,61 +441,47 @@ fn should_store_hello_world() {
         &[KEY.to_string()],
     );
     assert!(result_of_query.is_err());
-
-    // deploy the contract.
-    let res_1 = builder.exec(nft_execute_request).commit().expect_success();
-    let nft_contract_addressOption= res_1.query(
-        None,
-        Key::Account(account_addr),
-        &["contract_package_hash".to_string()],
-    ).unwrap();
-
-    let nft_contract_hash = nft_contract_addressOption.as_contract_package().unwrap();
-
-    // println!("res_1 {:?}", res_1.get_exec_results());
-    // println!("nft_contract_address {:?}", nft_contract_hash.current_contract_hash());
-
-    // let res_2 = builder
-    //     .exec(market_execute_request)
-    //     .commit()
-    //     .expect_success();
+    builder
+        .exec(market_execute_request)
+        .commit()
+        .expect_success();
 
 
-    // // make assertions
-    // let result_of_query = builder
-    //     .query(None, Key::Account(account_addr), &[KEY.to_string()])
-    //     .expect("should be stored value.")
-    //     .as_cl_value()
-    //     .expect("should be cl value.")
-    //     .clone()
-    //     .into_t::<std::string::String>()
-    //     .expect("should be string.");
-    //
-    // assert_eq!(result_of_query, VALUE);
+    // make assertions
+    let result_of_query = builder
+        .query(None, Key::Account(account_addr), &[KEY.to_string()])
+        .expect("should be stored value.")
+        .as_cl_value()
+        .expect("should be cl value.")
+        .clone()
+        .into_t::<std::string::String>()
+        .expect("should be string.");
 
+    assert_eq!(result_of_query, VALUE);
+
+    // Deploy new market item
+    let contract_hash_bytes = contract_hash(MARKET_NAME.to_string(), account_addr, &builder);
+    let market_contract_hash = ContractHash::from(contract_hash_bytes);
     let deploy_item_builder = DeployItemBuilder::new()
         .with_empty_payment_bytes(runtime_args! {
             ARG_AMOUNT => *DEFAULT_PAYMENT
         })
         .with_authorization_keys(&[account_addr])
         .with_address(account_addr);
-
-    let contract_hash_bytes = contract_hash(NAME.to_string(),account_addr, &builder);
-    let contract_hash = ContractHash::from(contract_hash_bytes);
-    let deploy_mint = deploy_item_builder.with_stored_session_hash(
-        contract_hash,
-        "mint",
+    let deploy_create_store_item = deploy_item_builder.with_stored_session_hash(
+        market_contract_hash,
+        "create_market_item",
         runtime_args! {
                 "recipient" => Key::Account(account_addr),
-                "token_ids" => vec![TokenId::from("1")],
-                "token_metas" => vec![meta::red_dragon()],
-        }
+                "item_ids" => vec![TokenId::zero()],
+                "item_nft_contract_addresses" => vec![nft_contract_hash],
+                "item_asking_prices" => vec![U256::from("2000000")],
+                "item_token_ids" => vec![TokenId::from("1")],
+        },
     ).build();
-    let nft_mint_execute_request =
-        ExecuteRequestBuilder::from_deploy_item(deploy_mint).build();
-    builder.exec(nft_mint_execute_request).commit().expect_success();
-
-
+    let create_store_item_execute_request =
+        ExecuteRequestBuilder::from_deploy_item(deploy_create_store_item).build();
+    builder.exec(create_store_item_execute_request).commit().expect_success();
 }
 
 #[ignore]
