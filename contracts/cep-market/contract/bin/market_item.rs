@@ -85,7 +85,7 @@ fn get_item_by_index() {
 }
 
 #[no_mangle]
-fn owner_of() {
+fn owner_of_market_item() {
     let item_id = runtime::get_named_arg::<TokenId>("item_id");
     let ret = MarketItem::default().owner_of(item_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
@@ -272,7 +272,7 @@ fn get_entry_points() -> EntryPoints {
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
-        "owner_of",
+        "owner_of_market_item",
         vec![Parameter::new("item_id", TokenId::cl_type())],
         CLType::Option(Box::new(CLType::Key)),
         EntryPointAccess::Public,
