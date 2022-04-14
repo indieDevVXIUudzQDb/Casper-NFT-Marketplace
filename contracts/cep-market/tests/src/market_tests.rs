@@ -251,10 +251,31 @@ fn create_market_item(builder: &mut InMemoryWasmTestBuilder, test_context: &Test
             "create_market_item",
             runtime_args! {
                 "recipient" => Key::Account(test_context.account_address),
-                "item_ids" => vec![TokenId::from("1")],
-                "item_nft_contract_addresses" => vec![test_context.cep47_package_hash_key],
+                "item_ids" => vec![TokenId::zero()],
+                // TODO change to key
+                "item_nft_contract_addresses" => vec![ContractHash::from(test_context.cep47_package_hash_key.into_hash().unwrap())],
                 "item_asking_prices" => vec![U256::from("2000000")],
                 "item_token_ids" => vec![TokenId::zero()],
+                },
+        )
+        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
+        .with_authorization_keys(&[test_context.account_address])
+        .with_deploy_hash([42; 32])
+        .build();
+
+    let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy).build();
+    builder.exec(execute_request).commit().expect_success();
+}
+
+fn process_market_sale(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, buyer: Key){
+    let deploy = DeployItemBuilder::new()
+        .with_address(test_context.account_address)
+        .with_stored_session_named_key(
+            MARKET_PACKAGE_KEY,
+            "process_market_sale",
+            runtime_args! {
+                "recipient" => Key::Account(test_context.account_address),
+                "item_id" => TokenId::zero(),
                 },
         )
         .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
@@ -270,33 +291,15 @@ fn create_market_item(builder: &mut InMemoryWasmTestBuilder, test_context: &Test
 fn should_process_valid_nft_sale() {
 
     let (mut builder, test_context) = setup();
+    let accounts = get_test_accounts(&mut builder);
     nft_mint(&mut builder, &test_context);
+    create_market_item(&mut builder, &test_context);
 
-    // // Create market item
-    // let contract_hash_bytes = get_contract_hash(MARKET_CONTRACT_NAME.to_string(), account_address, &test_builder);
-    // let market_contract_hash = ContractHash::from(contract_hash_bytes);
-    // let deploy_item_builder = DeployItemBuilder::new()
-    //     .with_empty_payment_bytes(runtime_args! {
-    //         ARG_AMOUNT => *DEFAULT_PAYMENT
-    //     })
-    //     .with_authorization_keys(&[account_address])
-    //     .with_address(account_address);
-    // let deploy_create_store_item = deploy_item_builder.with_stored_session_hash(
-    //     market_contract_hash,
-    //     "create_market_item",
-    //     runtime_args! {
-    //             "recipient" => Key::Account(account_address),
-    //             "item_ids" => vec![TokenId::from("1")],
-    //             "item_nft_contract_addresses" => vec![nft_contract_hash],
-    //             "item_asking_prices" => vec![U256::from("2000000")],
-    //             "item_token_ids" => vec![TokenId::zero()],
-    //     },
-    // ).build();
-    // let create_store_item_execute_request =
-    //     ExecuteRequestBuilder::from_deploy_item(deploy_create_store_item).build();
-    // test_builder.exec(create_store_item_execute_request).commit().expect_success();
-    //
-    //
+    let buyer = accounts[0];
+    // Check nft owner
+    process_market_sale(&mut builder, &test_context, Key::Account(buyer));
+    // Check nft new owner
+
     // // Check nft owner
     // let deploy_item_builder = DeployItemBuilder::new()
     //     .with_empty_payment_bytes(runtime_args! {
@@ -314,25 +317,7 @@ fn should_process_valid_nft_sale() {
     // let create_store_item_execute_request =
     //     ExecuteRequestBuilder::from_deploy_item(deploy_create_store_item).build();
     // test_builder.exec(create_store_item_execute_request).commit().expect_success();
-    //
-    // // Process market sale
-    // let deploy_item_builder = DeployItemBuilder::new()
-    //     .with_empty_payment_bytes(runtime_args! {
-    //         ARG_AMOUNT => *DEFAULT_PAYMENT
-    //     })
-    //     .with_authorization_keys(&[account_address])
-    //     .with_address(account_address);
-    // let deploy_create_store_item = deploy_item_builder.with_stored_session_hash(
-    //     market_contract_hash,
-    //     "process_market_sale",
-    //     runtime_args! {
-    //             "recipient" => Key::Account(account_address),
-    //             "item_id" => TokenId::zero(),
-    //     },
-    // ).build();
-    // let create_store_item_execute_request =
-    //     ExecuteRequestBuilder::from_deploy_item(deploy_create_store_item).build();
-    // test_builder.exec(create_store_item_execute_request).commit().expect_success();
+
 }
 
 #[ignore]
