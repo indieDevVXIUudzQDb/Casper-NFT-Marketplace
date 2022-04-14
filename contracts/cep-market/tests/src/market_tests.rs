@@ -20,9 +20,11 @@ use cep47_tests::cep47_instance::CEP47Instance;
 use test_env::TestEnv;
 
 use crate::market_instance::{MarketContractInstance, Meta, TokenId, MARKET_NAME_KEY};
+const CEP47_NAME: &str = "Dragon NFT";
 const CEP47_CONTRACT_NAME: &str = "cep47";
 const CEP47_CONTRACT_KEY: &str = "cep47_token_contract";
 const CEP47_PACKAGE_KEY: &str = "cep47_contract_hash";
+const MARKET_NAME: &str = "Galactic Market";
 const MARKET_CONTRACT_NAME: &str = "market";
 const MARKET_CONTRACT_KEY: &str = "market_package_contract";
 const MARKET_PACKAGE_KEY: &str = "market_contract_hash";
@@ -148,7 +150,7 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture) {
                 account_address,
                 CEP47_WASM,
                 runtime_args! {
-                "name" => "Dragon NFT",
+                "name" => CEP47_NAME,
                 "symbol" => SYMBOL,
                 "meta" => meta::contract_meta(),
                 "contract_name" => CEP47_CONTRACT_NAME,
@@ -182,10 +184,10 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture) {
                 account_address,
                 MARKET_WASM,
                 runtime_args! {
-                MARKET_NAME_KEY => "Galactic Market",
+                MARKET_NAME_KEY => MARKET_NAME,
                 "market_symbol" => SYMBOL,
                 "market_meta" => meta::contract_meta(),
-                "contract_name" => "market",
+                "contract_name" => MARKET_CONTRACT_NAME,
             },
             )
                 .build()
@@ -205,7 +207,7 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture) {
         //get market package hash
         let market_package_hash_key = *account
             .named_keys()
-            .get("market_contract_hash")
+            .get(MARKET_PACKAGE_KEY)
             .expect("should have market contract");
 
         // ========= install market contract end========= //
@@ -219,104 +221,33 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture) {
 
 }
 
+fn nft_mint(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture){
+    let deploy = DeployItemBuilder::new()
+        .with_address(test_context.account_address)
+        .with_stored_session_named_key(
+            CEP47_PACKAGE_KEY,
+            "mint",
+            runtime_args! {
+                "recipient" => Key::Account(test_context.account_address),
+                "token_ids" => vec![TokenId::zero()],
+                "token_metas" => vec![meta::red_dragon()],
+                },
+        )
+        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
+        .with_authorization_keys(&[test_context.account_address])
+        .with_deploy_hash([42; 32])
+        .build();
+
+    let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy).build();
+    builder.exec(execute_request).commit().expect_success();
+}
+
 #[test]
 fn should_process_valid_nft_sale() {
 
     let (mut builder, test_context) = setup();
+    nft_mint(&mut builder, &test_context);
 
-        // let nft_deploy_item = DeployItemBuilder::new()
-    //     .with_empty_payment_bytes(runtime_args! {
-    //         ARG_AMOUNT => *DEFAULT_PAYMENT
-    //     })
-    //     .with_session_code(
-    //         PathBuf::from(CEP47_WASM),
-    //         runtime_args! {
-    //             "name" => CEP47_CONTRACT_NAME,
-    //             "symbol" => SYMBOL,
-    //             "meta" => meta::contract_meta(),
-    //             "contract_name" => CEP47_CONTRACT_NAME,
-    //         },
-    //     )
-    //     .with_authorization_keys(&[nft_account_addr])
-    //     .with_address(nft_account_addr)
-    //     .build();
-    //
-    // let nft_execute_request = ExecuteRequestBuilder::from_deploy_item(nft_deploy_item).build();
-    //
-    // // deploy NFT contract.
-    // test_builder.exec(nft_execute_request).commit().expect_success();
-    //
-    //
-    // let deploy_item_builder = DeployItemBuilder::new()
-    //     .with_empty_payment_bytes(runtime_args! {
-    //         ARG_AMOUNT => *DEFAULT_PAYMENT
-    //     })
-    //     .with_authorization_keys(&[account_address])
-    //     .with_address(account_address);
-    //
-    // // let contract_hash_bytes = get_contract_hash(NFT_CONTRACT_NAME.to_string(), nft_account_addr, &test_builder);
-    // // let nft_contract_hash = ContractHash::from(contract_hash_bytes);
-    // let deploy_mint = deploy_item_builder.with_stored_session_hash(
-    //     nft_contract_hash,
-    //     "mint",
-    //     runtime_args! {
-    //             "recipient" => Key::Account(nft_account_addr),
-    //             "token_ids" => vec![TokenId::zero()],
-    //             "token_metas" => vec![meta::red_dragon()],
-    //     },
-    // ).build();
-    // let nft_mint_execute_request =
-    //     ExecuteRequestBuilder::from_deploy_item(deploy_mint).build();
-    // test_builder.exec(nft_mint_execute_request).commit().expect_success();
-    //
-    // //
-    // // let market_deploy_item = DeployItemBuilder::new()
-    // //     .with_empty_payment_bytes(runtime_args! {
-    // //         ARG_AMOUNT => *DEFAULT_PAYMENT
-    // //     })
-    // //     .with_session_code(
-    // //         PathBuf::from(MARKET_CONTRACT_WASM),
-    // //         runtime_args! {
-    // //             MARKET_NAME_KEY => MARKET_CONTRACT_NAME,
-    // //             "market_symbol" => SYMBOL,
-    // //             "market_meta" => meta::contract_meta(),
-    // //             "contract_name" => MARKET_CONTRACT_NAME,
-    // //             RUNTIME_ARG_NAME => VALUE,
-    // //         },
-    // //     )
-    // //     .with_authorization_keys(&[account_address])
-    // //     .with_address(account_address)
-    // //     .build();
-    // //
-    // // let market_execute_request =
-    // //     ExecuteRequestBuilder::from_deploy_item(market_deploy_item).build();
-    //
-    //
-    // // prepare assertions.
-    // let result_of_query = test_builder.query(
-    //     None,
-    //     Key::Account(*DEFAULT_ACCOUNT_ADDR),
-    //     &[KEY.to_string()],
-    // );
-    // assert!(result_of_query.is_err());
-    // test_builder
-    //     .exec(market_execute_request)
-    //     .commit()
-    //     .expect_success();
-    //
-    //
-    // // make assertions
-    // let result_of_query = test_builder
-    //     .query(None, Key::Account(account_address), &[KEY.to_string()])
-    //     .expect("should be stored value.")
-    //     .as_cl_value()
-    //     .expect("should be cl value.")
-    //     .clone()
-    //     .into_t::<std::string::String>()
-    //     .expect("should be string.");
-    //
-    // assert_eq!(result_of_query, VALUE);
-    //
     // // Create market item
     // let contract_hash_bytes = get_contract_hash(MARKET_CONTRACT_NAME.to_string(), account_address, &test_builder);
     // let market_contract_hash = ContractHash::from(contract_hash_bytes);
