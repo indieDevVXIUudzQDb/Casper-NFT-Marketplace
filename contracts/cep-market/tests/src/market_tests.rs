@@ -24,11 +24,9 @@ use crate::market_tests::meta::contract_meta;
 
 const CEP47_NAME: &str = "Dragon NFT";
 const CEP47_CONTRACT_NAME: &str = "cep47";
-const CEP47_CONTRACT_KEY: &str = "cep47_token_contract";
 const CEP47_PACKAGE_KEY: &str = "cep47_contract_hash";
 const MARKET_NAME: &str = "Galactic Market";
 const MARKET_CONTRACT_NAME: &str = "market";
-const MARKET_CONTRACT_KEY: &str = "market_package_contract";
 const MARKET_PACKAGE_KEY: &str = "market_contract_hash";
 const SYMBOL: &str = "DGNFT";
 pub const ITEM_STATUS_AVAILABLE: &str = "available";
@@ -344,6 +342,49 @@ fn owner_of(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, t
     }
 }
 
+
+fn approve(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture){
+    let deploy = DeployItemBuilder::new()
+        .with_address(test_context.account_address)
+        .with_stored_session_named_key(
+            CEP47_PACKAGE_KEY,
+            "approve",
+            runtime_args! {
+                "spender" => test_context.market_package_hash_key,
+                "token_ids" => vec![TokenId::zero()],
+                },
+        )
+        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
+        .with_authorization_keys(&[test_context.account_address])
+        .with_deploy_hash([42; 32])
+        .build();
+
+    let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy).build();
+    builder.exec(execute_request).commit().expect_success();
+}
+
+
+fn transfer(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, transferee: Key){
+    let deploy = DeployItemBuilder::new()
+        .with_address(test_context.account_address)
+        .with_stored_session_named_key(
+            CEP47_PACKAGE_KEY,
+            "transfer",
+            runtime_args! {
+                "recipient" => transferee,
+                "token_ids" => vec![TokenId::zero()],
+                },
+        )
+        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
+        .with_authorization_keys(&[test_context.account_address])
+        .with_deploy_hash([42; 32])
+        .build();
+
+    let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy).build();
+    builder.exec(execute_request).commit().expect_success();
+}
+
+
 #[test]
 fn should_process_valid_nft_sale() {
 
@@ -357,7 +398,14 @@ fn should_process_valid_nft_sale() {
     let owner_before = owner_of(&mut builder, &test_context, TokenId::zero());
     println!("owner_before {:?}", owner_before);
     process_market_sale(&mut builder, &test_context, Key::Account(buyer));
+
+    approve(&mut builder,&test_context);
+    transfer(&mut builder,&test_context, Key::Account(buyer));
     // Check nft new owner
+    let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
+    println!("owner_after {:?}", owner_after);
+
+    assert_ne!(owner_before, owner_after);
 
 }
 
