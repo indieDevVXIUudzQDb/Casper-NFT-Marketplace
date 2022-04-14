@@ -13,13 +13,15 @@ use std::path::PathBuf;
 
 use casper_types::account::Account;
 use casper_types::CLType::String;
-use casper_types::{account::AccountHash, runtime_args, ContractHash, HashAddr, Key, Motes, PublicKey, RuntimeArgs, SecretKey, U256, U512, ContractPackage, CLTyped};
-use casper_types::bytesrepr::FromBytes;
+use casper_types::{account::AccountHash, runtime_args, ContractHash, HashAddr, Key, Motes, PublicKey, RuntimeArgs, SecretKey, U256, U512, ContractPackage, CLTyped, ContractPackageHash, StoredValue};
+use casper_types::bytesrepr::{FromBytes, ToBytes};
 use cep47_tests::cep47_instance::CEP47Instance;
 
 use test_env::TestEnv;
 
 use crate::market_instance::{MarketContractInstance, Meta, TokenId, MARKET_NAME_KEY};
+use crate::market_tests::meta::contract_meta;
+
 const CEP47_NAME: &str = "Dragon NFT";
 const CEP47_CONTRACT_NAME: &str = "cep47";
 const CEP47_CONTRACT_KEY: &str = "cep47_token_contract";
@@ -274,7 +276,7 @@ fn process_market_sale(builder: &mut InMemoryWasmTestBuilder, test_context: &Tes
             MARKET_PACKAGE_KEY,
             "process_market_sale",
             runtime_args! {
-                "recipient" => Key::Account(test_context.account_address),
+                "recipient" => buyer,
                 "item_id" => TokenId::zero(),
                 },
         )
@@ -287,6 +289,61 @@ fn process_market_sale(builder: &mut InMemoryWasmTestBuilder, test_context: &Tes
     builder.exec(execute_request).commit().expect_success();
 }
 
+pub fn query_dictionary_item(
+    builder: &InMemoryWasmTestBuilder,
+    key: Key,
+    dictionary_name: std::string::String,
+    dictionary_item_key: std::string::String,
+) -> Result<StoredValue, std::string::String> {
+    let empty_path = vec![];
+    let dictionary_key_bytes = dictionary_item_key.as_bytes();
+    let address = match key {
+        Key::Account(_) | Key::Hash(_) => {
+            if let name = dictionary_name {
+                let stored_value = builder.query(None, key, &[])?;
+
+                let named_keys = match &stored_value {
+                    StoredValue::Account(account) => account.named_keys(),
+                    StoredValue::Contract(contract) => contract.named_keys(),
+                    _ => {
+                        return Err(
+                            "Provided base key is nether an account or a contract".to_string()
+                        )
+                    }
+                };
+
+                let dictionary_uref = named_keys
+                    .get(&name)
+                    .and_then(Key::as_uref)
+                    .ok_or_else(|| "No dictionary uref was found in named keys".to_string())?;
+
+                Key::dictionary(*dictionary_uref, dictionary_key_bytes)
+            } else {
+                return Err("No dictionary name was provided".to_string());
+            }
+        }
+        Key::URef(uref) => Key::dictionary(uref, dictionary_key_bytes),
+        Key::Dictionary(address) => Key::Dictionary(address),
+        _ => return Err("Unsupported key type for a query to a dictionary item".to_string()),
+    };
+    builder.query(None, address, &empty_path)
+}
+
+fn owner_of(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, token_id: TokenId) -> Option<Key> {
+    match query_dictionary_item(builder, test_context.cep47_package_hash_key, "owners".to_string(), TokenId::zero().to_string()) {
+        Ok(value) => value
+            .as_cl_value()
+            .expect("should be cl value.")
+            .clone()
+            .into_t()
+            .expect("Wrong type in query result."),
+        Err(e) => {
+            println!("{}", e);
+            None
+        }
+    }
+}
+
 #[test]
 fn should_process_valid_nft_sale() {
 
@@ -297,26 +354,10 @@ fn should_process_valid_nft_sale() {
 
     let buyer = accounts[0];
     // Check nft owner
+    let owner_before = owner_of(&mut builder, &test_context, TokenId::zero());
+    println!("owner_before {:?}", owner_before);
     process_market_sale(&mut builder, &test_context, Key::Account(buyer));
     // Check nft new owner
-
-    // // Check nft owner
-    // let deploy_item_builder = DeployItemBuilder::new()
-    //     .with_empty_payment_bytes(runtime_args! {
-    //         ARG_AMOUNT => *DEFAULT_PAYMENT
-    //     })
-    //     .with_authorization_keys(&[nft_account_addr])
-    //     .with_address(nft_account_addr);
-    // let deploy_create_store_item = deploy_item_builder.with_stored_session_hash(
-    //     nft_contract_hash,
-    //     "owner_of",
-    //     runtime_args! {
-    //             "token_id" => TokenId::zero(),
-    //     },
-    // ).build();
-    // let create_store_item_execute_request =
-    //     ExecuteRequestBuilder::from_deploy_item(deploy_create_store_item).build();
-    // test_builder.exec(create_store_item_execute_request).commit().expect_success();
 
 }
 
