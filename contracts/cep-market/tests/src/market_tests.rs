@@ -242,6 +242,30 @@ fn nft_mint(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture){
     builder.exec(execute_request).commit().expect_success();
 }
 
+
+fn create_market_item(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture){
+    let deploy = DeployItemBuilder::new()
+        .with_address(test_context.account_address)
+        .with_stored_session_named_key(
+            MARKET_PACKAGE_KEY,
+            "create_market_item",
+            runtime_args! {
+                "recipient" => Key::Account(test_context.account_address),
+                "item_ids" => vec![TokenId::from("1")],
+                "item_nft_contract_addresses" => vec![test_context.cep47_package_hash_key],
+                "item_asking_prices" => vec![U256::from("2000000")],
+                "item_token_ids" => vec![TokenId::zero()],
+                },
+        )
+        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
+        .with_authorization_keys(&[test_context.account_address])
+        .with_deploy_hash([42; 32])
+        .build();
+
+    let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy).build();
+    builder.exec(execute_request).commit().expect_success();
+}
+
 #[test]
 fn should_process_valid_nft_sale() {
 
