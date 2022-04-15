@@ -16,6 +16,7 @@ import { Wallet } from "tabler-icons-react";
 import styles from "../styles/dashboard-cyber.module.scss";
 import MainLinks from "./_mainLinks";
 import User from "./_user";
+import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
 
 const CustomHeader = () => {
   const [opened, setOpened] = useState(false);
@@ -80,8 +81,21 @@ const CustomNavbar = () => {
     </Navbar>
   );
 };
-
-export default function DashboardCyber() {
+export async function getServerSideProps(context) {
+  const items = supabaseServerSideClient.from("item").select("*");
+  return {
+    props: { items }, // will be passed to the page component as props
+  };
+}
+export interface NFTItem {
+  hash: string;
+  image_url: string;
+  name: string;
+  copies: number;
+  symbol: string;
+  contract_name: string;
+}
+export default function DashboardCyber(props: { items: NFTItem[] }) {
   return (
     <AppShell padding="md" navbar={<CustomNavbar />} header={<CustomHeader />}>
       <Title order={1}>Mint your NFT</Title>
