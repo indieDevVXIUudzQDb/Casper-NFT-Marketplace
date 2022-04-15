@@ -16,6 +16,7 @@ import styles from "../styles/dashboard-cyber.module.scss";
 import { MainLinks } from "./_mainLinks";
 import { User } from "./_user";
 import {MyCard} from "../components/MyCard";
+import {mockData} from "../mockData";
 
 const CustomHeader = () => {
   const [opened, setOpened] = useState(false);
@@ -84,8 +85,8 @@ const CustomNavbar = () => {
 export default function DashboardCyber() {
   return (
     <AppShell padding="md" navbar={<CustomNavbar />} header={<CustomHeader />}>
-      <SimpleGrid cols={3}>
-        <MyCard image={"image.png"} title={"Title"} description={"Description"} buttonText={"Buy"}/>
+      <SimpleGrid cols={3} spacing={50} style={{margin: "5em"}}>
+        {mockData.planets.map(planet=><MyCard image={planet.url} title={planet.name} description={planet.description} buttonText={planet.actionText}/>)}
       </SimpleGrid>
 
       <div className={styles.bg}>

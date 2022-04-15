@@ -14,7 +14,7 @@ export const MyCard = (props: Props) => {
     return (     <div style={{ width: 340 }}>
         <Card shadow="sm" p="lg">
             <Card.Section>
-                <img src={image} />
+                <img style={{width: 300}} src={image} />
             </Card.Section>
 
             <Group position="apart" style={{marginBottom: 5}}>
