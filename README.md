@@ -13,7 +13,7 @@ A rust Market contract to interact with the Casper CEP47 protocol.
 
 ## Implemented
 - static front end on Nextjs
-- some contract implementation - see below for details
+- some contract implementation - see below for remaining functionality required
 
 ## TODO
 ### Front end
