@@ -482,24 +482,34 @@ fn transfer_from(
     owner: AccountHash,
     recipient: AccountHash,
 ) {
-    let deploy = DeployItemBuilder::new()
-        .with_address(owner)
-        .with_stored_session_named_key(
-            CEP47_PACKAGE_KEY,
-            "transfer_from",
-            runtime_args! {
-            "sender" => Key::Account(sender),
+    let method: &str = "transfer_from";
+    let source = DeploySource::ByHash {
+        hash: ContractHash::from(test_context.cep47_package_hash_key.into_hash().unwrap()),
+        method: method.to_string(),
+    };
+    let args = runtime_args! {
+            "sender" => Key::Account(owner),
             "recipient" => Key::Account(recipient),
             "token_ids" => vec![TokenId::zero()],
-            },
-        )
-        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
-        .with_authorization_keys(&[owner])
-        .with_deploy_hash([42; 32])
-        .build();
+    };
+    let mut deploy_builder = DeployItemBuilder::new()
+        .with_empty_payment_bytes(runtime_args! {ARG_AMOUNT => *DEFAULT_PAYMENT})
+        .with_address(sender)
+        .with_authorization_keys(&[sender]);
+    deploy_builder = match source {
+        DeploySource::Code(path) => deploy_builder.with_session_code(path, args),
+        DeploySource::ByHash { hash, method } => {
+            // let contract_hash = ContractHash::from(*hash);
+            deploy_builder.with_stored_session_hash(hash, &*method, args)
+        }
+    };
 
-    let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy).build();
-    builder.exec(execute_request).commit().expect_success();
+    let mut execute_request_builder =
+        ExecuteRequestBuilder::from_deploy_item(deploy_builder.build());
+    builder
+        .exec(execute_request_builder.build())
+        .expect_success()
+        .commit();
 }
 
 #[test]
@@ -546,12 +556,21 @@ fn should_process_valid_nft_sale() {
     //     Key::Account(test_context.owner.account_hash.clone())
     // );
 
-    // transfer_from(&mut builder, &test_context, test_context.account_address,test_context.account_address, buyer);
-    // let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
-    // assert_eq!(owner_after.unwrap(), Key::Account(buyer));
-    //
-    // assert_ne!(Key::Account(test_context.account_address), Key::Account(buyer));
-    // // assert_ne!(owner_after.unwrap(), Key::Account(test_context.account_address));
+    transfer_from(
+        &mut builder,
+        &test_context,
+        test_context.owner.account_hash,
+        seller.account_hash,
+        buyer.account_hash,
+    );
+    let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
+    assert_eq!(owner_after.unwrap(), Key::Account(buyer.account_hash));
+
+    assert_ne!(
+        Key::Account(test_context.owner.account_hash),
+        Key::Account(buyer.account_hash)
+    );
+    // assert_ne!(owner_after.unwrap(), Key::Account(test_context.account_address));
 
     // --------------- Desired --------------- //
     // // Perform mint
