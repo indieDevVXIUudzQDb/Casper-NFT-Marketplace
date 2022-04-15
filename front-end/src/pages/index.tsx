@@ -8,15 +8,16 @@ import {
   ActionIcon,
   MediaQuery,
   Burger,
-  useMantineTheme, SimpleGrid
+  useMantineTheme,
+  SimpleGrid,
 } from "@mantine/core";
 import { Wallet } from "tabler-icons-react";
 
+import { MyCard } from "../components/MyCard";
+import { mockData } from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
-import { MainLinks } from "./_mainLinks";
-import { User } from "./_user";
-import {MyCard} from "../components/MyCard";
-import {mockData} from "../mockData";
+import MainLinks from "./_mainLinks";
+import User from "./_user";
 
 const CustomHeader = () => {
   const [opened, setOpened] = useState(false);
@@ -45,7 +46,7 @@ const CustomHeader = () => {
             GALACTIC NFTs
           </a>
         </div>
-        <div></div>
+        <div />
         <ActionIcon variant="default" size={30}>
           <Wallet size={16} />
         </ActionIcon>
@@ -85,19 +86,26 @@ const CustomNavbar = () => {
 export default function DashboardCyber() {
   return (
     <AppShell padding="md" navbar={<CustomNavbar />} header={<CustomHeader />}>
-      <SimpleGrid cols={3} spacing={50} style={{margin: "5em"}}>
-        {mockData.planets.map(planet=><MyCard image={planet.url} title={planet.name} description={planet.description} buttonText={planet.actionText}/>)}
+      <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
+        {mockData.planets.map((planet, index) => (
+          <MyCard
+            key={index}
+            image={planet.url}
+            title={planet.name}
+            description={planet.description}
+            buttonText={planet.actionText}
+          />
+        ))}
       </SimpleGrid>
 
       <div className={styles.bg}>
         <div className={styles.starField}>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
+          <div className={styles.layer} />
+          <div className={styles.layer} />
+          <div className={styles.layer} />
+          <div className={styles.layer} />
+          <div className={styles.layer} />
         </div>
-
       </div>
     </AppShell>
   );

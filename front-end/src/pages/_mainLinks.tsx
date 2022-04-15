@@ -43,7 +43,7 @@ const data = [
   { icon: <ShoppingCart size={16} />, color: "blue", label: "Market" },
 ];
 
-export function MainLinks() {
+export default function MainLinks() {
   const links = data.map((link) => <MainLink {...link} key={link.label} />);
   return <div>{links}</div>;
 }
