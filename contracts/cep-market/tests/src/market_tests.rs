@@ -1,19 +1,27 @@
-use std::borrow::Borrow;
-use casper_contract::contract_api::runtime::print;
-use casper_engine_test_support::{DeployItemBuilder, ExecuteRequestBuilder, InMemoryWasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR, DEFAULT_ACCOUNT_INITIAL_BALANCE, DEFAULT_GENESIS_CONFIG, DEFAULT_GENESIS_CONFIG_HASH, DEFAULT_PAYMENT, DEFAULT_RUN_GENESIS_REQUEST};
-use casper_execution_engine::core::engine_state::run_genesis_request::RunGenesisRequest;
-use casper_execution_engine::core::engine_state::{ExecuteRequest, GenesisAccount};
-use std::collections::BTreeMap;
-use std::hash::Hash;
-use std::path::PathBuf;
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
 };
+use casper_contract::contract_api::runtime::print;
+use casper_engine_test_support::{
+    DeployItemBuilder, ExecuteRequestBuilder, InMemoryWasmTestBuilder, ARG_AMOUNT,
+    DEFAULT_ACCOUNT_ADDR, DEFAULT_ACCOUNT_INITIAL_BALANCE, DEFAULT_GENESIS_CONFIG,
+    DEFAULT_GENESIS_CONFIG_HASH, DEFAULT_PAYMENT, DEFAULT_RUN_GENESIS_REQUEST,
+};
+use casper_execution_engine::core::engine_state::run_genesis_request::RunGenesisRequest;
+use casper_execution_engine::core::engine_state::{ExecuteRequest, GenesisAccount};
 use casper_types::account::Account;
-use casper_types::{account::AccountHash, runtime_args, ContractHash, HashAddr, Key, Motes, PublicKey, RuntimeArgs, SecretKey, U256, U512, ContractPackage, CLTyped, ContractPackageHash, StoredValue};
 use casper_types::bytesrepr::{FromBytes, ToBytes};
+use casper_types::{
+    account::AccountHash, runtime_args, CLTyped, ContractHash, ContractPackage,
+    ContractPackageHash, HashAddr, Key, Motes, PublicKey, RuntimeArgs, SecretKey, StoredValue,
+    U256, U512,
+};
 use cep47_tests::cep47_instance::CEP47Instance;
+use std::borrow::Borrow;
+use std::collections::BTreeMap;
+use std::hash::Hash;
+use std::path::PathBuf;
 
 use test_env::TestEnv;
 
@@ -56,7 +64,6 @@ mod meta {
     }
 }
 
-
 pub fn fund_account(account: &AccountHash) -> ExecuteRequest {
     let deploy_item = DeployItemBuilder::new()
         .with_address(*DEFAULT_ACCOUNT_ADDR)
@@ -88,7 +95,11 @@ pub fn query<T: FromBytes + CLTyped>(
         .expect("Wrong type in query result.")
 }
 
-pub fn get_contract_hash(name: String, account: AccountHash, test_builder: &InMemoryWasmTestBuilder) -> [u8; 32] {
+pub fn get_contract_hash(
+    name: String,
+    account: AccountHash,
+    test_builder: &InMemoryWasmTestBuilder,
+) -> [u8; 32] {
     let key = format!("{}_contract_hash_wrapped", name);
     // query(test_builder, Key::Account(account), &[key])
     query(test_builder, Key::Account(account), &[key])
@@ -102,15 +113,20 @@ pub struct TestAccount {
 
 pub fn get_test_accounts() -> (InMemoryWasmTestBuilder, Vec<TestAccount>) {
     let mut test_builder = InMemoryWasmTestBuilder::default();
-    test_builder.run_genesis(&DEFAULT_RUN_GENESIS_REQUEST).commit();
+    test_builder
+        .run_genesis(&DEFAULT_RUN_GENESIS_REQUEST)
+        .commit();
 
     let mut accounts = Vec::new();
     for i in 0..10u8 {
         let secret_key: SecretKey = SecretKey::ed25519_from_bytes([i; 32]).unwrap();
         let public_key: PublicKey = (&secret_key).into();
         let account_hash = AccountHash::from(&public_key);
-        accounts.push(
-            TestAccount { secret_key, public_key, account_hash });
+        accounts.push(TestAccount {
+            secret_key,
+            public_key,
+            account_hash,
+        });
         test_builder
             .exec(fund_account(&account_hash))
             .expect_success()
@@ -120,7 +136,7 @@ pub fn get_test_accounts() -> (InMemoryWasmTestBuilder, Vec<TestAccount>) {
 }
 
 struct TestFixture {
-    account_address: AccountHash,
+    owner: TestAccount,
     cep47_package_hash_key: Key,
     market_package_hash_key: Key,
 }
@@ -175,11 +191,9 @@ pub fn query_dictionary_item(
 }
 
 fn setup() -> (InMemoryWasmTestBuilder, TestFixture, Vec<TestAccount>) {
-
-
     let (mut test_builder, mut accounts) = get_test_accounts();
-    let main_account = accounts.pop().unwrap();
-    let account_address = main_account.account_hash;
+    let owner = accounts.pop().unwrap();
+    let account_address = owner.account_hash;
 
     // ====install cep47 contract start=========//
     let exec_request = {
@@ -187,13 +201,13 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture, Vec<TestAccount>) {
             account_address,
             CEP47_WASM,
             runtime_args! {
-                "name" => CEP47_NAME,
-                "symbol" => SYMBOL,
-                "meta" => meta::contract_meta(),
-                "contract_name" => CEP47_CONTRACT_NAME,
-                },
+            "name" => CEP47_NAME,
+            "symbol" => SYMBOL,
+            "meta" => meta::contract_meta(),
+            "contract_name" => CEP47_CONTRACT_NAME,
+            },
         )
-            .build()
+        .build()
     };
 
     test_builder.exec(exec_request).expect_success().commit();
@@ -227,7 +241,7 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture, Vec<TestAccount>) {
                 "contract_name" => MARKET_CONTRACT_NAME,
             },
         )
-            .build()
+        .build()
     };
 
     test_builder.exec(exec_request).expect_success().commit();
@@ -240,7 +254,6 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture, Vec<TestAccount>) {
         .cloned()
         .expect("should be account");
 
-
     //get market package hash
     let market_package_hash_key = *account
         .named_keys()
@@ -250,7 +263,7 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture, Vec<TestAccount>) {
     // ========= install market contract end========= //
 
     let test_context = TestFixture {
-        account_address,
+        owner,
         cep47_package_hash_key,
         market_package_hash_key,
     };
@@ -258,17 +271,24 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture, Vec<TestAccount>) {
     (test_builder, test_context, accounts)
 }
 
-fn nft_mint(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, sender: AccountHash, recipient: AccountHash, token_ids: Vec<TokenId>, token_metas: Vec<Meta>) {
+fn nft_mint(
+    builder: &mut InMemoryWasmTestBuilder,
+    test_context: &TestFixture,
+    sender: AccountHash,
+    recipient: AccountHash,
+    token_ids: Vec<TokenId>,
+    token_metas: Vec<Meta>,
+) {
     let deploy = DeployItemBuilder::new()
         .with_address(sender)
         .with_stored_session_named_key(
             CEP47_PACKAGE_KEY,
             "mint",
             runtime_args! {
-                "recipient" => Key::Account(recipient),
-                "token_ids" => token_ids,
-                "token_metas" => token_metas,
-                },
+            "recipient" => Key::Account(recipient),
+            "token_ids" => token_ids,
+            "token_metas" => token_metas,
+            },
         )
         .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
         .with_authorization_keys(&[sender])
@@ -281,21 +301,21 @@ fn nft_mint(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, s
 
 fn create_market_item(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture) {
     let deploy = DeployItemBuilder::new()
-        .with_address(test_context.account_address)
+        .with_address(test_context.owner.account_hash)
         .with_stored_session_named_key(
             MARKET_PACKAGE_KEY,
             "create_market_item",
             runtime_args! {
-                "recipient" => Key::Account(test_context.account_address),
+                "recipient" => Key::Account(test_context.owner.account_hash),
                 "item_ids" => vec![TokenId::zero()],
-                // TODO change to key
+                // TODO change item_nft_contract_addresses to keys
                 "item_nft_contract_addresses" => vec![ContractHash::from(test_context.cep47_package_hash_key.into_hash().unwrap())],
                 "item_asking_prices" => vec![U256::from("2000000")],
                 "item_token_ids" => vec![TokenId::zero()],
                 },
         )
         .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
-        .with_authorization_keys(&[test_context.account_address])
+        .with_authorization_keys(&[test_context.owner.account_hash])
         .with_deploy_hash([42; 32])
         .build();
 
@@ -303,19 +323,23 @@ fn create_market_item(builder: &mut InMemoryWasmTestBuilder, test_context: &Test
     builder.exec(execute_request).commit().expect_success();
 }
 
-fn process_market_sale(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, buyer: Key) {
+fn process_market_sale(
+    builder: &mut InMemoryWasmTestBuilder,
+    test_context: &TestFixture,
+    buyer: Key,
+) {
     let deploy = DeployItemBuilder::new()
-        .with_address(test_context.account_address)
+        .with_address(test_context.owner.account_hash)
         .with_stored_session_named_key(
             MARKET_PACKAGE_KEY,
             "process_market_sale",
             runtime_args! {
-                "recipient" => buyer,
-                "item_id" => TokenId::zero(),
-                },
+            "recipient" => buyer,
+            "item_id" => TokenId::zero(),
+            },
         )
         .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
-        .with_authorization_keys(&[test_context.account_address])
+        .with_authorization_keys(&[test_context.owner.account_hash])
         .with_deploy_hash([42; 32])
         .build();
 
@@ -323,8 +347,17 @@ fn process_market_sale(builder: &mut InMemoryWasmTestBuilder, test_context: &Tes
     builder.exec(execute_request).commit().expect_success();
 }
 
-fn owner_of(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, token_id: TokenId) -> Option<Key> {
-    match query_dictionary_item(builder, test_context.cep47_package_hash_key, "owners".to_string(), TokenId::zero().to_string()) {
+fn owner_of(
+    builder: &mut InMemoryWasmTestBuilder,
+    test_context: &TestFixture,
+    token_id: TokenId,
+) -> Option<Key> {
+    match query_dictionary_item(
+        builder,
+        test_context.cep47_package_hash_key,
+        "owners".to_string(),
+        TokenId::zero().to_string(),
+    ) {
         Ok(value) => value
             .as_cl_value()
             .expect("should be cl value.")
@@ -338,8 +371,18 @@ fn owner_of(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, t
     }
 }
 
-fn get_approved(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, owner: Key, token_id: TokenId) -> Option<Key> {
-    match query_dictionary_item(builder, test_context.cep47_package_hash_key, "allowances".to_string(), key_and_value_to_str::<String>(&owner, &token_id.to_string())) {
+fn get_approved(
+    builder: &mut InMemoryWasmTestBuilder,
+    test_context: &TestFixture,
+    owner: Key,
+    token_id: TokenId,
+) -> Option<Key> {
+    match query_dictionary_item(
+        builder,
+        test_context.cep47_package_hash_key,
+        "allowances".to_string(),
+        key_and_value_to_str::<String>(&owner, &token_id.to_string()),
+    ) {
         Ok(value) => value
             .as_cl_value()
             .expect("should be cl value.")
@@ -353,19 +396,24 @@ fn get_approved(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixtur
     }
 }
 
-fn approve(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, sender: AccountHash, spender: AccountHash) {
+fn approve(
+    builder: &mut InMemoryWasmTestBuilder,
+    test_context: &TestFixture,
+    sender: AccountHash,
+    spender: AccountHash,
+) {
     let deploy = DeployItemBuilder::new()
-        .with_address(test_context.account_address)
+        .with_address(test_context.owner.account_hash)
         .with_stored_session_named_key(
             CEP47_PACKAGE_KEY,
             "approve",
             runtime_args! {
-                "spender" => Key::Account(spender),
-                "token_ids" => vec![TokenId::zero()],
-                },
+            "spender" => Key::Account(spender),
+            "token_ids" => vec![TokenId::zero()],
+            },
         )
         .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
-        .with_authorization_keys(&[test_context.account_address])
+        .with_authorization_keys(&[test_context.owner.account_hash])
         .with_deploy_hash([42; 32])
         .build();
 
@@ -373,19 +421,24 @@ fn approve(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, se
     builder.exec(execute_request).commit().expect_success();
 }
 
-fn transfer(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, owner: Key, recipient: Key) {
+fn transfer(
+    builder: &mut InMemoryWasmTestBuilder,
+    test_context: &TestFixture,
+    owner: Key,
+    recipient: Key,
+) {
     let deploy = DeployItemBuilder::new()
-        .with_address(test_context.account_address)
+        .with_address(test_context.owner.account_hash)
         .with_stored_session_named_key(
             CEP47_PACKAGE_KEY,
             "transfer",
             runtime_args! {
-                "recipient" => recipient,
-                "token_ids" => vec![TokenId::zero()],
-                },
+            "recipient" => recipient,
+            "token_ids" => vec![TokenId::zero()],
+            },
         )
         .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
-        .with_authorization_keys(&[test_context.account_address])
+        .with_authorization_keys(&[test_context.owner.account_hash])
         .with_deploy_hash([42; 32])
         .build();
 
@@ -393,17 +446,23 @@ fn transfer(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, o
     builder.exec(execute_request).commit().expect_success();
 }
 
-fn transfer_from(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, sender: AccountHash, owner: AccountHash, recipient: AccountHash) {
+fn transfer_from(
+    builder: &mut InMemoryWasmTestBuilder,
+    test_context: &TestFixture,
+    sender: AccountHash,
+    owner: AccountHash,
+    recipient: AccountHash,
+) {
     let deploy = DeployItemBuilder::new()
         .with_address(owner)
         .with_stored_session_named_key(
             CEP47_PACKAGE_KEY,
             "transfer_from",
             runtime_args! {
-                "sender" => Key::Account(sender),
-                "recipient" => Key::Account(recipient),
-                "token_ids" => vec![TokenId::zero()],
-                },
+            "sender" => Key::Account(sender),
+            "recipient" => Key::Account(recipient),
+            "token_ids" => vec![TokenId::zero()],
+            },
         )
         .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
         .with_authorization_keys(&[owner])
@@ -416,26 +475,44 @@ fn transfer_from(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixtu
 
 #[test]
 fn should_process_valid_nft_sale() {
-    let (mut builder, test_context, accounts) = setup();
-    let seller = accounts[2].account_hash;
-    let buyer = accounts[3].account_hash;
-    println!("account_address {:?}", test_context.account_address);
-    println!("seller          {:?}", seller);
-    println!("buyer           {:?}", buyer);
-
+    let (mut builder, test_context, mut accounts) = setup();
+    let seller = accounts.pop().unwrap();
+    let buyer = accounts.pop().unwrap();
+    println!("owner           {:?}", test_context.owner.account_hash);
+    println!("seller          {:?}", &seller.account_hash);
+    println!("buyer           {:?}", &buyer.account_hash);
 
     // --------------- Working --------------- //
     // Perform mint
-    nft_mint(&mut builder, &test_context, test_context.account_address, seller, vec![TokenId::zero()], vec![meta::red_dragon()]);
+    nft_mint(
+        &mut builder,
+        &test_context,
+        test_context.owner.account_hash,
+        seller.account_hash,
+        vec![TokenId::zero()],
+        vec![meta::red_dragon()],
+    );
 
     // Check nft owner
     let owner_before = owner_of(&mut builder, &test_context, TokenId::zero());
-    assert_eq!(owner_before.unwrap(), Key::Account(seller));
+    assert_eq!(owner_before.unwrap(), Key::Account(seller.account_hash));
 
-
-    // approve(&mut builder, &test_context, test_context.account_address, seller);
-    // let approved_after = get_approved(&mut builder, &test_context, Key::Account(test_context.account_address),TokenId::zero());
-    // assert_eq!(approved_after.unwrap(), Key::Account(buyer));
+    approve(
+        &mut builder,
+        &test_context,
+        seller.account_hash,
+        test_context.owner.account_hash,
+    );
+    let approved_after = get_approved(
+        &mut builder,
+        &test_context,
+        Key::Account(test_context.owner.account_hash),
+        TokenId::zero(),
+    );
+    assert_eq!(
+        approved_after.unwrap(),
+        Key::Account(test_context.owner.account_hash.clone())
+    );
 
     // transfer_from(&mut builder, &test_context, test_context.account_address,test_context.account_address, buyer);
     // let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
@@ -443,7 +520,6 @@ fn should_process_valid_nft_sale() {
     //
     // assert_ne!(Key::Account(test_context.account_address), Key::Account(buyer));
     // // assert_ne!(owner_after.unwrap(), Key::Account(test_context.account_address));
-
 
     // --------------- Desired --------------- //
     // // Perform mint
@@ -461,17 +537,15 @@ fn should_process_valid_nft_sale() {
     // assert_eq!(approved_after.unwrap(), Key::Account(test_context.account_address));
     // println!("approved_after {:?}", approved_after);
 
-
     //TODO
     // create_market_item(&mut builder, &test_context);
     // process_market_sale(&mut builder, &test_context, Key::Account(buyer));
     // transfer(&mut builder, &test_context, Key::Account(original_owner),Key::Account(buyer));
     // transfer_from(&mut builder, &test_context, Key::Account(original_owner),Key::Account(test_context.account_address));
 
-
     // Check nft new owner
-    let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
-    println!("owner_after {:?}", owner_after);
+    // let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
+    // println!("owner_after {:?}", owner_after);
 
     // assert_ne!(owner_before, owner_after);
 }
