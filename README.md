@@ -3,7 +3,8 @@
 ![](v1.gif)
 
 ## Description
-Currently work in progress, the rust contract is not complete and front end is using static data only using Nextjs. 
+Currently work in progress, an NFT Store to participate in the Casper Network.
+_Note: The rust contract is not complete and front end is using static data only using Nextjs._ 
 
 ### Design Summary
 Using Next.js for marketplace users to interact with. 
