@@ -2,16 +2,20 @@ import React from "react";
 
 import { ThemeIcon, UnstyledButton, Group, Text } from "@mantine/core";
 import { ShoppingCart, Wallet } from "tabler-icons-react";
+import { useRouter } from "next/router";
 
 interface MainLinkProps {
   icon: React.ReactNode;
   color: string;
   label: string;
+  func: () => void;
+  link: any;
 }
 
-function MainLink({ icon, color, label }: MainLinkProps) {
+function MainLink({ icon, color, label, func }: MainLinkProps) {
   return (
     <UnstyledButton
+      onClick={func}
       sx={(theme) => ({
         display: "block",
         width: "100%",
@@ -39,16 +43,37 @@ function MainLink({ icon, color, label }: MainLinkProps) {
   );
 }
 
-const data = [
-  { icon: <ShoppingCart size={16} />, color: "blue", label: "Market" },
-  {
-    icon: <Wallet size={16} />,
-    color: "blue",
-    label: "Connect to Casper Wallet",
-  },
-];
-
 export default function MainLinks() {
+  const router = useRouter();
+
+  const data = [
+    {
+      icon: <ShoppingCart size={16} />,
+      color: "blue",
+      label: "Market",
+      func: () => router.push("/"),
+    },
+    {
+      icon: <ShoppingCart size={16} />,
+      color: "blue",
+      label: "My NFTs",
+      func: () => router.push("/my-nfts"),
+    },
+    {
+      icon: <ShoppingCart size={16} />,
+      color: "blue",
+      label: "Mint NFT",
+      func: () => router.push("/mint"),
+    },
+    {
+      icon: <Wallet size={16} />,
+      color: "blue",
+      label: "Connect to Casper Wallet",
+      //TODO
+      func: () => null,
+    },
+  ];
+
   const links = data.map((link) => <MainLink {...link} key={link.label} />);
   return <div>{links}</div>;
 }

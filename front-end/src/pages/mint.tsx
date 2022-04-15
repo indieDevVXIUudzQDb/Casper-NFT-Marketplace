@@ -9,12 +9,10 @@ import {
   MediaQuery,
   Burger,
   useMantineTheme,
-  SimpleGrid, Title,
+  Title,
 } from "@mantine/core";
 import { Wallet } from "tabler-icons-react";
 
-import { MyCard } from "../components/MyCard";
-import { mockData } from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
 import MainLinks from "./_mainLinks";
 import User from "./_user";
@@ -86,19 +84,7 @@ const CustomNavbar = () => {
 export default function DashboardCyber() {
   return (
     <AppShell padding="md" navbar={<CustomNavbar />} header={<CustomHeader />}>
-      <Title order={1}>Distant Planet Collection</Title>
-
-      <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
-        {mockData.planets.map((planet, index) => (
-          <MyCard
-            key={index}
-            image={planet.url}
-            title={planet.name}
-            description={planet.description}
-            buttonText={planet.actionText}
-          />
-        ))}
-      </SimpleGrid>
+      <Title order={1}>Mint your NFT</Title>
 
       <div className={styles.bg}>
         <div className={styles.starField}>
