@@ -8,7 +8,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 
-export default function User() {
+export default function User(props: { connected: boolean }) {
   const theme = useMantineTheme();
 
   return (
@@ -41,9 +41,15 @@ export default function User() {
       >
         <Group>
           <Box sx={{ flex: 1 }}>
-            <Text size="sm" weight={500}>
-              Not Connected
-            </Text>
+            {props.connected ? (
+              <Text weight={700} color={"green"}>
+                <b>&bull; &nbsp;</b> Connected to Casper Signer
+              </Text>
+            ) : (
+              <Text weight={700}>
+                <b>&bull; &nbsp;</b> Not Connected to Casper Signer
+              </Text>
+            )}
           </Box>
         </Group>
       </UnstyledButton>

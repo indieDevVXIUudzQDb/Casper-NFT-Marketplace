@@ -9,16 +9,17 @@ import {
   MediaQuery,
   Burger,
   useMantineTheme,
-  SimpleGrid,
   Title,
+  SimpleGrid,
 } from "@mantine/core";
 import { Wallet } from "tabler-icons-react";
 
-import { MyCard } from "../components/MyCard";
-import { mockData } from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
 import MainLinks from "./_mainLinks";
 import User from "./_user";
+import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
+import { mockData } from "../mockData";
+import { MyCard } from "../components/MyCard";
 import {
   accountInformation,
   EVENT_STREAM_ADDRESS,
@@ -26,9 +27,8 @@ import {
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
 import { EventStream } from "casper-js-sdk";
-import { isConnected } from "casper-js-sdk/dist/lib/Signer";
 
-const CustomHeader = (props: { address: string }) => {
+const CustomHeader = () => {
   const [opened, setOpened] = useState(false);
 
   const theme = useMantineTheme();
@@ -57,7 +57,6 @@ const CustomHeader = (props: { address: string }) => {
         </div>
         <div />
         <ActionIcon variant="default" size={30}>
-          {props.address}
           <Wallet size={16} />
         </ActionIcon>
       </Group>
@@ -65,7 +64,7 @@ const CustomHeader = (props: { address: string }) => {
   );
 };
 
-const CustomNavbar = (props: { connected: boolean }) => {
+const CustomNavbar = () => {
   return (
     <Navbar
       p="md"
@@ -82,7 +81,7 @@ const CustomNavbar = (props: { connected: boolean }) => {
             <MainLinks />
           </Navbar.Section>
           <Navbar.Section>
-            <User connected={props.connected} />
+            <User />
           </Navbar.Section>
         </div>
         <div className={styles.lineRight}>
@@ -92,8 +91,24 @@ const CustomNavbar = (props: { connected: boolean }) => {
     </Navbar>
   );
 };
-
-export default function DashboardCyber() {
+export async function getServerSideProps(context) {
+  const { data: items } = await supabaseServerSideClient
+    .from("item")
+    .select("*");
+  return {
+    props: { items }, // will be passed to the page component as props
+  };
+}
+export interface NFTItem {
+  hash: string;
+  image_url: string;
+  name: string;
+  copies: number;
+  symbol: string;
+  contract_name: string;
+}
+export default function DashboardCyber(props: { items: NFTItem[] }) {
+  const items = props.items;
   const [address, setAddress] = useState("");
   const [publicKey, setPublicKey] = useState("");
   const [balance, setBalance] = useState("");
@@ -121,26 +136,22 @@ export default function DashboardCyber() {
     subscribeToContractEvents(es, () => getActiveAccountBalance());
     updateAccountInformation();
   }, []);
-  return (
-    <AppShell
-      padding="md"
-      navbar={<CustomNavbar connected={connected} />}
-      header={<CustomHeader address={address} />}
-    >
-      <Title order={1}>Distant Planet Collection</Title>
 
+  console.log(items);
+  return (
+    <AppShell padding="md" navbar={<CustomNavbar />} header={<CustomHeader />}>
+      <Title order={1}>My NFTs</Title>
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
-        {mockData.planets.map((planet, index) => (
+        {items.map((nft, index) => (
           <MyCard
             key={index}
-            image={planet.url}
-            title={planet.name}
-            description={planet.description}
-            buttonText={planet.actionText}
+            image={nft.image_url}
+            title={nft.name}
+            description={""}
+            buttonText={"Sell (Coming Soon)"}
           />
         ))}
       </SimpleGrid>
-
       <div className={styles.bg}>
         <div className={styles.starField}>
           <div className={styles.layer} />

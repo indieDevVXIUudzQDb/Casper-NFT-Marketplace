@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import {
   AppShell,
@@ -9,26 +9,21 @@ import {
   MediaQuery,
   Burger,
   useMantineTheme,
-  SimpleGrid,
   Title,
+  Button,
+  Checkbox,
+  Box,
+  TextInput,
 } from "@mantine/core";
 import { Wallet } from "tabler-icons-react";
 
-import { MyCard } from "../components/MyCard";
-import { mockData } from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
 import MainLinks from "./_mainLinks";
 import User from "./_user";
-import {
-  accountInformation,
-  EVENT_STREAM_ADDRESS,
-  getActiveAccountBalance,
-  subscribeToContractEvents,
-} from "../utils/cep47_utils";
-import { EventStream } from "casper-js-sdk";
-import { isConnected } from "casper-js-sdk/dist/lib/Signer";
+import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
+import { useForm } from "@mantine/hooks";
 
-const CustomHeader = (props: { address: string }) => {
+const CustomHeader = () => {
   const [opened, setOpened] = useState(false);
 
   const theme = useMantineTheme();
@@ -57,7 +52,6 @@ const CustomHeader = (props: { address: string }) => {
         </div>
         <div />
         <ActionIcon variant="default" size={30}>
-          {props.address}
           <Wallet size={16} />
         </ActionIcon>
       </Group>
@@ -65,7 +59,7 @@ const CustomHeader = (props: { address: string }) => {
   );
 };
 
-const CustomNavbar = (props: { connected: boolean }) => {
+const CustomNavbar = () => {
   return (
     <Navbar
       p="md"
@@ -82,7 +76,7 @@ const CustomNavbar = (props: { connected: boolean }) => {
             <MainLinks />
           </Navbar.Section>
           <Navbar.Section>
-            <User connected={props.connected} />
+            <User />
           </Navbar.Section>
         </div>
         <div className={styles.lineRight}>
@@ -94,53 +88,37 @@ const CustomNavbar = (props: { connected: boolean }) => {
 };
 
 export default function DashboardCyber() {
-  const [address, setAddress] = useState("");
-  const [publicKey, setPublicKey] = useState("");
-  const [balance, setBalance] = useState("");
-  const [nftBalance, setNFTBalance] = useState(0);
-  const [tx, setTx] = useState("");
-  const [to, setTo] = useState("");
-  const [amount, setAmount] = useState("");
-  const [connected, setConnected] = useState(false);
-  const updateAccountInformation = async () => {
-    const {
-      textAddress,
-      textBalance,
-      publicKey: updatedPublicKey,
-    } = await accountInformation();
-    setAddress(textAddress);
-    setBalance(textBalance);
-    setPublicKey(updatedPublicKey);
-    setNFTBalance(await getActiveAccountBalance());
-    setConnected(true);
-  };
-
-  useEffect(() => {
-    console.log("subscription called");
-    const es = new EventStream(EVENT_STREAM_ADDRESS!);
-    subscribeToContractEvents(es, () => getActiveAccountBalance());
-    updateAccountInformation();
-  }, []);
+  const form = useForm({
+    initialValues: {
+      name: "",
+      symbol: "",
+      url: "",
+      description: "",
+    },
+  });
   return (
-    <AppShell
-      padding="md"
-      navbar={<CustomNavbar connected={connected} />}
-      header={<CustomHeader address={address} />}
-    >
-      <Title order={1}>Distant Planet Collection</Title>
-
-      <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
-        {mockData.planets.map((planet, index) => (
-          <MyCard
-            key={index}
-            image={planet.url}
-            title={planet.name}
-            description={planet.description}
-            buttonText={planet.actionText}
+    <AppShell padding="md" navbar={<CustomNavbar />} header={<CustomHeader />}>
+      <Title order={1}>Mint your NFT</Title>
+      <Box sx={{ maxWidth: 300 }} mx="auto">
+        <form onSubmit={form.onSubmit((values) => console.log(values))}>
+          <TextInput required label="Name" {...form.getInputProps("name")} />
+          <TextInput
+            required
+            label="Symbol"
+            {...form.getInputProps("symbol")}
           />
-        ))}
-      </SimpleGrid>
+          <TextInput required label="URL" {...form.getInputProps("url")} />
+          <TextInput
+            required
+            label="Description"
+            {...form.getInputProps("description")}
+          />
 
+          <Group position="right" mt="md">
+            <Button type="submit">Create</Button>
+          </Group>
+        </form>
+      </Box>
       <div className={styles.bg}>
         <div className={styles.starField}>
           <div className={styles.layer} />

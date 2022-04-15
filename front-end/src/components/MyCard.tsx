@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Badge, Button, Card, Group } from "@mantine/core";
+import { Badge, Button, Card, Group, Title } from "@mantine/core";
 
 import { prefix } from "../prefix";
 
@@ -18,14 +18,16 @@ export const MyCard = (props: Props) => {
     <div style={{ width: 340 }} key={key}>
       <Card shadow="sm" p="lg">
         <Card.Section>
-          <img style={{ width: 300 }} src={`${prefix}${image}`} />
+          <div style={{ textAlign: "center" }}>
+            <img
+              style={{ maxWidth: 290, padding: "1em" }}
+              src={`${prefix}${image}`}
+            />
+          </div>
         </Card.Section>
 
         <Group position="apart" style={{ marginBottom: 5 }}>
-          {title}
-          <Badge color="pink" variant="light">
-            On Sale
-          </Badge>
+          <Title align={"center"}>{title}</Title>
         </Group>
 
         {description}
