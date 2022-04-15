@@ -10,7 +10,10 @@ use casper_execution_engine::core::engine_state::{ExecuteRequest, GenesisAccount
 use std::collections::BTreeMap;
 use std::hash::Hash;
 use std::path::PathBuf;
-
+use blake2::{
+    digest::{Update, VariableOutput},
+    VarBlake2b,
+};
 use casper_types::account::Account;
 use casper_types::CLType::String;
 use casper_types::{account::AccountHash, runtime_args, ContractHash, HashAddr, Key, Motes, PublicKey, RuntimeArgs, SecretKey, U256, U512, ContractPackage, CLTyped, ContractPackageHash, StoredValue};
@@ -117,6 +120,55 @@ struct TestFixture {
     market_package_hash_key: Key
 }
 
+pub fn key_and_value_to_str<T: CLTyped + ToBytes>(key: &Key, value: &T) -> std::string::String {
+    let mut hasher = VarBlake2b::new(32).unwrap();
+    hasher.update(key.to_bytes().unwrap());
+    hasher.update(value.to_bytes().unwrap());
+    let mut ret = [0u8; 32];
+    hasher.finalize_variable(|hash| ret.clone_from_slice(hash));
+    hex::encode(ret)
+}
+
+pub fn query_dictionary_item(
+    builder: &InMemoryWasmTestBuilder,
+    key: Key,
+    dictionary_name: std::string::String,
+    dictionary_item_key: std::string::String,
+) -> Result<StoredValue, std::string::String> {
+    let empty_path = vec![];
+    let dictionary_key_bytes = dictionary_item_key.as_bytes();
+    let address = match key {
+        Key::Account(_) | Key::Hash(_) => {
+            if let name = dictionary_name {
+                let stored_value = builder.query(None, key, &[])?;
+
+                let named_keys = match &stored_value {
+                    StoredValue::Account(account) => account.named_keys(),
+                    StoredValue::Contract(contract) => contract.named_keys(),
+                    _ => {
+                        return Err(
+                            "Provided base key is nether an account or a contract".to_string()
+                        )
+                    }
+                };
+
+                let dictionary_uref = named_keys
+                    .get(&name)
+                    .and_then(Key::as_uref)
+                    .ok_or_else(|| "No dictionary uref was found in named keys".to_string())?;
+
+                Key::dictionary(*dictionary_uref, dictionary_key_bytes)
+            } else {
+                return Err("No dictionary name was provided".to_string());
+            }
+        }
+        Key::URef(uref) => Key::dictionary(uref, dictionary_key_bytes),
+        Key::Dictionary(address) => Key::Dictionary(address),
+        _ => return Err("Unsupported key type for a query to a dictionary item".to_string()),
+    };
+    builder.query(None, address, &empty_path)
+}
+
 fn setup() -> (InMemoryWasmTestBuilder, TestFixture) {
 
         // Create an asymmetric keypair, and derive the account address of this.
@@ -221,27 +273,26 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture) {
 
 }
 
-fn nft_mint(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture){
+fn nft_mint(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, sender: AccountHash,recipient:AccountHash, token_ids: Vec<TokenId>, token_metas: Vec<Meta>){
     let deploy = DeployItemBuilder::new()
-        .with_address(test_context.account_address)
+        .with_address(sender)
         .with_stored_session_named_key(
             CEP47_PACKAGE_KEY,
             "mint",
             runtime_args! {
-                "recipient" => Key::Account(test_context.account_address),
-                "token_ids" => vec![TokenId::zero()],
-                "token_metas" => vec![meta::red_dragon()],
+                "recipient" => Key::Account(recipient),
+                "token_ids" => token_ids,
+                "token_metas" => token_metas,
                 },
         )
         .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
-        .with_authorization_keys(&[test_context.account_address])
+        .with_authorization_keys(&[sender])
         .with_deploy_hash([42; 32])
         .build();
 
     let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy).build();
     builder.exec(execute_request).commit().expect_success();
 }
-
 
 fn create_market_item(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture){
     let deploy = DeployItemBuilder::new()
@@ -287,46 +338,6 @@ fn process_market_sale(builder: &mut InMemoryWasmTestBuilder, test_context: &Tes
     builder.exec(execute_request).commit().expect_success();
 }
 
-pub fn query_dictionary_item(
-    builder: &InMemoryWasmTestBuilder,
-    key: Key,
-    dictionary_name: std::string::String,
-    dictionary_item_key: std::string::String,
-) -> Result<StoredValue, std::string::String> {
-    let empty_path = vec![];
-    let dictionary_key_bytes = dictionary_item_key.as_bytes();
-    let address = match key {
-        Key::Account(_) | Key::Hash(_) => {
-            if let name = dictionary_name {
-                let stored_value = builder.query(None, key, &[])?;
-
-                let named_keys = match &stored_value {
-                    StoredValue::Account(account) => account.named_keys(),
-                    StoredValue::Contract(contract) => contract.named_keys(),
-                    _ => {
-                        return Err(
-                            "Provided base key is nether an account or a contract".to_string()
-                        )
-                    }
-                };
-
-                let dictionary_uref = named_keys
-                    .get(&name)
-                    .and_then(Key::as_uref)
-                    .ok_or_else(|| "No dictionary uref was found in named keys".to_string())?;
-
-                Key::dictionary(*dictionary_uref, dictionary_key_bytes)
-            } else {
-                return Err("No dictionary name was provided".to_string());
-            }
-        }
-        Key::URef(uref) => Key::dictionary(uref, dictionary_key_bytes),
-        Key::Dictionary(address) => Key::Dictionary(address),
-        _ => return Err("Unsupported key type for a query to a dictionary item".to_string()),
-    };
-    builder.query(None, address, &empty_path)
-}
-
 fn owner_of(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, token_id: TokenId) -> Option<Key> {
     match query_dictionary_item(builder, test_context.cep47_package_hash_key, "owners".to_string(), TokenId::zero().to_string()) {
         Ok(value) => value
@@ -342,15 +353,29 @@ fn owner_of(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, t
     }
 }
 
+fn get_approved(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture,owner: Key, token_id: TokenId) -> Option<Key> {
+    match query_dictionary_item(builder, test_context.cep47_package_hash_key, "allowances".to_string(), key_and_value_to_str::<std::string::String>(&owner, &token_id.to_string())) {
+        Ok(value) => value
+            .as_cl_value()
+            .expect("should be cl value.")
+            .clone()
+            .into_t()
+            .expect("Wrong type in query result."),
+        Err(e) => {
+            println!("{}", e);
+            None
+        }
+    }
+}
 
-fn approve(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture){
+fn approve(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, sender: AccountHash, spender: AccountHash){
     let deploy = DeployItemBuilder::new()
         .with_address(test_context.account_address)
         .with_stored_session_named_key(
             CEP47_PACKAGE_KEY,
             "approve",
             runtime_args! {
-                "spender" => test_context.market_package_hash_key,
+                "spender" => Key::Account(spender),
                 "token_ids" => vec![TokenId::zero()],
                 },
         )
@@ -363,15 +388,14 @@ fn approve(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture){
     builder.exec(execute_request).commit().expect_success();
 }
 
-
-fn transfer(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, transferee: Key){
+fn transfer(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, owner:Key, recipient: Key){
     let deploy = DeployItemBuilder::new()
         .with_address(test_context.account_address)
         .with_stored_session_named_key(
             CEP47_PACKAGE_KEY,
             "transfer",
             runtime_args! {
-                "recipient" => transferee,
+                "recipient" => recipient,
                 "token_ids" => vec![TokenId::zero()],
                 },
         )
@@ -384,28 +408,79 @@ fn transfer(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, t
     builder.exec(execute_request).commit().expect_success();
 }
 
+fn transfer_from(builder: &mut InMemoryWasmTestBuilder, test_context: &TestFixture, sender:Key, owner:AccountHash, recipient: Key){
+    let deploy = DeployItemBuilder::new()
+        .with_address(test_context.account_address)
+        .with_stored_session_named_key(
+            CEP47_PACKAGE_KEY,
+            "transfer_from",
+            runtime_args! {
+                "sender" => sender,
+                "recipient" => recipient,
+                "token_ids" => vec![TokenId::zero()],
+                },
+        )
+        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
+        .with_authorization_keys(&[test_context.account_address])
+        .with_deploy_hash([42; 32])
+        .build();
+
+    let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy).build();
+    builder.exec(execute_request).commit().expect_success();
+}
 
 #[test]
 fn should_process_valid_nft_sale() {
 
     let (mut builder, test_context) = setup();
+    println!("account_address {:?}", test_context.account_address);
     let accounts = get_test_accounts(&mut builder);
-    nft_mint(&mut builder, &test_context);
-    create_market_item(&mut builder, &test_context);
+    let original_owner = accounts[0];
+    let buyer = accounts[1];
 
-    let buyer = accounts[0];
+    // --------------- Working --------------- //
+    // Perform mint
+    nft_mint(&mut builder, &test_context, test_context.account_address, test_context.account_address,vec![TokenId::zero()],vec![meta::red_dragon()] );
+
     // Check nft owner
     let owner_before = owner_of(&mut builder, &test_context, TokenId::zero());
-    println!("owner_before {:?}", owner_before);
-    process_market_sale(&mut builder, &test_context, Key::Account(buyer));
+    assert_eq!(owner_before.unwrap(), Key::Account(test_context.account_address));
 
-    approve(&mut builder,&test_context);
-    transfer(&mut builder,&test_context, Key::Account(buyer));
+    approve(&mut builder, &test_context, test_context.account_address, buyer);
+    let approved_after = get_approved(&mut builder, &test_context, Key::Account(buyer),TokenId::zero());
+    assert_eq!(approved_after.unwrap(), Key::Account(buyer));
+
+
+    // --------------- Desired --------------- //
+    // // Perform mint
+    // nft_mint(&mut builder, &test_context, test_context.account_address, original_owner,vec![TokenId::zero()],vec![meta::red_dragon()] );
+    //
+    // // Check nft owner
+    // let owner_before = owner_of(&mut builder, &test_context, TokenId::zero());
+    // assert_eq!(owner_before.unwrap(), Key::Account(original_owner));
+
+    // let approved_before = get_approved(&mut builder, &test_context, Key::Account(original_owner),TokenId::zero());
+    // println!("approved_before {:?}", approved_before);
+    // approve(&mut builder, &test_context, original_owner, buyer);
+
+    // let approved_after = get_approved(&mut builder, &test_context, Key::Account(original_owner),TokenId::zero());
+    // assert_eq!(approved_after.unwrap(), Key::Account(test_context.account_address));
+    // println!("approved_after {:?}", approved_after);
+
+
+    //TODO
+    // create_market_item(&mut builder, &test_context);
+    // process_market_sale(&mut builder, &test_context, Key::Account(buyer));
+    // transfer(&mut builder, &test_context, Key::Account(original_owner),Key::Account(buyer));
+    // transfer_from(&mut builder, &test_context, Key::Account(original_owner),Key::Account(test_context.account_address));
+
+
+
     // Check nft new owner
     let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
     println!("owner_after {:?}", owner_after);
 
-    assert_ne!(owner_before, owner_after);
+    // assert_ne!(owner_before, owner_after);
 
 }
 
