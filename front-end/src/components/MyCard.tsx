@@ -1,6 +1,7 @@
 import React from "react";
 
 import { Badge, Button, Card, Group } from "@mantine/core";
+import { prefix } from "../prefix";
 
 interface Props {
   image: string;
@@ -16,7 +17,7 @@ export const MyCard = (props: Props) => {
     <div style={{ width: 340 }} key={key}>
       <Card shadow="sm" p="lg">
         <Card.Section>
-          <img style={{ width: 300 }} src={image} />
+          <img style={{ width: 300 }} src={`${prefix}${image}`} />
         </Card.Section>
 
         <Group position="apart" style={{ marginBottom: 5 }}>
