@@ -1,6 +1,7 @@
 import React from "react";
 
 import { Badge, Button, Card, Group } from "@mantine/core";
+
 import { prefix } from "../prefix";
 
 interface Props {
