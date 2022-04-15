@@ -8,13 +8,14 @@ import {
   ActionIcon,
   MediaQuery,
   Burger,
-  useMantineTheme,
+  useMantineTheme, SimpleGrid
 } from "@mantine/core";
 import { Wallet } from "tabler-icons-react";
 
 import styles from "../styles/dashboard-cyber.module.scss";
 import { MainLinks } from "./_mainLinks";
 import { User } from "./_user";
+import {MyCard} from "../components/MyCard";
 
 const CustomHeader = () => {
   const [opened, setOpened] = useState(false);
@@ -83,6 +84,10 @@ const CustomNavbar = () => {
 export default function DashboardCyber() {
   return (
     <AppShell padding="md" navbar={<CustomNavbar />} header={<CustomHeader />}>
+      <SimpleGrid cols={3}>
+        <MyCard image={"image.png"} title={"Title"} description={"Description"} buttonText={"Buy"}/>
+      </SimpleGrid>
+
       <div className={styles.bg}>
         <div className={styles.starField}>
           <div className={styles.layer}></div>
@@ -91,6 +96,7 @@ export default function DashboardCyber() {
           <div className={styles.layer}></div>
           <div className={styles.layer}></div>
         </div>
+
       </div>
     </AppShell>
   );
