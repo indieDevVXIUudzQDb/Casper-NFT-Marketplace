@@ -1,10 +1,6 @@
 use std::borrow::Borrow;
 use casper_contract::contract_api::runtime::print;
-use casper_engine_test_support::{
-    DeployItemBuilder, ExecuteRequestBuilder, InMemoryWasmTestBuilder, ARG_AMOUNT,
-    DEFAULT_ACCOUNT_ADDR, DEFAULT_ACCOUNT_INITIAL_BALANCE, DEFAULT_GENESIS_CONFIG,
-    DEFAULT_GENESIS_CONFIG_HASH, DEFAULT_PAYMENT,
-};
+use casper_engine_test_support::{DeployItemBuilder, ExecuteRequestBuilder, InMemoryWasmTestBuilder, ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR, DEFAULT_ACCOUNT_INITIAL_BALANCE, DEFAULT_GENESIS_CONFIG, DEFAULT_GENESIS_CONFIG_HASH, DEFAULT_PAYMENT, DEFAULT_RUN_GENESIS_REQUEST};
 use casper_execution_engine::core::engine_state::run_genesis_request::RunGenesisRequest;
 use casper_execution_engine::core::engine_state::{ExecuteRequest, GenesisAccount};
 use std::collections::BTreeMap;
@@ -104,7 +100,10 @@ pub struct TestAccount {
     account_hash: AccountHash,
 }
 
-pub fn get_test_accounts(test_builder: &mut InMemoryWasmTestBuilder) -> Vec<TestAccount> {
+pub fn get_test_accounts() -> (InMemoryWasmTestBuilder, Vec<TestAccount>) {
+    let mut test_builder = InMemoryWasmTestBuilder::default();
+    test_builder.run_genesis(&DEFAULT_RUN_GENESIS_REQUEST).commit();
+
     let mut accounts = Vec::new();
     for i in 0..10u8 {
         let secret_key: SecretKey = SecretKey::ed25519_from_bytes([i; 32]).unwrap();
@@ -117,7 +116,7 @@ pub fn get_test_accounts(test_builder: &mut InMemoryWasmTestBuilder) -> Vec<Test
             .expect_success()
             .commit();
     }
-    accounts
+    (test_builder, accounts)
 }
 
 struct TestFixture {
@@ -176,18 +175,11 @@ pub fn query_dictionary_item(
 }
 
 fn setup() -> (InMemoryWasmTestBuilder, TestFixture, Vec<TestAccount>) {
-    let mut test_builder = InMemoryWasmTestBuilder::default();
-    let mut genesis_config = DEFAULT_GENESIS_CONFIG.clone();
 
-    let run_genesis_request = RunGenesisRequest::new(
-        *DEFAULT_GENESIS_CONFIG_HASH,
-        genesis_config.protocol_version(),
-        genesis_config.take_ee_config(),
-    );
 
-    test_builder.run_genesis(&run_genesis_request).commit();
-    let accounts = get_test_accounts(&mut test_builder);
-    let account_address = accounts[0].account_hash;
+    let (mut test_builder, mut accounts) = get_test_accounts();
+    let main_account = accounts.pop().unwrap();
+    let account_address = main_account.account_hash;
 
     // ====install cep47 contract start=========//
     let exec_request = {
@@ -441,10 +433,9 @@ fn should_process_valid_nft_sale() {
     assert_eq!(owner_before.unwrap(), Key::Account(seller));
 
 
-    //TODO
-    // approve(&mut builder, &test_context, seller, test_context.account_address);
+    // approve(&mut builder, &test_context, test_context.account_address, seller);
     // let approved_after = get_approved(&mut builder, &test_context, Key::Account(test_context.account_address),TokenId::zero());
-    // assert_eq!(approved_after.unwrap(), Key::Account(seller));
+    // assert_eq!(approved_after.unwrap(), Key::Account(buyer));
 
     // transfer_from(&mut builder, &test_context, test_context.account_address,test_context.account_address, buyer);
     // let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
