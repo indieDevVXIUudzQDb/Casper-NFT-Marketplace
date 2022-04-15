@@ -1,7 +1,12 @@
 import React from "react";
 
 import { ThemeIcon, UnstyledButton, Group, Text } from "@mantine/core";
-import { ShoppingCart, Wallet } from "tabler-icons-react";
+import {
+  BuildingFactory,
+  PictureInPicture,
+  ShoppingCart,
+  Wallet,
+} from "tabler-icons-react";
 import { useRouter } from "next/router";
 
 interface MainLinkProps {
@@ -9,7 +14,6 @@ interface MainLinkProps {
   color: string;
   label: string;
   func: () => void;
-  link: any;
 }
 
 function MainLink({ icon, color, label, func }: MainLinkProps) {
@@ -50,17 +54,17 @@ export default function MainLinks() {
     {
       icon: <ShoppingCart size={16} />,
       color: "blue",
-      label: "Market",
+      label: "Browse Market",
       func: () => router.push("/"),
     },
     {
-      icon: <ShoppingCart size={16} />,
+      icon: <PictureInPicture size={16} />,
       color: "blue",
       label: "My NFTs",
       func: () => router.push("/my-nfts"),
     },
     {
-      icon: <ShoppingCart size={16} />,
+      icon: <BuildingFactory size={16} />,
       color: "blue",
       label: "Mint NFT",
       func: () => router.push("/mint"),
