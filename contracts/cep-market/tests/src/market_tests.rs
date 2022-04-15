@@ -139,7 +139,7 @@ pub fn get_test_accounts() -> (InMemoryWasmTestBuilder, Vec<TestAccount>) {
     (test_builder, accounts)
 }
 
-struct TestFixture {
+pub struct TestFixture {
     owner: TestAccount,
     cep47_package_hash_key: Key,
     market_package_hash_key: Key,
@@ -316,35 +316,48 @@ fn nft_mint(
 fn create_market_item(
     builder: &mut InMemoryWasmTestBuilder,
     test_context: &TestFixture,
+    sender: AccountHash,
     item_ids: Vec<TokenId>,
 ) {
-    let deploy = DeployItemBuilder::new()
-        .with_address(test_context.owner.account_hash)
-        .with_stored_session_named_key(
-            MARKET_PACKAGE_KEY,
-            "create_market_item",
-            runtime_args! {
+    let method: &str = "create_market_item";
+    let source = DeploySource::ByHash {
+        hash: ContractHash::from(test_context.market_package_hash_key.into_hash().unwrap()),
+        method: method.to_string(),
+    };
+    let args = runtime_args! {
                 "recipient" => Key::Account(test_context.owner.account_hash),
                 "item_ids" => item_ids,
                 // TODO change item_nft_contract_addresses to keys
                 "item_nft_contract_addresses" => vec![ContractHash::from(test_context.cep47_package_hash_key.into_hash().unwrap())],
                 "item_asking_prices" => vec![U256::from("2000000")],
                 "item_token_ids" => vec![TokenId::zero()],
-                },
-        )
-        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
-        .with_authorization_keys(&[test_context.owner.account_hash])
-        .with_deploy_hash([42; 32])
-        .build();
+    };
+    let mut deploy_builder = DeployItemBuilder::new()
+        .with_empty_payment_bytes(runtime_args! {ARG_AMOUNT => *DEFAULT_PAYMENT})
+        .with_address(sender)
+        .with_authorization_keys(&[sender]);
+    deploy_builder = match source {
+        DeploySource::Code(path) => deploy_builder.with_session_code(path, args),
+        DeploySource::ByHash { hash, method } => {
+            // let contract_hash = ContractHash::from(*hash);
+            deploy_builder.with_stored_session_hash(hash, &*method, args)
+        }
+    };
 
-    let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy).build();
-    builder.exec(execute_request).commit().expect_success();
+    let mut execute_request_builder =
+        ExecuteRequestBuilder::from_deploy_item(deploy_builder.build());
+    builder
+        .exec(execute_request_builder.build())
+        .expect_success()
+        .commit();
 }
 
 fn process_market_sale(
     builder: &mut InMemoryWasmTestBuilder,
     test_context: &TestFixture,
     buyer: Key,
+    owner: Key,
+    item_id: TokenId,
 ) {
     let deploy = DeployItemBuilder::new()
         .with_address(test_context.owner.account_hash)
@@ -353,7 +366,8 @@ fn process_market_sale(
             "process_market_sale",
             runtime_args! {
             "recipient" => buyer,
-            "item_id" => TokenId::zero(),
+            "owner" => owner,
+            "item_id" => item_id,
             },
         )
         .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
@@ -418,7 +432,7 @@ fn approve(
     builder: &mut InMemoryWasmTestBuilder,
     test_context: &TestFixture,
     sender: AccountHash,
-    spender: AccountHash,
+    spender: Key,
     token_ids: Vec<TokenId>,
 ) {
     let method: &str = "approve";
@@ -427,7 +441,7 @@ fn approve(
         method: method.to_string(),
     };
     let args = runtime_args! {
-            "spender" => Key::Account(spender),
+            "spender" => spender,
             "token_ids" => token_ids,
     };
     let mut deploy_builder = DeployItemBuilder::new()
@@ -448,31 +462,6 @@ fn approve(
         .exec(execute_request_builder.build())
         .expect_success()
         .commit();
-}
-
-fn transfer(
-    builder: &mut InMemoryWasmTestBuilder,
-    test_context: &TestFixture,
-    owner: Key,
-    recipient: Key,
-) {
-    let deploy = DeployItemBuilder::new()
-        .with_address(test_context.owner.account_hash)
-        .with_stored_session_named_key(
-            CEP47_PACKAGE_KEY,
-            "transfer",
-            runtime_args! {
-            "recipient" => recipient,
-            "token_ids" => vec![TokenId::zero()],
-            },
-        )
-        .with_empty_payment_bytes(runtime_args! { ARG_AMOUNT => *DEFAULT_PAYMENT, })
-        .with_authorization_keys(&[test_context.owner.account_hash])
-        .with_deploy_hash([42; 32])
-        .build();
-
-    let execute_request = ExecuteRequestBuilder::from_deploy_item(deploy).build();
-    builder.exec(execute_request).commit().expect_success();
 }
 
 fn transfer_from(
@@ -540,21 +529,11 @@ fn should_process_valid_nft_sale() {
         &mut builder,
         &test_context,
         seller.account_hash,
-        test_context.owner.account_hash,
+        Key::Account(test_context.owner.account_hash),
         vec![TokenId::zero()],
     );
 
-    //TODO fix get_approved value
-    // let approved_after = get_approved(
-    //     &mut builder,
-    //     &test_context,
-    //     Key::Account(test_context.owner.account_hash),
-    //     TokenId::zero(),
-    // );
-    // assert_eq!(
-    //     approved_after.unwrap(),
-    //     Key::Account(test_context.owner.account_hash.clone())
-    // );
+    // TODO get_approved value
 
     transfer_from(
         &mut builder,
@@ -566,39 +545,35 @@ fn should_process_valid_nft_sale() {
     let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
     assert_eq!(owner_after.unwrap(), Key::Account(buyer.account_hash));
 
-    assert_ne!(
-        Key::Account(test_context.owner.account_hash),
-        Key::Account(buyer.account_hash)
-    );
-    // assert_ne!(owner_after.unwrap(), Key::Account(test_context.account_address));
-
     // --------------- Desired --------------- //
-    // // Perform mint
-    // nft_mint(&mut builder, &test_context, test_context.account_address, original_owner,vec![TokenId::zero()],vec![meta::red_dragon()] );
-    //
-    // // Check nft owner
-    // let owner_before = owner_of(&mut builder, &test_context, TokenId::zero());
-    // assert_eq!(owner_before.unwrap(), Key::Account(original_owner));
-
-    // let approved_before = get_approved(&mut builder, &test_context, Key::Account(original_owner),TokenId::zero());
-    // println!("approved_before {:?}", approved_before);
-    // approve(&mut builder, &test_context, original_owner, buyer);
-
-    // let approved_after = get_approved(&mut builder, &test_context, Key::Account(original_owner),TokenId::zero());
-    // assert_eq!(approved_after.unwrap(), Key::Account(test_context.account_address));
-    // println!("approved_after {:?}", approved_after);
 
     //TODO
-    // create_market_item(&mut builder, &test_context, vec![TokenId::zero()]);
-    // process_market_sale(&mut builder, &test_context, Key::Account(buyer));
-    // transfer(&mut builder, &test_context, Key::Account(original_owner),Key::Account(buyer));
-    // transfer_from(&mut builder, &test_context, Key::Account(original_owner),Key::Account(test_context.account_address));
+    // approve(
+    //     &mut builder,
+    //     &test_context,
+    //     test_context.owner.account_hash,
+    //     test_context.market_package_hash_key,
+    //     vec![TokenId::zero()],
+    // );
+    // create_market_item(
+    //     &mut builder,
+    //     &test_context,
+    //     seller.account_hash,
+    //     vec![TokenId::zero()],
+    // );
+    // process_market_sale(
+    //     &mut builder,
+    //     &test_context,
+    //     Key::Account(buyer.account_hash),
+    //     Key::Account(seller.account_hash),
+    //     TokenId::zero(),
+    // );
 
     // Check nft new owner
-    // let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
-    // println!("owner_after {:?}", owner_after);
+    let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
+    println!("owner_after {:?}", owner_after);
 
-    // assert_ne!(owner_before, owner_after);
+    assert_ne!(owner_before, owner_after);
 }
 
 #[ignore]

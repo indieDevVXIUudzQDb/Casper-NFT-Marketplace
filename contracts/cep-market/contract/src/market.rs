@@ -5,11 +5,11 @@ use crate::data::{
 use crate::{
     data::{self},
     event::MarketEvent,
-    Meta, NFTContractAddress, TokenId, ITEM_STATUS_AVAILABLE, ITEM_STATUS_SOLD,
+    Meta, NFTContractAddress, TokenId, ITEM_STATUS_AVAILABLE,
 };
-use alloc::{string::String, vec, vec::Vec};
-use casper_contract::contract_api::runtime;
-use casper_types::{runtime_args, ApiError, ContractHash, Key, RuntimeArgs, U256};
+use alloc::{string::String, vec::Vec};
+
+use casper_types::{ApiError, Key, U256};
 use contract_utils::{ContractContext, ContractStorage};
 use core::convert::TryInto;
 
@@ -97,6 +97,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         ItemStatusData::instance().get(&item_id)
     }
 
+    //TODO
     // CLType::List(Box::new(MarketItemInstance::cl_type()))
     // fn available_items(&self) -> MarketItemList {
     //     // let length = Items::instance().get_length();
@@ -210,12 +211,12 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
             .unwrap();
         data::set_total_supply(new_total_supply);
 
-        // let market_account_key = self.self_addr().into_hash().unwrap();
-        // let market_account_hash = ContractHash::new(market_account_key);
+        //TODO
+        // let market_account_key = self.self_addr();
         // let _: () = runtime::call_contract(
         //     *nft_contract_addresses.first().unwrap(),
         //     "approve",
-        //     runtime_args!{"spender" => market_account_hash,"token_ids" => item_token_ids }
+        //     runtime_args! {"spender" => market_account_key,"token_ids" => item_token_ids },
         // );
 
         self.emit(MarketEvent::CreateItem {
@@ -226,27 +227,19 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
     }
 
     fn process_market_sale(&mut self, recipient: Key, item_id: TokenId) -> Result<TokenId, Error> {
-        if self.owner_of(item_id).is_none() {
-            return Err(Error::TokenIdDoesntExist);
-        }
-        let result = self.set_item_status(item_id, String::from(ITEM_STATUS_SOLD));
-        if result.is_err() {
-            return Err(Error::TokenIdDoesntExist);
-        }
-
+        //TODO
+        // let owner = self.owner_of(item_id);
         // let nft_contract_address = self.item_nft_contract_address(item_id).unwrap();
-        // let market_account_key = self.self_addr().into_hash().unwrap();
-        // let market_account_hash = ContractHash::new(market_account_key);
+        // let token_id = self.item_token_id(item_id).unwrap();
+        // // let market_account_key = self.self_addr();
         // let _: () = runtime::call_contract(
         //     nft_contract_address,
-        //     "transfer",
-        //     runtime_args!{"spender" => market_account_hash,"token_ids" => vec![item_id] }
-        // );
-
-        // let _: () = runtime::call_contract(
-        //     market_account_hash,
-        //     "item_token_id",
-        //     runtime_args!{"item_id" => item_id }
+        //     "transfer_from",
+        //     runtime_args! {
+        //         "sender" => owner,
+        //         "recipient" => recipient,
+        //         "token_ids" => vec![token_id]
+        //     },
         // );
 
         self.emit(MarketEvent::SoldItem { recipient, item_id });
