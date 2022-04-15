@@ -5,7 +5,11 @@
 ## Description
 Currently work in progress, the rust contract is not complete and front end is using static data only using Nextjs. 
 
-##TODO
+### Design Summary
+Using Next.js for marketplace users to interact with. 
+A rust Market contract to interact with the Casper CEP47 protocol.
+
+## TODO
 ### Front end
 - Deploy front end
 - Link front end with wallet
