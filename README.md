@@ -1,7 +1,7 @@
 # Casper-NFT-Marketplace
 
 ## Description
-Front end is using static data only using Nextjs which is statically hosted on github pages
+Front end is using static data only using Nextjs
 
 ##TODO
 ### Front end
