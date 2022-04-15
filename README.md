@@ -10,6 +10,11 @@ _Note: The rust contract is not complete and front end is using static data only
 Using Next.js for marketplace users to interact with. 
 A rust Market contract to interact with the Casper CEP47 protocol.
 
+
+## Implemented
+- static front end on Nextjs
+- some contract implementation - see below for details
+
 ## TODO
 ### Front end
 - Deploy front end
