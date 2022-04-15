@@ -69,13 +69,6 @@ export default function MainLinks() {
       label: "Mint NFT",
       func: () => router.push("/mint"),
     },
-    {
-      icon: <Wallet size={16} />,
-      color: "blue",
-      label: "Connect to Casper Wallet",
-      //TODO
-      func: () => null,
-    },
   ];
 
   const links = data.map((link) => <MainLink {...link} key={link.label} />);

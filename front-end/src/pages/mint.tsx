@@ -10,6 +10,10 @@ import {
   Burger,
   useMantineTheme,
   Title,
+  Button,
+  Checkbox,
+  Box,
+  TextInput,
 } from "@mantine/core";
 import { Wallet } from "tabler-icons-react";
 
@@ -17,6 +21,7 @@ import styles from "../styles/dashboard-cyber.module.scss";
 import MainLinks from "./_mainLinks";
 import User from "./_user";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
+import { useForm } from "@mantine/hooks";
 
 const CustomHeader = () => {
   const [opened, setOpened] = useState(false);
@@ -81,25 +86,39 @@ const CustomNavbar = () => {
     </Navbar>
   );
 };
-export async function getServerSideProps(context) {
-  const items = supabaseServerSideClient.from("item").select("*");
-  return {
-    props: { items }, // will be passed to the page component as props
-  };
-}
-export interface NFTItem {
-  hash: string;
-  image_url: string;
-  name: string;
-  copies: number;
-  symbol: string;
-  contract_name: string;
-}
-export default function DashboardCyber(props: { items: NFTItem[] }) {
+
+export default function DashboardCyber() {
+  const form = useForm({
+    initialValues: {
+      name: "",
+      symbol: "",
+      url: "",
+      description: "",
+    },
+  });
   return (
     <AppShell padding="md" navbar={<CustomNavbar />} header={<CustomHeader />}>
       <Title order={1}>Mint your NFT</Title>
+      <Box sx={{ maxWidth: 300 }} mx="auto">
+        <form onSubmit={form.onSubmit((values) => console.log(values))}>
+          <TextInput required label="Name" {...form.getInputProps("name")} />
+          <TextInput
+            required
+            label="Symbol"
+            {...form.getInputProps("symbol")}
+          />
+          <TextInput required label="URL" {...form.getInputProps("url")} />
+          <TextInput
+            required
+            label="Description"
+            {...form.getInputProps("description")}
+          />
 
+          <Group position="right" mt="md">
+            <Button type="submit">Create</Button>
+          </Group>
+        </form>
+      </Box>
       <div className={styles.bg}>
         <div className={styles.starField}>
           <div className={styles.layer} />
