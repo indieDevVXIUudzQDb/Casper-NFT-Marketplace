@@ -1,7 +1,7 @@
 import React from "react";
 
 import { ThemeIcon, UnstyledButton, Group, Text } from "@mantine/core";
-import { ShoppingCart } from "tabler-icons-react";
+import { ShoppingCart, Wallet } from "tabler-icons-react";
 
 interface MainLinkProps {
   icon: React.ReactNode;
@@ -41,6 +41,11 @@ function MainLink({ icon, color, label }: MainLinkProps) {
 
 const data = [
   { icon: <ShoppingCart size={16} />, color: "blue", label: "Market" },
+  {
+    icon: <Wallet size={16} />,
+    color: "blue",
+    label: "Connect to Casper Wallet",
+  },
 ];
 
 export default function MainLinks() {
