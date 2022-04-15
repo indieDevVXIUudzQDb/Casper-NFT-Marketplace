@@ -1,6 +1,6 @@
 # Casper-NFT-Marketplace
 
-![](v1.gif)
+![](v1.1.gif)
 
 ## Description
 Built for the Ready Player Casper Hackathon.
