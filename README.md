@@ -6,7 +6,7 @@
 Built for the Ready Player Casper Hackathon.
 
 Currently work in progress, an NFT Store to participate in the Casper Network.
-_Note: The rust contract is not complete and front end is using static data only using Nextjs._ 
+_Note: The rust contract is not complete and some of the data in the front end is using sample data only._ 
 
 ### Design Summary
 Using Next.js for marketplace users to interact with. 
@@ -16,8 +16,9 @@ Supabase db for tracking relevant market items.
 
 ## Implemented
 - Browse page with static data
-- My NFTs which will fetch from supabase database, (Planning to sync with Casper to verify ownership.)
-- Mint NFT form for creating an nft
+- Connect to wallet
+- My NFTs page which will fetch from supabase database, (Planning to sync with Casper to verify ownership.)
+- Mint NFT form for creating an nft(Incomplete)
 - Partial market contract implementation - see below for remaining functionality required
 
 ## Instructions
