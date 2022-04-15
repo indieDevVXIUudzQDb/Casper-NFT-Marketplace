@@ -23,9 +23,6 @@ export const MyCard = (props: Props) => {
 
         <Group position="apart" style={{ marginBottom: 5 }}>
           {title}
-          <Badge color="pink" variant="light">
-            On Sale
-          </Badge>
         </Group>
 
         {description}
