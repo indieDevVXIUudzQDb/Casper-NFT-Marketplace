@@ -24,7 +24,8 @@ Supabase db for tracking relevant market items.
 ## Instructions
 
 ```
-cd front-end
+cd server
+cp .env.template .env.local
 npm i
 npm start dev
 ```

@@ -8,8 +8,9 @@
 You can see the results locally in production mode with:
 
 ```
-$ npm run build
-$ npm run start
+cp .env.template .env.local
+npm run build
+npm run dev
 ```
 
 The generated HTML and CSS files are minified (built-in feature from Next js). It will also removed unused CSS from [Tailwind CSS](https://tailwindcss.com).
