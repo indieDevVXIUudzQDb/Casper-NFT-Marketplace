@@ -1,24 +1,9 @@
 import React, { useEffect, useState } from "react";
 
-import {
-  AppShell,
-  Navbar,
-  Header,
-  Group,
-  ActionIcon,
-  MediaQuery,
-  Burger,
-  useMantineTheme,
-  Title,
-  SimpleGrid,
-} from "@mantine/core";
-import { Wallet } from "tabler-icons-react";
+import { AppShell, SimpleGrid, Title } from "@mantine/core";
 
 import styles from "../styles/dashboard-cyber.module.scss";
-import MainLinks from "./_mainLinks";
-import User from "./_user";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
-import { mockData } from "../mockData";
 import { MyCard } from "../components/MyCard";
 import {
   accountInformation,
@@ -27,10 +12,10 @@ import {
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
 import { EventStream } from "casper-js-sdk";
-import {CustomNavbar} from "../components/CustomNavbar";
-import {CustomHeader} from "../components/CustomHeader";
+import { CustomNavbar } from "../components/CustomNavbar";
+import { CustomHeader } from "../components/CustomHeader";
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps(_context: any) {
   const { data: items } = await supabaseServerSideClient
     .from("item")
     .select("*");
@@ -59,14 +44,16 @@ export default function DashboardCyber(props: { items: NFTItem[] }) {
   const updateAccountInformation = async () => {
     const {
       textAddress,
-      textBalance,
-      publicKey: updatedPublicKey,
+      // textBalance,
+      // publicKey: updatedPublicKey,
     } = await accountInformation();
     setAddress(textAddress);
     // setBalance(textBalance);
     // setPublicKey(updatedPublicKey);
     // setNFTBalance(await getActiveAccountBalance());
-    setConnected(true);
+    if (textAddress) {
+      setConnected(true);
+    }
   };
 
   useEffect(() => {
@@ -78,7 +65,16 @@ export default function DashboardCyber(props: { items: NFTItem[] }) {
 
   console.log(items);
   return (
-    <AppShell padding="md" navbar={<CustomNavbar connected={connected} updateAccountInformation={updateAccountInformation} />} header={<CustomHeader address={address} />}>
+    <AppShell
+      padding="md"
+      navbar={
+        <CustomNavbar
+          connected={connected}
+          updateAccountInformation={updateAccountInformation}
+        />
+      }
+      header={<CustomHeader address={address} />}
+    >
       <Title order={1}>My NFTs</Title>
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
         {items.map((nft, index) => (

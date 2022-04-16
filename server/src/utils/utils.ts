@@ -1,6 +1,12 @@
-import { CasperClient, CLPublicKey, Keys, CasperServiceByJsonRPC } from "casper-js-sdk";
+import {
+  CasperClient,
+  CLPublicKey,
+  Keys,
+  CasperServiceByJsonRPC,
+} from "casper-js-sdk";
 
 export const parseTokenMeta = (str: string): Array<[string, string]> =>
+  // @ts-ignore
   str.split(",").map((s) => {
     const map = s.split(" ");
     return [map[0], map[1]];
@@ -24,6 +30,7 @@ export const getKeyPairOfUserSet = (pathToUsers: string) => {
   });
 };
 
+// @ts-ignore
 export const getDeploy = async (NODE_URL: string, deployHash: string) => {
   const client = new CasperClient(NODE_URL);
   let i = 300;

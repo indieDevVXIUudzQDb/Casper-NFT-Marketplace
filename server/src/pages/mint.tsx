@@ -1,40 +1,20 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 
-import {
-  AppShell,
-  Navbar,
-  Header,
-  Group,
-  ActionIcon,
-  MediaQuery,
-  Burger,
-  useMantineTheme,
-  Title,
-  Button,
-  Checkbox,
-  Box,
-  TextInput,
-} from "@mantine/core";
-import { Wallet } from "tabler-icons-react";
+import { AppShell, Group, Title, Button, Box, TextInput } from "@mantine/core";
 
 import styles from "../styles/dashboard-cyber.module.scss";
-import MainLinks from "./_mainLinks";
-import User from "./_user";
-import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
 import { useForm } from "@mantine/hooks";
-import {CustomNavbar} from "../components/CustomNavbar";
-import {CustomHeader} from "../components/CustomHeader";
+import { CustomNavbar } from "../components/CustomNavbar";
+import { CustomHeader } from "../components/CustomHeader";
 import {
   accountInformation,
   EVENT_STREAM_ADDRESS,
   getActiveAccountBalance,
-  subscribeToContractEvents
+  subscribeToContractEvents,
 } from "../utils/cep47_utils";
-import {EventStream} from "casper-js-sdk";
-
+import { EventStream } from "casper-js-sdk";
 
 export default function Mint() {
-
   const [address, setAddress] = useState("");
   // const [publicKey, setPublicKey] = useState("");
   // const [balance, setBalance] = useState("");
@@ -46,14 +26,16 @@ export default function Mint() {
   const updateAccountInformation = async () => {
     const {
       textAddress,
-      textBalance,
-      publicKey: updatedPublicKey,
+      // textBalance,
+      // publicKey: updatedPublicKey,
     } = await accountInformation();
     setAddress(textAddress);
     // setBalance(textBalance);
     // setPublicKey(updatedPublicKey);
     // setNFTBalance(await getActiveAccountBalance());
-    setConnected(true);
+    if (textAddress) {
+      setConnected(true);
+    }
   };
 
   useEffect(() => {
@@ -71,7 +53,16 @@ export default function Mint() {
     },
   });
   return (
-      <AppShell padding="md" navbar={<CustomNavbar connected={connected} updateAccountInformation={updateAccountInformation} />} header={<CustomHeader address={address} />}>
+    <AppShell
+      padding="md"
+      navbar={
+        <CustomNavbar
+          connected={connected}
+          updateAccountInformation={updateAccountInformation}
+        />
+      }
+      header={<CustomHeader address={address} />}
+    >
       <Title order={1}>Mint your NFT</Title>
       <Box sx={{ maxWidth: 300 }} mx="auto">
         <form onSubmit={form.onSubmit((values) => console.log(values))}>

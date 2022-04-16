@@ -1,24 +1,10 @@
 import React, { useEffect, useState } from "react";
 
-import {
-  AppShell,
-  Navbar,
-  Header,
-  Group,
-  ActionIcon,
-  MediaQuery,
-  Burger,
-  useMantineTheme,
-  SimpleGrid,
-  Title,
-} from "@mantine/core";
-import { Wallet } from "tabler-icons-react";
+import { AppShell, SimpleGrid, Title } from "@mantine/core";
 
 import { MyCard } from "../components/MyCard";
 import { mockData } from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
-import MainLinks from "./_mainLinks";
-import User from "./_user";
 import {
   accountInformation,
   EVENT_STREAM_ADDRESS,
@@ -26,9 +12,8 @@ import {
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
 import { EventStream } from "casper-js-sdk";
-import { isConnected } from "casper-js-sdk/dist/lib/Signer";
-import {CustomNavbar} from "../components/CustomNavbar";
-import {CustomHeader} from "../components/CustomHeader";
+import { CustomNavbar } from "../components/CustomNavbar";
+import { CustomHeader } from "../components/CustomHeader";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState("");
@@ -42,14 +27,16 @@ export default function DashboardCyber() {
   const updateAccountInformation = async () => {
     const {
       textAddress,
-      textBalance,
-      publicKey: updatedPublicKey,
+      // textBalance,
+      // publicKey: updatedPublicKey,
     } = await accountInformation();
     setAddress(textAddress);
     // setBalance(textBalance);
     // setPublicKey(updatedPublicKey);
     // setNFTBalance(await getActiveAccountBalance());
-    setConnected(true);
+    if (textAddress) {
+      setConnected(true);
+    }
   };
 
   useEffect(() => {
@@ -61,7 +48,12 @@ export default function DashboardCyber() {
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} updateAccountInformation={updateAccountInformation} />}
+      navbar={
+        <CustomNavbar
+          connected={connected}
+          updateAccountInformation={updateAccountInformation}
+        />
+      }
       header={<CustomHeader address={address} />}
     >
       <Title order={1}>Distant Planet Collection</Title>

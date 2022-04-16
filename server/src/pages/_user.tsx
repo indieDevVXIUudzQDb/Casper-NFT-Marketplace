@@ -7,10 +7,13 @@ import {
   Box,
   useMantineTheme,
 } from "@mantine/core";
-import {MainLink} from "./_mainLinks";
-import {Wallet} from "tabler-icons-react";
+import { MainLink } from "./_mainLinks";
+import { Wallet } from "tabler-icons-react";
 
-export default function User(props: { connected: boolean, updateAccountInformation: ()=>void}) {
+export default function User(props: {
+  connected: boolean;
+  updateAccountInformation: () => void;
+}) {
   const theme = useMantineTheme();
 
   return (
@@ -48,11 +51,15 @@ export default function User(props: { connected: boolean, updateAccountInformati
                 <b>&bull; &nbsp;</b> Connected to Casper Signer
               </Text>
             ) : (
-                <MainLink color={"red"} func={async ()=> {
-                    await window.casperlabsHelper.requestConnection();
-                    props.updateAccountInformation()
-
-                }} icon={<Wallet />} label={"Connect to Casper Signer"} />
+              <MainLink
+                color={"red"}
+                func={async () => {
+                  await window.casperlabsHelper.requestConnection();
+                  props.updateAccountInformation();
+                }}
+                icon={<Wallet />}
+                label={"Connect to Casper Signer"}
+              />
             )}
           </Box>
         </Group>
