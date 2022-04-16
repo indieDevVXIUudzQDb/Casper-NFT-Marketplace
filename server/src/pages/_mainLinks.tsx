@@ -16,7 +16,7 @@ interface MainLinkProps {
   func: () => void;
 }
 
-function MainLink({ icon, color, label, func }: MainLinkProps) {
+export function MainLink({ icon, color, label, func }: MainLinkProps) {
   return (
     <UnstyledButton
       onClick={func}

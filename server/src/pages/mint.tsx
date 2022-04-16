@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 
 import {
   AppShell,
@@ -22,72 +22,46 @@ import MainLinks from "./_mainLinks";
 import User from "./_user";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
 import { useForm } from "@mantine/hooks";
+import {CustomNavbar} from "../components/CustomNavbar";
+import {CustomHeader} from "../components/CustomHeader";
+import {
+  accountInformation,
+  EVENT_STREAM_ADDRESS,
+  getActiveAccountBalance,
+  subscribeToContractEvents
+} from "../utils/cep47_utils";
+import {EventStream} from "casper-js-sdk";
 
-const CustomHeader = () => {
-  const [opened, setOpened] = useState(false);
 
-  const theme = useMantineTheme();
+export default function Mint() {
 
-  return (
-    <Header height={60}>
-      {/* Handle other responsive styles with MediaQuery component or createStyles function */}
-      <MediaQuery largerThan="sm" styles={{ display: "none" }}>
-        <Burger
-          opened={opened}
-          onClick={() => setOpened((o) => !o)}
-          size="sm"
-          color={theme.colors.gray[6]}
-          mr="xl"
-        />
-      </MediaQuery>
-      <Group sx={{ height: "100%" }} px={20} position="apart">
-        <div
-          style={{
-            margin: "auto",
-          }}
-        >
-          <a href={""} className={styles.neonText}>
-            GALACTIC NFTs
-          </a>
-        </div>
-        <div />
-        <ActionIcon variant="default" size={30}>
-          <Wallet size={16} />
-        </ActionIcon>
-      </Group>
-    </Header>
-  );
-};
+  const [address, setAddress] = useState("");
+  // const [publicKey, setPublicKey] = useState("");
+  // const [balance, setBalance] = useState("");
+  // const [nftBalance, setNFTBalance] = useState(0);
+  // const [tx, setTx] = useState("");
+  // const [to, setTo] = useState("");
+  // const [amount, setAmount] = useState("");
+  const [connected, setConnected] = useState(false);
+  const updateAccountInformation = async () => {
+    const {
+      textAddress,
+      textBalance,
+      publicKey: updatedPublicKey,
+    } = await accountInformation();
+    setAddress(textAddress);
+    // setBalance(textBalance);
+    // setPublicKey(updatedPublicKey);
+    // setNFTBalance(await getActiveAccountBalance());
+    setConnected(true);
+  };
 
-const CustomNavbar = () => {
-  return (
-    <Navbar
-      p="md"
-      hiddenBreakpoint="sm"
-      width={{ sm: 300, lg: 400 }}
-      className={"border-r-0"}
-    >
-      <div className={styles.copyBox}>
-        <div className={styles.inner}>
-          <div className={styles.lineLeft}>
-            <div className={styles.scanner} />
-          </div>
-          <Navbar.Section grow mt="xs">
-            <MainLinks />
-          </Navbar.Section>
-          <Navbar.Section>
-            <User />
-          </Navbar.Section>
-        </div>
-        <div className={styles.lineRight}>
-          <div className={styles.scanner} />
-        </div>
-      </div>
-    </Navbar>
-  );
-};
-
-export default function DashboardCyber() {
+  useEffect(() => {
+    console.log("subscription called");
+    const es = new EventStream(EVENT_STREAM_ADDRESS!);
+    subscribeToContractEvents(es, () => getActiveAccountBalance());
+    updateAccountInformation();
+  }, []);
   const form = useForm({
     initialValues: {
       name: "",
@@ -97,7 +71,7 @@ export default function DashboardCyber() {
     },
   });
   return (
-    <AppShell padding="md" navbar={<CustomNavbar />} header={<CustomHeader />}>
+      <AppShell padding="md" navbar={<CustomNavbar connected={connected} updateAccountInformation={updateAccountInformation} />} header={<CustomHeader address={address} />}>
       <Title order={1}>Mint your NFT</Title>
       <Box sx={{ maxWidth: 300 }} mx="auto">
         <form onSubmit={form.onSubmit((values) => console.log(values))}>

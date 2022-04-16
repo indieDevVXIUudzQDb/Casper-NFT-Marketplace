@@ -17,11 +17,12 @@ import {
 } from "casper-cep47-js-client";
 import { getAccountInfo, getAccountNamedKeyValue, getDeploy } from "./utils";
 
-export const NODE_ADDRESS = "http://localhost:11100/http://mynctl:11101/rpc";
-export const EVENT_STREAM_ADDRESS =
-  "http://localhost:11100/http://mynctl:18101/events/main";
-export const CHAIN_NAME = "casper-net-1";
-export const MINT_ONE_PAYMENT_AMOUNT = "2000000000";
+export const NODE_ADDRESS = process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS || "http://localhost:11100/http://mynctl:11101/rpc";
+export const EVENT_STREAM_ADDRESS = process.env.NEXT_PUBLIC || "http://localhost:11100/http://mynctl:18101/events/main";
+export const CHAIN_NAME = process.env.NEXT_PUBLIC || "casper-net-1";
+export const MINT_ONE_PAYMENT_AMOUNT = process.env.NEXT_PUBLIC || "2000000000";
+
+//TODO make following dynamic
 export const CONTRACT_NAME = "doggy_contract";
 export const CONTRACT_HOLDER_ADDRESS =
   "0146c64d0506c486f2b19f9cf73479fba550f33227b6ec1c12e58b437d2680e96d";
@@ -159,32 +160,37 @@ export const sendTransaction = async (
 };
 
 const initClient = async () => {
-  const contractPublicKey = CLPublicKey.fromHex(CONTRACT_HOLDER_ADDRESS);
-  const cep47 = new CEP47Client(NODE_ADDRESS!, CHAIN_NAME!);
-  let contractAccountInfo = await getAccountInfo(
-    NODE_ADDRESS!,
-    contractPublicKey
-  );
-  console.log(`... Account Info: `, contractAccountInfo);
-  const contractHashKey = `${CONTRACT_NAME!}_contract_hash`;
-  console.log({ contractHashKey: contractHashKey });
-  const contractHash = await getAccountNamedKeyValue(
-    contractAccountInfo,
-    contractHashKey
-  );
-  console.log(`... Contract Hash: ${contractHash}`);
+  try {
+    const contractPublicKey = CLPublicKey.fromHex(CONTRACT_HOLDER_ADDRESS);
+    const cep47 = new CEP47Client(NODE_ADDRESS!, CHAIN_NAME!);
+    let contractAccountInfo = await getAccountInfo(
+        NODE_ADDRESS!,
+        contractPublicKey
+    );
+    console.log(`... Account Info: `, contractAccountInfo);
+    const contractHashKey = `${CONTRACT_NAME!}_contract_hash`;
+    console.log({contractHashKey: contractHashKey});
+    const contractHash = await getAccountNamedKeyValue(
+        contractAccountInfo,
+        contractHashKey
+    );
+    console.log(`... Contract Hash: ${contractHash}`);
 
-  const contractPackageHash = await getAccountNamedKeyValue(
-    contractAccountInfo,
-    `contract_package_hash`
-  );
-  console.log(`... Contract Package Hash: ${contractPackageHash}`);
+    const contractPackageHash = await getAccountNamedKeyValue(
+        contractAccountInfo,
+        `contract_package_hash`
+    );
+    console.log(`... Contract Package Hash: ${contractPackageHash}`);
 
-  cep47.setContractHash(contractHash, contractPackageHash);
-  return {
-    cep47,
-    contractPublicKey,
-  };
+    cep47.setContractHash(contractHash, contractPackageHash);
+    return {
+      cep47,
+      contractPublicKey,
+    };
+  }catch (e) {
+    console.log(e);
+  }
+
 };
 
 export const triggerMintDeploy = async (
