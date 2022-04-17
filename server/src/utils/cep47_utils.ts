@@ -113,7 +113,10 @@ export const accountInformation = async (): Promise<{
   };
 };
 
-export const sendTransaction = async (to: string, amount: string): Promise<string> => {
+export const sendTransaction = async (
+  to: string,
+  amount: string
+): Promise<string> => {
   let tx = "";
   // For native-transfers the payment price is fixed.
   const paymentAmount = 10000000000;
@@ -163,8 +166,7 @@ export const sendTransaction = async (to: string, amount: string): Promise<strin
     tx = `tx: ${signed}`;
   }
   return tx;
-};;
-
+};
 const initClient = async () => {
   let cep47;
   let contractPublicKey;

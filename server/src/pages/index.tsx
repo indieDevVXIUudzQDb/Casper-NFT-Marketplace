@@ -1,12 +1,12 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 
-import {AppShell, SimpleGrid, Title} from "@mantine/core";
-import {toast, Toaster} from "react-hot-toast";
+import { AppShell, SimpleGrid, Title } from "@mantine/core";
+import { toast, Toaster } from "react-hot-toast";
 
-import {CustomHeader} from "../components/CustomHeader";
-import {CustomNavbar} from "../components/CustomNavbar";
-import {MyCard} from "../components/MyCard";
-import {mockData} from "../mockData";
+import { CustomHeader } from "../components/CustomHeader";
+import { CustomNavbar } from "../components/CustomNavbar";
+import { MyCard } from "../components/MyCard";
+import { mockData } from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
 // import {
 //   EVENT_STREAM_ADDRESS,
