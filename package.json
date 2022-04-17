@@ -1,0 +1,19 @@
+{
+  "name": "casper-nft-marketplace",
+  "version": "1.0.0",
+  "description": "![](v1.1.gif)",
+  "main": "index.js",
+  "scripts": {
+    "install": "server npm install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/indieDevVXIUudzQDb/Casper-NFT-Marketplace.git"
+  },
+  "author": "indieDev",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/indieDevVXIUudzQDb/Casper-NFT-Marketplace/issues"
+  },
+  "homepage": "https://github.com/indieDevVXIUudzQDb/Casper-NFT-Marketplace#readme"
+}
