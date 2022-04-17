@@ -1,0 +1,21 @@
+{
+  "name": "galactic-nft-market",
+  "description": "MVP for Hackathon",
+  "scripts": {
+  },
+  "env": {
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
