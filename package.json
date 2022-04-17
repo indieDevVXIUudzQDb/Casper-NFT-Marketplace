@@ -4,7 +4,8 @@
   "description": "![](v1.1.gif)",
   "main": "index.js",
   "scripts": {
-    "install": "server npm install"
+    "install": "server/npm install",
+    "ci": "server/npm ci"
   },
   "repository": {
     "type": "git",
