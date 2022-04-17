@@ -9,7 +9,8 @@
     "build-prod": "run-s clean build export",
     "clean": "rimraf .next out",
     "lint": "next lint",
-    "build-types": "tsc --noEmit --pretty"
+    "build-types": "tsc --noEmit --pretty",
+    "deploy": "cd ../ && git subtree push --prefix server heroku main || true"
   },
   "dependencies": {
     "@mantine/core": "4.1.4",
