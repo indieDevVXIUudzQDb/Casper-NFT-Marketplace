@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 import {
   Burger,
   Button,
@@ -7,9 +8,10 @@ import {
   MediaQuery,
   useMantineTheme,
 } from "@mantine/core";
-import styles from "../styles/dashboard-cyber.module.scss";
-import { Lock, Wallet } from "tabler-icons-react";
 import { useClipboard } from "@mantine/hooks";
+import { Lock, Wallet } from "tabler-icons-react";
+
+import styles from "../styles/dashboard-cyber.module.scss";
 
 export const addressShortener = (address: string) => {
   const maxLength = 6;

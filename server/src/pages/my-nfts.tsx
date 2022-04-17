@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 
 import { AppShell, SimpleGrid, Title } from "@mantine/core";
+import { EventStream } from "casper-js-sdk";
+import { toast } from "react-hot-toast";
 
-import styles from "../styles/dashboard-cyber.module.scss";
-import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
+import { CustomHeader } from "../components/CustomHeader";
+import { CustomNavbar } from "../components/CustomNavbar";
 import { MyCard } from "../components/MyCard";
+import styles from "../styles/dashboard-cyber.module.scss";
 import {
   EVENT_STREAM_ADDRESS,
   getActiveAccountBalance,
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
-import { EventStream } from "casper-js-sdk";
-import { CustomNavbar } from "../components/CustomNavbar";
-import { CustomHeader } from "../components/CustomHeader";
-import { toast } from "react-hot-toast";
+import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
 
 export async function getServerSideProps(_context: any) {
   const { data: items } = await supabaseServerSideClient
@@ -23,6 +23,7 @@ export async function getServerSideProps(_context: any) {
     props: { items }, // will be passed to the page component as props
   };
 }
+
 export interface NFTItem {
   hash: string;
   image_url: string;
@@ -31,8 +32,9 @@ export interface NFTItem {
   symbol: string;
   contract_name: string;
 }
+
 export default function DashboardCyber(props: { items: NFTItem[] }) {
-  const items = props.items;
+  const { items } = props;
   const [address, setAddress] = useState("");
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);

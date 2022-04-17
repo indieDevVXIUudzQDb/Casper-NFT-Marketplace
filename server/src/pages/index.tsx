@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 
-import { AppShell, SimpleGrid, Title } from "@mantine/core";
+import {AppShell, SimpleGrid, Title} from "@mantine/core";
+import {toast, Toaster} from "react-hot-toast";
 
-import { MyCard } from "../components/MyCard";
-import { mockData } from "../mockData";
+import {CustomHeader} from "../components/CustomHeader";
+import {CustomNavbar} from "../components/CustomNavbar";
+import {MyCard} from "../components/MyCard";
+import {mockData} from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
 // import {
 //   EVENT_STREAM_ADDRESS,
@@ -11,9 +14,6 @@ import styles from "../styles/dashboard-cyber.module.scss";
 //   subscribeToContractEvents,
 // } from "../utils/cep47_utils";
 // import { EventStream } from "casper-js-sdk";
-import { CustomNavbar } from "../components/CustomNavbar";
-import { CustomHeader } from "../components/CustomHeader";
-import { toast, Toaster } from "react-hot-toast";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState("");

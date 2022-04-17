@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 
 import { AppShell, Box, Button, Group, TextInput, Title } from "@mantine/core";
-
-import styles from "../styles/dashboard-cyber.module.scss";
 import { useForm } from "@mantine/hooks";
-import { CustomNavbar } from "../components/CustomNavbar";
+import { EventStream } from "casper-js-sdk";
+import { toast } from "react-hot-toast";
+
 import { CustomHeader } from "../components/CustomHeader";
+import { CustomNavbar } from "../components/CustomNavbar";
+import styles from "../styles/dashboard-cyber.module.scss";
 import {
   EVENT_STREAM_ADDRESS,
   getActiveAccountBalance,
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
-import { EventStream } from "casper-js-sdk";
-import { toast } from "react-hot-toast";
 
 export default function Mint() {
   const [address, setAddress] = useState("");

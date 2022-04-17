@@ -1,12 +1,12 @@
 import React from "react";
 
 import { Group, Text, ThemeIcon, UnstyledButton } from "@mantine/core";
+import { useRouter } from "next/router";
 import {
   BuildingFactory,
   PictureInPicture,
   ShoppingCart,
 } from "tabler-icons-react";
-import { useRouter } from "next/router";
 
 interface MainLinkProps {
   icon: React.ReactNode;

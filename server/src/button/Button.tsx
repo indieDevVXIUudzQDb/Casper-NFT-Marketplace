@@ -10,7 +10,7 @@ const Button = (props: IButtonProps) => {
     btn: true,
     "btn-xl": props.xl,
     "btn-base": !props.xl,
-    "btn-primary": true
+    "btn-primary": true,
   });
 
   return (

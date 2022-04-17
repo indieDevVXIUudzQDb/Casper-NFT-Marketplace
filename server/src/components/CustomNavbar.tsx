@@ -1,8 +1,10 @@
+import React from "react";
+
 import { Navbar } from "@mantine/core";
-import styles from "../styles/dashboard-cyber.module.scss";
+
 import MainLinks from "../pages/_mainLinks";
 import User from "../pages/_user";
-import React from "react";
+import styles from "../styles/dashboard-cyber.module.scss";
 
 export const CustomNavbar = (props: { connected: boolean }) => {
   return (

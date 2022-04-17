@@ -1,5 +1,3 @@
-import { supabaseServerSideClient } from "../../utils/supabaseServerSideClient";
-
 export default function handler(req, res) {
   console.log(req);
   // supabaseServerSideClient.from("item").insert();

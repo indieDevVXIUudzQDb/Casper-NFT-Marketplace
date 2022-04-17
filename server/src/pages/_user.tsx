@@ -7,8 +7,9 @@ import {
   UnstyledButton,
   useMantineTheme,
 } from "@mantine/core";
-import { MainLink } from "./_mainLinks";
 import { Wallet } from "tabler-icons-react";
+
+import { MainLink } from "./_mainLinks";
 
 export default function User(props: { connected: boolean }) {
   const theme = useMantineTheme();

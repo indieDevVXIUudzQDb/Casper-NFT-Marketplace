@@ -1,8 +1,8 @@
 import {
   CasperClient,
+  CasperServiceByJsonRPC,
   CLPublicKey,
   Keys,
-  CasperServiceByJsonRPC,
 } from "casper-js-sdk";
 
 export const parseTokenMeta = (str: string): Array<[string, string]> =>
@@ -13,6 +13,7 @@ export const parseTokenMeta = (str: string): Array<[string, string]> =>
   });
 
 export const sleep = (ms: number) => {
+  // eslint-disable-next-line no-promise-executor-return
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
@@ -31,27 +32,31 @@ export const getKeyPairOfUserSet = (pathToUsers: string) => {
 };
 
 // @ts-ignore
+// eslint-disable-next-line consistent-return
 export const getDeploy = async (NODE_URL: string, deployHash: string) => {
   const client = new CasperClient(NODE_URL);
   let i = 300;
+  // eslint-disable-next-line eqeqeq
   while (i != 0) {
+    // eslint-disable-next-line no-await-in-loop
     const [deploy, raw] = await client.getDeploy(deployHash);
     if (raw.execution_results.length !== 0) {
       // @ts-ignore
       if (raw.execution_results[0].result.Success) {
         return deploy;
-      } else {
-        // @ts-ignore
-        throw Error(
-          "Contract execution: " +
-            // @ts-ignore
-            raw.execution_results[0].result.Failure.error_message
-        );
       }
+      // @ts-ignore
+      throw Error(
+        `Contract execution: ${
+          // @ts-ignore
+          raw.execution_results[0].result.Failure.error_message
+        }`
+      );
     } else {
+      // eslint-disable-next-line no-plusplus
       i--;
+      // eslint-disable-next-line no-await-in-loop
       await sleep(1000);
-      continue;
     }
   }
   // throw Error("Timeout after " + i + "s. Something's wrong");

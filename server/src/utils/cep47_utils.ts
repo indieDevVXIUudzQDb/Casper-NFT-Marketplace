@@ -2,6 +2,11 @@
 // https://casper.network/docs/dapp-dev-guide/tutorials/casper-signer/
 
 import {
+  CEP47Client,
+  CEP47EventParser,
+  CEP47Events,
+} from "casper-cep47-js-client";
+import {
   CasperClient,
   CasperServiceByJsonRPC,
   CLPublicKey,
@@ -10,11 +15,7 @@ import {
   EventStream,
 } from "casper-js-sdk";
 import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
-import {
-  CEP47Client,
-  CEP47EventParser,
-  CEP47Events,
-} from "casper-cep47-js-client";
+
 import { getAccountInfo, getAccountNamedKeyValue, getDeploy } from "./utils";
 
 export const NODE_ADDRESS =
@@ -26,12 +27,12 @@ export const EVENT_STREAM_ADDRESS =
 export const CHAIN_NAME = process.env.NEXT_PUBLIC || "casper-net-1";
 export const MINT_ONE_PAYMENT_AMOUNT = process.env.NEXT_PUBLIC || "2000000000";
 
-//TODO make following dynamic
+// TODO make following dynamic
 export const CONTRACT_NAME = "doggy_contract";
 export const CONTRACT_HOLDER_ADDRESS =
   "0146c64d0506c486f2b19f9cf73479fba550f33227b6ec1c12e58b437d2680e96d";
-//Create Casper client and service to interact with Casper node.
-const cep47_utils = new CasperServiceByJsonRPC(NODE_ADDRESS);
+// Create Casper client and service to interact with Casper node.
+const cep47Utils = new CasperServiceByJsonRPC(NODE_ADDRESS);
 const casperClient = new CasperClient(NODE_ADDRESS);
 
 export const subscribeToContractEvents = (
@@ -86,16 +87,16 @@ export const accountInformation = async (): Promise<{
       publicKey = await window.casperlabsHelper.getActivePublicKey();
       textAddress = publicKey;
 
-      const latestBlock = await cep47_utils.getLatestBlockInfo();
+      const latestBlock = await cep47Utils.getLatestBlockInfo();
       console.log({ latestBlock });
       if (latestBlock.block) {
-        const root = await cep47_utils.getStateRootHash(latestBlock.block.hash);
-        const balanceUref = await cep47_utils.getAccountBalanceUrefByPublicKey(
+        const root = await cep47Utils.getStateRootHash(latestBlock.block.hash);
+        const balanceUref = await cep47Utils.getAccountBalanceUrefByPublicKey(
           root,
           CLPublicKey.fromHex(publicKey)
         );
-        //account balance from the last block
-        const balance = await cep47_utils.getAccountBalance(
+        // account balance from the last block
+        const balance = await cep47Utils.getAccountBalance(
           latestBlock.block.header.state_root_hash,
           balanceUref
         );
@@ -112,10 +113,7 @@ export const accountInformation = async (): Promise<{
   };
 };
 
-export const sendTransaction = async (
-  to: string,
-  amount: string
-): Promise<string> => {
+export const sendTransaction = async (to: string, amount: string): Promise<string> => {
   let tx = "";
   // For native-transfers the payment price is fixed.
   const paymentAmount = 10000000000;
@@ -132,7 +130,7 @@ export const sendTransaction = async (
   const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
   const publicKey = CLPublicKey.fromHex(publicKeyHex);
 
-  let deployParams = new DeployUtil.DeployParams(
+  const deployParams = new DeployUtil.DeployParams(
     publicKey,
     CHAIN_NAME,
     gasPrice,
@@ -165,19 +163,21 @@ export const sendTransaction = async (
     tx = `tx: ${signed}`;
   }
   return tx;
-};
+};;
 
 const initClient = async () => {
+  let cep47;
+  let contractPublicKey;
   try {
-    const contractPublicKey = CLPublicKey.fromHex(CONTRACT_HOLDER_ADDRESS);
-    const cep47 = new CEP47Client(NODE_ADDRESS!, CHAIN_NAME!);
-    let contractAccountInfo = await getAccountInfo(
+    contractPublicKey = CLPublicKey.fromHex(CONTRACT_HOLDER_ADDRESS);
+    cep47 = new CEP47Client(NODE_ADDRESS!, CHAIN_NAME!);
+    const contractAccountInfo = await getAccountInfo(
       NODE_ADDRESS!,
       contractPublicKey
     );
     console.log(`... Account Info: `, contractAccountInfo);
     const contractHashKey = `${CONTRACT_NAME!}_contract_hash`;
-    console.log({ contractHashKey: contractHashKey });
+    console.log({ contractHashKey });
     const contractHash = await getAccountNamedKeyValue(
       contractAccountInfo,
       contractHashKey
@@ -191,14 +191,13 @@ const initClient = async () => {
     console.log(`... Contract Package Hash: ${contractPackageHash}`);
 
     cep47.setContractHash(contractHash, contractPackageHash);
-    return {
-      cep47,
-      contractPublicKey,
-    };
   } catch (e) {
     console.log(e);
-    return;
   }
+  return {
+    cep47,
+    contractPublicKey,
+  };
 };
 
 export const triggerMintDeploy = async (
@@ -238,13 +237,15 @@ export const triggerMintDeploy = async (
     console.log("...... Token minted successfully");
   }
 
+  // eslint-disable-next-line consistent-return
   return { mintDeployHash };
 };
 
-export const getActiveAccountBalance = async (): Promise<any> => {
+export const getActiveAccountBalance = async function (): Promise<number> {
+  let activeAccountBalance = 0;
   // @ts-ignore
   const { contractPublicKey, cep47 } = await initClient();
-  if (!contractPublicKey || !cep47) return;
+  if (!contractPublicKey || !cep47) return 0;
   const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
 
   const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
@@ -254,7 +255,7 @@ export const getActiveAccountBalance = async (): Promise<any> => {
 
     console.log("...... Balance of master account: ", balanceOf1);
 
-    const activeAccountBalance = await cep47.balanceOf(activePublicKey);
+    activeAccountBalance = await cep47.balanceOf(activePublicKey);
 
     console.log("...... Balance of active account: ", activeAccountBalance);
 
@@ -273,11 +274,10 @@ export const getActiveAccountBalance = async (): Promise<any> => {
       indexByToken1
     );
     console.log("...... token one id: ", tokenByIndex1);
-    return activeAccountBalance;
   } catch (e) {
     console.log(e);
-    return 0;
   }
+  return activeAccountBalance;
 };
 
 export const triggerBurnDeploy = async (ids: string[]) => {
