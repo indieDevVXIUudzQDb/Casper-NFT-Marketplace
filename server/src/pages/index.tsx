@@ -1,74 +1,119 @@
 import React, { useEffect, useState } from "react";
 
-import {
-  AppShell,
-  Navbar,
-  Header,
-  Group,
-  ActionIcon,
-  MediaQuery,
-  Burger,
-  useMantineTheme,
-  SimpleGrid,
-  Title,
-} from "@mantine/core";
-import { Wallet } from "tabler-icons-react";
+import { AppShell, SimpleGrid, Title } from "@mantine/core";
 
 import { MyCard } from "../components/MyCard";
 import { mockData } from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
-import MainLinks from "./_mainLinks";
-import User from "./_user";
-import {
-  accountInformation,
-  EVENT_STREAM_ADDRESS,
-  getActiveAccountBalance,
-  subscribeToContractEvents,
-} from "../utils/cep47_utils";
-import { EventStream } from "casper-js-sdk";
-import { isConnected } from "casper-js-sdk/dist/lib/Signer";
-import {CustomNavbar} from "../components/CustomNavbar";
-import {CustomHeader} from "../components/CustomHeader";
+// import {
+//   EVENT_STREAM_ADDRESS,
+//   getActiveAccountBalance,
+//   subscribeToContractEvents,
+// } from "../utils/cep47_utils";
+// import { EventStream } from "casper-js-sdk";
+import { CustomNavbar } from "../components/CustomNavbar";
+import { CustomHeader } from "../components/CustomHeader";
+import { toast, Toaster } from "react-hot-toast";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState("");
+  const [connected, setConnected] = useState(false);
+  const [locked, setLocked] = useState(false);
   // const [publicKey, setPublicKey] = useState("");
   // const [balance, setBalance] = useState("");
   // const [nftBalance, setNFTBalance] = useState(0);
   // const [tx, setTx] = useState("");
   // const [to, setTo] = useState("");
   // const [amount, setAmount] = useState("");
-  const [connected, setConnected] = useState(false);
-  const updateAccountInformation = async () => {
-    const {
-      textAddress,
-      textBalance,
-      publicKey: updatedPublicKey,
-    } = await accountInformation();
-    setAddress(textAddress);
-    // setBalance(textBalance);
-    // setPublicKey(updatedPublicKey);
-    // setNFTBalance(await getActiveAccountBalance());
-    setConnected(true);
-  };
+  // const updateAccountInformation = async () => {
+  //   // const {
+  //   //   textAddress: updatedTextAddress,
+  //   //   // textBalance,
+  //   //   // publicKey: updatedPublicKey,
+  //   // } = await accountInformation();
+  //   // setAddress(updatedTextAddress);
+  //   // setBalance(textBalance);
+  //   // setPublicKey(updatedPublicKey);
+  //   // setNFTBalance(await getActiveAccountBalance());
+  // };
+
+  // useEffect(() => {
+  //   console.log("subscription called");
+  //   const es = new EventStream(EVENT_STREAM_ADDRESS!);
+  //   subscribeToContractEvents(es, () => getActiveAccountBalance());
+  // }, []);
 
   useEffect(() => {
-    console.log("subscription called");
-    const es = new EventStream(EVENT_STREAM_ADDRESS!);
-    subscribeToContractEvents(es, () => getActiveAccountBalance());
-    updateAccountInformation();
+    window.addEventListener("signer:connected", (msg) => {
+      setConnected(true);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+      toast.success("Connected to Signer!");
+    });
+    window.addEventListener("signer:disconnected", (msg) => {
+      setConnected(false);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+      toast("Disconnected from Signer");
+    });
+    window.addEventListener("signer:tabUpdated", (msg) => {
+      // @ts-ignore
+      setConnected(msg.detail.isConnected);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+    });
+    window.addEventListener("signer:activeKeyChanged", (msg) => {
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+      toast("Active key changed");
+    });
+    window.addEventListener("signer:locked", (msg) => {
+      // @ts-ignore
+      setConnected(msg.detail.isConnected);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+    });
+    window.addEventListener("signer:unlocked", (msg) => {
+      // @ts-ignore
+      setConnected(msg.detail.isConnected);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+    });
+    window.addEventListener("signer:initialState", (msg) => {
+      // @ts-ignore
+      setConnected(msg.detail.isConnected);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+    });
   }, []);
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} updateAccountInformation={updateAccountInformation} />}
-      header={<CustomHeader address={address} />}
+      navbar={<CustomNavbar connected={connected} />}
+      header={<CustomHeader address={address} locked={locked} />}
     >
+      <div>
+        <Toaster />
+      </div>
+
       <Title order={1}>Distant Planet Collection</Title>
 
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
         {mockData.planets.map((planet, index) => (
           <MyCard
+            // index={index}
             key={index}
             image={planet.url}
             title={planet.name}
@@ -80,10 +125,6 @@ export default function DashboardCyber() {
 
       <div className={styles.bg}>
         <div className={styles.starField}>
-          <div className={styles.layer} />
-          <div className={styles.layer} />
-          <div className={styles.layer} />
-          <div className={styles.layer} />
           <div className={styles.layer} />
         </div>
       </div>

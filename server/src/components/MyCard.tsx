@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Badge, Button, Card, Group, Title } from "@mantine/core";
+import { Button, Card, Group, Title } from "@mantine/core";
 
 import { prefix } from "../prefix";
 
@@ -9,19 +9,19 @@ interface Props {
   title: string;
   description: string;
   buttonText: string;
-  key: number;
 }
 
 export const MyCard = (props: Props) => {
-  const { image, title, description, buttonText, key } = props;
+  const { image, title, description, buttonText } = props;
   return (
-    <div style={{ width: 340 }} key={key}>
+    <div style={{}}>
       <Card shadow="sm" p="lg">
         <Card.Section>
           <div style={{ textAlign: "center" }}>
             <img
-              style={{ maxWidth: 290, padding: "1em" }}
+              style={{ width: "80%", padding: "1em" }}
               src={`${prefix}${image}`}
+              alt={title}
             />
           </div>
         </Card.Section>
@@ -29,9 +29,7 @@ export const MyCard = (props: Props) => {
         <Group position="apart" style={{ marginBottom: 5 }}>
           <Title align={"center"}>{title}</Title>
         </Group>
-
         {description}
-
         <Button
           variant="light"
           color="blue"

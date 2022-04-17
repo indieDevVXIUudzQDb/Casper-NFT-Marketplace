@@ -1,11 +1,10 @@
 import React from "react";
 
-import { ThemeIcon, UnstyledButton, Group, Text } from "@mantine/core";
+import { Group, Text, ThemeIcon, UnstyledButton } from "@mantine/core";
 import {
   BuildingFactory,
   PictureInPicture,
   ShoppingCart,
-  Wallet,
 } from "tabler-icons-react";
 import { useRouter } from "next/router";
 
