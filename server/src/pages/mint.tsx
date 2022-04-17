@@ -1,49 +1,92 @@
 import React, { useEffect, useState } from "react";
 
-import { AppShell, Group, Title, Button, Box, TextInput } from "@mantine/core";
+import { AppShell, Box, Button, Group, TextInput, Title } from "@mantine/core";
 
 import styles from "../styles/dashboard-cyber.module.scss";
 import { useForm } from "@mantine/hooks";
 import { CustomNavbar } from "../components/CustomNavbar";
 import { CustomHeader } from "../components/CustomHeader";
 import {
-  accountInformation,
   EVENT_STREAM_ADDRESS,
   getActiveAccountBalance,
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
 import { EventStream } from "casper-js-sdk";
+import { toast } from "react-hot-toast";
 
 export default function Mint() {
   const [address, setAddress] = useState("");
+  const [connected, setConnected] = useState(false);
+  const [locked, setLocked] = useState(false);
+
   // const [publicKey, setPublicKey] = useState("");
   // const [balance, setBalance] = useState("");
   // const [nftBalance, setNFTBalance] = useState(0);
   // const [tx, setTx] = useState("");
   // const [to, setTo] = useState("");
   // const [amount, setAmount] = useState("");
-  const [connected, setConnected] = useState(false);
-  const updateAccountInformation = async () => {
-    const {
-      textAddress,
-      // textBalance,
-      // publicKey: updatedPublicKey,
-    } = await accountInformation();
-    setAddress(textAddress);
-    // setBalance(textBalance);
-    // setPublicKey(updatedPublicKey);
-    // setNFTBalance(await getActiveAccountBalance());
-    if (textAddress) {
-      setConnected(true);
-    }
-  };
 
   useEffect(() => {
     console.log("subscription called");
     const es = new EventStream(EVENT_STREAM_ADDRESS!);
     subscribeToContractEvents(es, () => getActiveAccountBalance());
-    updateAccountInformation();
   }, []);
+  useEffect(() => {
+    window.addEventListener("signer:connected", (msg) => {
+      setConnected(true);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+      toast.success("Connected to Signer!");
+    });
+    window.addEventListener("signer:disconnected", (msg) => {
+      setConnected(false);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+      toast("Disconnected from Signer");
+    });
+    window.addEventListener("signer:tabUpdated", (msg) => {
+      // @ts-ignore
+      setConnected(msg.detail.isConnected);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+    });
+    window.addEventListener("signer:activeKeyChanged", (msg) => {
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+      toast("Active key changed");
+    });
+    window.addEventListener("signer:locked", (msg) => {
+      // @ts-ignore
+      setConnected(msg.detail.isConnected);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+    });
+    window.addEventListener("signer:unlocked", (msg) => {
+      // @ts-ignore
+      setConnected(msg.detail.isConnected);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+    });
+    window.addEventListener("signer:initialState", (msg) => {
+      // @ts-ignore
+      setConnected(msg.detail.isConnected);
+      // @ts-ignore
+      setLocked(!msg.detail.isUnlocked);
+      // @ts-ignore
+      setAddress(msg.detail.activeKey);
+    });
+  }, []);
+
   const form = useForm({
     initialValues: {
       name: "",
@@ -55,13 +98,8 @@ export default function Mint() {
   return (
     <AppShell
       padding="md"
-      navbar={
-        <CustomNavbar
-          connected={connected}
-          updateAccountInformation={updateAccountInformation}
-        />
-      }
-      header={<CustomHeader address={address} />}
+      navbar={<CustomNavbar connected={connected} />}
+      header={<CustomHeader address={address} locked={locked} />}
     >
       <Title order={1}>Mint your NFT</Title>
       <Box sx={{ maxWidth: 300 }} mx="auto">
@@ -86,10 +124,6 @@ export default function Mint() {
       </Box>
       <div className={styles.bg}>
         <div className={styles.starField}>
-          <div className={styles.layer} />
-          <div className={styles.layer} />
-          <div className={styles.layer} />
-          <div className={styles.layer} />
           <div className={styles.layer} />
         </div>
       </div>

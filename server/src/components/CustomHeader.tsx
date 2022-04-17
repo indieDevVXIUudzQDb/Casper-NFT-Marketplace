@@ -1,19 +1,28 @@
 import React, { useState } from "react";
 import {
-  ActionIcon,
   Burger,
+  Button,
   Group,
   Header,
   MediaQuery,
   useMantineTheme,
 } from "@mantine/core";
 import styles from "../styles/dashboard-cyber.module.scss";
-import { Wallet } from "tabler-icons-react";
+import { Lock, Wallet } from "tabler-icons-react";
+import { useClipboard } from "@mantine/hooks";
 
-export const CustomHeader = (props: { address: string }) => {
+export const addressShortener = (address: string) => {
+  const maxLength = 6;
+  const start = address.substring(0, maxLength);
+  const end = address.substring(address.length - maxLength, address.length);
+  return `${start}…${end}`;
+};
+
+export const CustomHeader = (props: { address: string; locked: boolean }) => {
   const [opened, setOpened] = useState(false);
 
   const theme = useMantineTheme();
+  const clipboard = useClipboard({ timeout: 500 });
 
   return (
     <Header height={60}>
@@ -38,10 +47,18 @@ export const CustomHeader = (props: { address: string }) => {
           </a>
         </div>
         <div />
-        <ActionIcon variant="default" size={30}>
-          {props.address}
-          <Wallet size={16} />
-        </ActionIcon>
+        {props.locked ? (
+          <Button color={"gray"}>
+            <Lock size={16} />
+          </Button>
+        ) : (
+          <Button
+            color={clipboard.copied ? "teal" : "blue"}
+            onClick={() => clipboard.copy(props.address)}
+          >
+            <Wallet size={16} /> &nbsp; {addressShortener(props.address)}
+          </Button>
+        )}
       </Group>
     </Header>
   );

@@ -4,10 +4,7 @@ import MainLinks from "../pages/_mainLinks";
 import User from "../pages/_user";
 import React from "react";
 
-export const CustomNavbar = (props: {
-  connected: boolean;
-  updateAccountInformation: () => void;
-}) => {
+export const CustomNavbar = (props: { connected: boolean }) => {
   return (
     <Navbar
       p="md"
@@ -24,10 +21,7 @@ export const CustomNavbar = (props: {
             <MainLinks />
           </Navbar.Section>
           <Navbar.Section>
-            <User
-              connected={props.connected}
-              updateAccountInformation={props.updateAccountInformation}
-            />
+            <User connected={props.connected} />
           </Navbar.Section>
         </div>
         <div className={styles.lineRight}>
