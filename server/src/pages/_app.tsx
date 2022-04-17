@@ -1,9 +1,9 @@
 import { useState } from "react";
 
 import {
-  MantineProvider,
   ColorScheme,
   ColorSchemeProvider,
+  MantineProvider,
 } from "@mantine/core";
 import { NotificationsProvider } from "@mantine/notifications";
 import { getCookie, setCookies } from "cookies-next";
@@ -17,9 +17,8 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
     props.colorScheme
   );
 
-  const toggleColorScheme = (value?: ColorScheme) => {
-    const nextColorScheme =
-      value || (colorScheme === "dark" ? "light" : "dark");
+  const toggleColorScheme = (_value?: ColorScheme) => {
+    const nextColorScheme = "dark";
     setColorScheme(nextColorScheme);
     setCookies("mantine-color-scheme", nextColorScheme, {
       maxAge: 60 * 60 * 24 * 30,
