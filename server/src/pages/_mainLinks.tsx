@@ -65,8 +65,8 @@ export default function MainLinks() {
     {
       icon: <BuildingFactory size={16} />,
       color: "blue",
-      label: "Mint NFT",
-      func: () => router.push("/mint"),
+      label: "Create NFT",
+      func: () => router.push("/nft/create"),
     },
   ];
 

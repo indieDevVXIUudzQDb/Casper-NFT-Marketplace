@@ -1,18 +1,26 @@
 import React, { useEffect, useState } from "react";
 
-import { AppShell, Box, Button, Group, TextInput, Title } from "@mantine/core";
+import {
+  AppShell,
+  Box,
+  Button,
+  Group,
+  Textarea,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { useForm } from "@mantine/hooks";
 import { EventStream } from "casper-js-sdk";
 import { toast } from "react-hot-toast";
 
-import { CustomHeader } from "../components/CustomHeader";
-import { CustomNavbar } from "../components/CustomNavbar";
-import styles from "../styles/dashboard-cyber.module.scss";
+import { CustomHeader } from "../../components/CustomHeader";
+import { CustomNavbar } from "../../components/CustomNavbar";
+import styles from "../../styles/dashboard-cyber.module.scss";
 import {
   EVENT_STREAM_ADDRESS,
   getActiveAccountBalance,
   subscribeToContractEvents,
-} from "../utils/cep47_utils";
+} from "../../utils/cep47_utils";
 
 export default function Mint() {
   const [address, setAddress] = useState("");
@@ -92,6 +100,7 @@ export default function Mint() {
       name: "",
       symbol: "",
       url: "",
+      meta: "",
       description: "",
     },
   });
@@ -101,7 +110,7 @@ export default function Mint() {
       navbar={<CustomNavbar connected={connected} />}
       header={<CustomHeader address={address} locked={locked} />}
     >
-      <Title order={1}>Mint your NFT</Title>
+      <Title order={1}>Create your NFT</Title>
       <Box sx={{ maxWidth: 300 }} mx="auto">
         <form onSubmit={form.onSubmit((values) => console.log(values))}>
           <TextInput required label="Name" {...form.getInputProps("name")} />
@@ -110,7 +119,25 @@ export default function Mint() {
             label="Symbol"
             {...form.getInputProps("symbol")}
           />
-          <TextInput required label="URL" {...form.getInputProps("url")} />
+          <TextInput
+            required
+            label="Symbol"
+            {...form.getInputProps("symbol")}
+          />
+          <TextInput
+            required
+            label="Image URL"
+            {...form.getInputProps("url")}
+          />
+          {/* eslint-disable-next-line react/jsx-no-undef */}
+          <Textarea
+            // placeholder="Enter"
+            label="Meta (JSON Format)"
+            autosize
+            {...form.getInputProps("meta")}
+            defaultValue={"{}"}
+            minRows={2}
+          />
           <TextInput
             required
             label="Description"
