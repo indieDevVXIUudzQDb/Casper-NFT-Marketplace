@@ -7,13 +7,13 @@ import {
   UnstyledButton,
   useMantineTheme,
 } from "@mantine/core";
+import { CasperLabsHelper } from "casper-js-sdk/dist/@types/casperlabsSigner";
 import { Wallet } from "tabler-icons-react";
 
 import { MainLink } from "./_mainLinks";
 
 export default function User(props: { connected: boolean }) {
   const theme = useMantineTheme();
-
   return (
     <>
       <Box
@@ -75,7 +75,9 @@ export default function User(props: { connected: boolean }) {
           <MainLink
             color={"green"}
             func={async () => {
-              await window.casperlabsHelper.requestConnection();
+              const casperlabsHelper: CasperLabsHelper =
+                await window.casperlabsHelper;
+              await casperlabsHelper.requestConnection();
             }}
             icon={<Wallet />}
             label={"Connect to Casper Signer"}
