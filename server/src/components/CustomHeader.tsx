@@ -52,6 +52,7 @@ export const CustomHeader = (props: {
           </a>
         </div>
         <div />
+        {/* eslint-disable-next-line no-nested-ternary */}
         {props.locked ? (
           <Button color={"gray"}>
             <Lock size={16} />
