@@ -13,9 +13,7 @@ import Head from "next/head";
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   const { Component, pageProps } = props;
-  const [colorScheme, setColorScheme] = useState<ColorScheme>(
-    props.colorScheme
-  );
+  const [colorScheme, setColorScheme] = useState<ColorScheme>("dark");
 
   const toggleColorScheme = (_value?: ColorScheme) => {
     const nextColorScheme = "dark";
