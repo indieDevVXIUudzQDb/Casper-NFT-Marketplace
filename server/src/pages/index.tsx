@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { AppShell, SimpleGrid, Title } from "@mantine/core";
+import { Signer } from "casper-js-sdk";
 import { toast, Toaster } from "react-hot-toast";
 
 import { CustomHeader } from "../components/CustomHeader";
@@ -16,9 +17,19 @@ import styles from "../styles/dashboard-cyber.module.scss";
 // import { EventStream } from "casper-js-sdk";
 
 export default function DashboardCyber() {
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
+
+  // Without the timeout it doesn't always work properly
+  setTimeout(async () => {
+    try {
+      setConnected(await Signer.isConnected());
+    } catch (err) {
+      console.log(err);
+    }
+  }, 100);
+
   // const [publicKey, setPublicKey] = useState("");
   // const [balance, setBalance] = useState("");
   // const [nftBalance, setNFTBalance] = useState(0);

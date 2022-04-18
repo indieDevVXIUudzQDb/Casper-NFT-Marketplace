@@ -10,7 +10,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/hooks";
-import { EventStream } from "casper-js-sdk";
+import { EventStream, Signer } from "casper-js-sdk";
 import { toast } from "react-hot-toast";
 
 import { CustomHeader } from "../../components/CustomHeader";
@@ -23,9 +23,18 @@ import {
 } from "../../utils/cep47_utils";
 
 export default function Mint() {
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
+
+  // Without the timeout it doesn't always work properly
+  setTimeout(async () => {
+    try {
+      setConnected(await Signer.isConnected());
+    } catch (err) {
+      console.log(err);
+    }
+  }, 100);
 
   // const [publicKey, setPublicKey] = useState("");
   // const [balance, setBalance] = useState("");
@@ -135,7 +144,6 @@ export default function Mint() {
             label="Meta (JSON Format)"
             autosize
             {...form.getInputProps("meta")}
-            defaultValue={"{}"}
             minRows={2}
           />
           <TextInput

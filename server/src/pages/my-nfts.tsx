@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { AppShell, SimpleGrid, Title } from "@mantine/core";
-import { EventStream } from "casper-js-sdk";
+import { EventStream, Signer } from "casper-js-sdk";
 import { toast } from "react-hot-toast";
 
 import { CustomHeader } from "../components/CustomHeader";
@@ -35,9 +35,17 @@ export interface NFTItem {
 
 export default function DashboardCyber(props: { items: NFTItem[] }) {
   const { items } = props;
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
+  // Without the timeout it doesn't always work properly
+  setTimeout(async () => {
+    try {
+      setConnected(await Signer.isConnected());
+    } catch (err) {
+      console.log(err);
+    }
+  }, 100);
   // const [publicKey, setPublicKey] = useState("");
   // const [balance, setBalance] = useState("");
   // const [nftBalance, setNFTBalance] = useState(0);

@@ -7,7 +7,7 @@ import {
   UnstyledButton,
   useMantineTheme,
 } from "@mantine/core";
-import { CasperLabsHelper } from "casper-js-sdk/dist/@types/casperlabsSigner";
+import { Signer } from "casper-js-sdk";
 import { Wallet } from "tabler-icons-react";
 
 import { MainLink } from "./_mainLinks";
@@ -59,25 +59,20 @@ export default function User(props: { connected: boolean }) {
       <Box sx={{ flex: 1 }}>
         {props.connected ? (
           <>
-            <Text weight={700} color={"green"}>
-              <b>&bull; &nbsp;</b> Connected to Casper Signer
-            </Text>
             <MainLink
               color={"red"}
               func={async () => {
                 await window.casperlabsHelper.disconnectFromSite();
               }}
               icon={<Wallet />}
-              label={"Disconnect from Casper Signer"}
+              label={"Disconnect Casper Signer"}
             />
           </>
         ) : (
           <MainLink
             color={"green"}
             func={async () => {
-              const casperlabsHelper: CasperLabsHelper =
-                await window.casperlabsHelper;
-              await casperlabsHelper.requestConnection();
+              await Signer.sendConnectionRequest();
             }}
             icon={<Wallet />}
             label={"Connect to Casper Signer"}

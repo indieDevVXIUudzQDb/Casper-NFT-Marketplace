@@ -20,7 +20,10 @@ export const addressShortener = (address: string) => {
   return `${start}…${end}`;
 };
 
-export const CustomHeader = (props: { address: string; locked: boolean }) => {
+export const CustomHeader = (props: {
+  address: string | null;
+  locked: boolean;
+}) => {
   const [opened, setOpened] = useState(false);
 
   const theme = useMantineTheme();
@@ -53,12 +56,19 @@ export const CustomHeader = (props: { address: string; locked: boolean }) => {
           <Button color={"gray"}>
             <Lock size={16} />
           </Button>
-        ) : (
+        ) : props.address ? (
           <Button
             color={clipboard.copied ? "teal" : "blue"}
             onClick={() => clipboard.copy(props.address)}
           >
             <Wallet size={16} /> &nbsp; {addressShortener(props.address)}
+          </Button>
+        ) : (
+          <Button
+            color={clipboard.copied ? "teal" : "blue"}
+            onClick={() => clipboard.copy(props.address)}
+          >
+            <Wallet size={16} />
           </Button>
         )}
       </Group>
