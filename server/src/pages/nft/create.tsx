@@ -106,13 +106,35 @@ export default function Mint() {
 
   const form = useForm({
     initialValues: {
-      name: "",
-      symbol: "",
-      url: "",
-      meta: "",
-      description: "",
+      name: "test",
+      symbol: "TEST",
+      url: "test.com",
+      meta: `{"hello":"world"}`,
+      description: "test description",
     },
   });
+  const createNFT = async (values: {
+    name: string;
+    symbol: string;
+    url: string;
+    meta: string;
+    description: string;
+  }) => {
+    const meta = JSON.parse(values.meta);
+    const res = await fetch("http://localhost:3000/api/deploy_nft", {
+      body: JSON.stringify({
+        ...values,
+        meta,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+    const result = await res.json();
+    console.log(result);
+    // result.user => 'Ada Lovelace'
+  };
   return (
     <AppShell
       padding="md"
@@ -121,7 +143,7 @@ export default function Mint() {
     >
       <Title order={1}>Create your NFT</Title>
       <Box sx={{ maxWidth: 300 }} mx="auto">
-        <form onSubmit={form.onSubmit((values) => console.log(values))}>
+        <form onSubmit={form.onSubmit((values) => createNFT(values))}>
           <TextInput required label="Name" {...form.getInputProps("name")} />
           <TextInput
             required
