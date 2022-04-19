@@ -136,7 +136,11 @@ export default function DashboardCyber() {
 
       <div className={styles.bg}>
         <div className={styles.starField}>
-          <div className={styles.layer} />
+          <div className={styles.layer}></div>
+          <div className={styles.layer}></div>
+          <div className={styles.layer}></div>
+          <div className={styles.layer}></div>
+          <div className={styles.layer}></div>
         </div>
       </div>
     </AppShell>
