@@ -103,6 +103,7 @@
     left: 0;
     z-index: -3;
 }
+
 .bg:before {
     content: "";
     width: 100%;
@@ -166,6 +167,7 @@
         opacity: 0;
     }
 }
+
 @keyframes sf-fly-by-4 {
     0% {
         transform: translateZ(-1800px);
@@ -182,6 +184,7 @@
         opacity: 0;
     }
 }
+
 @keyframes sf-fly-by-5 {
     0% {
         transform: translateZ(-1800px);
@@ -210,6 +213,7 @@
     -webkit-perspective: 600px;
     z-index: -1;
 }
+
 .layer {
     box-shadow: -411px -476px #cccccc, 777px -407px #d4d4d4, -387px -477px #fcfcfc, -91px -235px #d4d4d4, 491px -460px #f7f7f7, 892px -128px #f7f7f7, 758px -277px #ededed, 596px 378px #cccccc, 647px 423px whitesmoke, 183px 389px #c7c7c7,
     524px -237px #f0f0f0, 679px -535px #e3e3e3, 158px 399px #ededed, 157px 249px #ededed, 81px -450px #ebebeb, 719px -360px #c2c2c2, -499px 473px #e8e8e8, -158px -349px #d4d4d4, 870px -134px #cfcfcf, 446px 404px #c2c2c2,
@@ -229,29 +233,32 @@
     width: 4px;
     border-radius: 2px;
 }
+
 .layer:nth-child(1) {
     opacity: 0;
 
-    animation: sf-fly-by-1 12s linear infinite;
+    animation: sf-fly-by-1 8s 1s linear infinite;
 }
+
 .layer:nth-child(2) {
     opacity: 0;
 
-    animation: sf-fly-by-2 8s 1s linear infinite;
+    animation: sf-fly-by-2 10s 2s linear infinite;
 }
+
 .layer:nth-child(3) {
     opacity: 0;
 
-    animation: sf-fly-by-3 6s 2s linear infinite;
+    animation: sf-fly-by-3 12s 3s linear infinite;
 }
 
 .layer:nth-child(4) {
     opacity: 0;
-    animation: sf-fly-by-4 5s 3s linear infinite;
+    animation: sf-fly-by-4 14s 4s linear infinite;
 }
 
 .layer:nth-child(5) {
     opacity: 0;
 
-    animation: sf-fly-by-5 4s 4s linear infinite;
+    animation: sf-fly-by-5 16s 5s linear infinite;
 }
