@@ -14,6 +14,7 @@ import {
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
+import { NFTMeta } from "../utils/types";
 
 export async function getServerSideProps(_context: any) {
   const { data: items } = await supabaseServerSideClient
@@ -24,16 +25,7 @@ export async function getServerSideProps(_context: any) {
   };
 }
 
-export interface NFTItem {
-  hash: string;
-  image_url: string;
-  name: string;
-  copies: number;
-  symbol: string;
-  contract_name: string;
-}
-
-export default function DashboardCyber(props: { items: NFTItem[] }) {
+export default function DashboardCyber(props: { items: NFTMeta[] }) {
   const { items } = props;
   const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
@@ -142,7 +134,7 @@ export default function DashboardCyber(props: { items: NFTItem[] }) {
         {items.map((nft, index) => (
           <MyCard
             key={index}
-            image={nft.image_url}
+            image={nft.url}
             title={nft.name}
             description={""}
             buttonText={"Sell (Coming Soon)"}

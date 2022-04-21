@@ -16,7 +16,7 @@ import {
 } from "casper-js-sdk";
 import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
 
-import { getAccountInfo, getAccountNamedKeyValue, getDeploy } from "./utils";
+import { getAccountInfo, getDeploy } from "./utils";
 
 export const NODE_ADDRESS =
   process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS ||
@@ -167,7 +167,7 @@ export const sendTransaction = async (
   }
   return tx;
 };
-const initClient = async () => {
+export const initClient = async () => {
   let cep47;
   let contractPublicKey;
   try {
@@ -178,21 +178,24 @@ const initClient = async () => {
       contractPublicKey
     );
     console.log(`... Account Info: `, contractAccountInfo);
-    const contractHashKey = `${CONTRACT_NAME!}_contract_hash`;
-    console.log({ contractHashKey });
-    const contractHash = await getAccountNamedKeyValue(
-      contractAccountInfo,
-      contractHashKey
-    );
-    console.log(`... Contract Hash: ${contractHash}`);
+    // const contractHashKey = `${CONTRACT_NAME!}_contract_hash`;
+    // console.log({ contractHashKey });
+    // const contractHash = await getAccountNamedKeyValue(
+    //   contractAccountInfo,
+    //   contractHashKey
+    // );
+    // console.log(`... Contract Hash: ${contractHash}`);
+    //
+    // const contractPackageHash = await getAccountNamedKeyValue(
+    //   contractAccountInfo,
+    //   `contract_package_hash`
+    // );
+    // console.log(`... Contract Package Hash: ${contractPackageHash}`);
+    const contractHash = process.env.NEXT_PUBLIC_CEP47_CONTRACT_HASH;
+    const contractPackageHash =
+      process.env.NEXT_PUBLIC_CEP47_CONTRACT_PACKAGE_HASH;
 
-    const contractPackageHash = await getAccountNamedKeyValue(
-      contractAccountInfo,
-      `contract_package_hash`
-    );
-    console.log(`... Contract Package Hash: ${contractPackageHash}`);
-
-    cep47.setContractHash(contractHash, contractPackageHash);
+    cep47.setContractHash(contractHash!, contractPackageHash!);
   } catch (e) {
     console.log(e);
   }
@@ -205,42 +208,57 @@ const initClient = async () => {
 export const triggerMintDeploy = async (
   ids: string[],
   metas: Map<string, string>[]
-) => {
-  // @ts-ignore
-  const { cep47 } = await initClient();
-  if (!cep47) return;
-  const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
-  const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
+): Promise<unknown> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // @ts-ignore
+      const { cep47 } = await initClient();
+      if (!cep47) return;
+      const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
+      const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
 
-  const mintDeploy = await cep47.mint(
-    activePublicKey,
-    ids,
-    metas,
-    MINT_ONE_PAYMENT_AMOUNT!,
-    activePublicKey
-  );
+      const mintDeploy = await cep47.mint(
+        activePublicKey,
+        ids,
+        metas,
+        MINT_ONE_PAYMENT_AMOUNT!,
+        activePublicKey
+      );
 
-  // Turn your transaction data to format JSON
-  const json = DeployUtil.deployToJson(mintDeploy);
+      // Turn your transaction data to format JSON
+      const json = DeployUtil.deployToJson(mintDeploy);
 
-  // Sign transcation using casper-signer.
-  const signature = await window.casperlabsHelper.sign(
-    json,
-    publicKeyHex,
-    publicKeyHex
-  );
-  const deployObject = DeployUtil.deployFromJson(signature);
-  let mintDeployHash;
-  if (deployObject.val) {
-    // Here we are sending the signed deploy.
-    mintDeployHash = await casperClient.putDeploy(deployObject.val as Deploy);
-    console.log("...... Mint deployed");
-    await getDeploy(NODE_ADDRESS!, mintDeployHash);
-    console.log("...... Token minted successfully");
-  }
+      // Sign transcation using casper-signer.
+      const signature = await window.casperlabsHelper.sign(
+        json,
+        publicKeyHex,
+        publicKeyHex
+      );
+      const deployObject = DeployUtil.deployFromJson(signature);
+      let mintDeployHash;
+      if (deployObject.val) {
+        // Here we are sending the signed deploy.
+        mintDeployHash = await casperClient.putDeploy(
+          deployObject.val as Deploy
+        );
+        console.log(`...... Mint deployed: ${mintDeployHash}`);
+        console.log({ ids, metas });
+        await getDeploy(NODE_ADDRESS!, mintDeployHash);
+        console.log("...... Token minted successfully");
+      }
+      console.log("...... Mint deploy hash: ", mintDeployHash);
+      const result = await getDeploy(
+        process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS!,
+        mintDeployHash || ""
+      );
+      console.log("...... Token minted successfully");
 
-  // eslint-disable-next-line consistent-return
-  return { mintDeployHash };
+      resolve(mintDeployHash);
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+  });
 };
 
 export const getActiveAccountBalance = async function (): Promise<number> {

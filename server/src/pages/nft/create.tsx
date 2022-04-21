@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/hooks";
 import { EventStream, Signer } from "casper-js-sdk";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 
 import { CustomHeader } from "../../components/CustomHeader";
 import { CustomNavbar } from "../../components/CustomNavbar";
@@ -19,8 +19,11 @@ import styles from "../../styles/dashboard-cyber.module.scss";
 import {
   EVENT_STREAM_ADDRESS,
   getActiveAccountBalance,
+  initClient,
   subscribeToContractEvents,
+  triggerMintDeploy,
 } from "../../utils/cep47_utils";
+import { NFTMeta } from "../../utils/types";
 
 export default function Mint() {
   const [address, setAddress] = useState(null);
@@ -109,31 +112,62 @@ export default function Mint() {
       name: "test",
       symbol: "TEST",
       url: "test.com",
-      meta: `{"hello":"world"}`,
+      customMeta: `{"hello":"world"}`,
       description: "test description",
     },
   });
+  const mintNFT = async (item: NFTMeta) => {
+    const { cep47 } = await initClient();
+    if (!cep47) return;
+    const totalSupply = await cep47.totalSupply();
+    const startIndex = totalSupply;
+
+    const mapped: Map<string, string> = new Map(Object.entries(item));
+    console.log("...... Triggered Mint Deploy: ");
+    toast.promise(triggerMintDeploy([`${startIndex}`], [mapped]), {
+      loading: "Minting in progress",
+      success: "Minting Successful",
+      error: "Error when minting",
+    });
+  };
+
   const createNFT = async (values: {
     name: string;
     symbol: string;
     url: string;
-    meta: string;
+    customMeta: string;
     description: string;
   }) => {
-    const meta = JSON.parse(values.meta);
-    const res = await fetch("http://localhost:3000/api/deploy_nft", {
-      body: JSON.stringify({
+    let customMeta;
+    let item;
+    try {
+      customMeta = JSON.parse(values.customMeta);
+    } catch (e) {
+      console.log(e);
+    }
+
+    if (
+      typeof customMeta === "object" &&
+      !Array.isArray(customMeta) &&
+      customMeta !== null
+    ) {
+      item = {
         ...values,
-        meta,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-    });
-    const result = await res.json();
-    console.log(result);
-    // result.user => 'Ada Lovelace'
+        ...customMeta,
+      };
+    } else if (customMeta === null) {
+      item = {
+        ...values,
+      };
+    } else {
+      console.log(
+        "Invalid format passed to Custom Meta. Expecting JSON Object."
+      );
+      toast.error("Invalid Custom Meta format. Expecting JSON Object.");
+      return;
+    }
+    const deployHash = await mintNFT(item);
+    console.log({ deployHash });
   };
   return (
     <AppShell
@@ -141,6 +175,8 @@ export default function Mint() {
       navbar={<CustomNavbar connected={connected} />}
       header={<CustomHeader address={address} locked={locked} />}
     >
+      <Toaster />
+
       <Title order={1}>Create your NFT</Title>
       <Box sx={{ maxWidth: 300 }} mx="auto">
         <form onSubmit={form.onSubmit((values) => createNFT(values))}>
@@ -163,9 +199,9 @@ export default function Mint() {
           {/* eslint-disable-next-line react/jsx-no-undef */}
           <Textarea
             // placeholder="Enter"
-            label="Meta (JSON Format)"
+            label="Custom Meta (JSON Format)"
             autosize
-            {...form.getInputProps("meta")}
+            {...form.getInputProps("customMeta")}
             minRows={2}
           />
           <TextInput

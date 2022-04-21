@@ -1,10 +1,19 @@
-export default function handler(req: Request, res: Response) {
+import { supabaseServerSideClient } from "../../utils/supabaseServerSideClient";
+import { NFTMeta } from "../../utils/types";
+
+export default async function handler(req: Request, res: Response) {
   if (req.method === "POST") {
     console.log("hello POST");
+
+    const item = (await req.json()) as NFTMeta;
+
+    // supabaseServerSideClient.from("item").insert();
+    // TODO return deploy hash
+
+    const { error } = await supabaseServerSideClient
+      .from("item")
+      .insert({ item });
   }
-  console.log(req);
-  // supabaseServerSideClient.from("item").insert();
-  // TODO return deploy hash
   // @ts-ignore
-  res.status(200).json(req.body);
+  res.status(200);
 }
