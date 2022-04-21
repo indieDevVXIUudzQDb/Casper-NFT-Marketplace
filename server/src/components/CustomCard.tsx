@@ -11,7 +11,7 @@ interface Props {
   buttonText: string;
 }
 
-export const MyCard = (props: Props) => {
+export const CustomCard = (props: Props) => {
   const { image, title, description, buttonText } = props;
   return (
     <div style={{}}>

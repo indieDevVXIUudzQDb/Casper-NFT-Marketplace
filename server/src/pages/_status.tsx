@@ -12,7 +12,7 @@ import { Wallet } from "tabler-icons-react";
 
 import { MainLink } from "./_mainLinks";
 
-export default function User(props: { connected: boolean; locked: boolean }) {
+export default function Status(props: { connected: boolean; locked: boolean }) {
   const theme = useMantineTheme();
   console.log({ props });
   return (
@@ -46,6 +46,7 @@ export default function User(props: { connected: boolean; locked: boolean }) {
         >
           <Group>
             <Box sx={{ flex: 1 }}>
+              {/* eslint-disable-next-line no-nested-ternary */}
               {props.locked ? (
                 <>
                   <Text
@@ -66,6 +67,7 @@ export default function User(props: { connected: boolean; locked: boolean }) {
         </UnstyledButton>
       </Box>
       <Box sx={{ flex: 1 }}>
+        {/* eslint-disable-next-line no-nested-ternary */}
         {props.locked ? null : props.connected ? (
           <MainLink
             color={"red"}

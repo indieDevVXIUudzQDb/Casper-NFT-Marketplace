@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 
 import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
-import { MyCard } from "../components/MyCard";
+import { CustomCard } from "../components/MyCard";
 import styles from "../styles/dashboard-cyber.module.scss";
 import {
   EVENT_STREAM_ADDRESS,
@@ -132,7 +132,7 @@ export default function DashboardCyber(props: { items: NFTMeta[] }) {
       <Title order={1}>My NFTs</Title>
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
         {items.map((nft, index) => (
-          <MyCard
+          <CustomCard
             key={index}
             image={nft.url}
             title={nft.name}

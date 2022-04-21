@@ -6,7 +6,7 @@ import {toast, Toaster} from "react-hot-toast";
 
 import {CustomHeader} from "../components/CustomHeader";
 import {CustomNavbar} from "../components/CustomNavbar";
-import {MyCard} from "../components/MyCard";
+import {CustomCard} from "../components/MyCard";
 import {mockData} from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
 // import {
@@ -123,7 +123,7 @@ export default function DashboardCyber() {
 
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
         {mockData.planets.map((planet, index) => (
-          <MyCard
+          <CustomCard
             // index={index}
             key={index}
             image={planet.url}
