@@ -208,52 +208,61 @@ export const initClient = async () => {
 export const triggerMintDeploy = async (
   ids: string[],
   metas: Map<string, string>[]
-): Promise<unknown> => {
+): Promise<string | null> => {
+  try {
+    // @ts-ignore
+    const { cep47 } = await initClient();
+    if (!cep47) return null;
+    const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
+    const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
+
+    const mintDeploy = await cep47.mint(
+      activePublicKey,
+      ids,
+      metas,
+      MINT_ONE_PAYMENT_AMOUNT!,
+      activePublicKey
+    );
+
+    // Turn your transaction data to format JSON
+    const json = DeployUtil.deployToJson(mintDeploy);
+
+    // Sign transcation using casper-signer.
+    const signature = await window.casperlabsHelper.sign(
+      json,
+      publicKeyHex,
+      publicKeyHex
+    );
+    const deployObject = DeployUtil.deployFromJson(signature);
+    let mintDeployHash;
+    if (deployObject.val) {
+      // Here we are sending the signed deploy.
+      mintDeployHash = await casperClient.putDeploy(deployObject.val as Deploy);
+      console.log(`...... Mint deployed: ${mintDeployHash}`);
+      console.log({ ids, metas });
+      // eslint-disable-next-line consistent-return
+      return mintDeployHash;
+    }
+  } catch (e) {
+    console.log(e);
+  }
+  return null;
+};
+
+export const getDeployResult = (deployHash: string) => {
+  // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
       // @ts-ignore
       const { cep47 } = await initClient();
       if (!cep47) return;
-      const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
-      const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
-
-      const mintDeploy = await cep47.mint(
-        activePublicKey,
-        ids,
-        metas,
-        MINT_ONE_PAYMENT_AMOUNT!,
-        activePublicKey
+      await getDeploy(
+        process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS!!,
+        deployHash
       );
+      console.log("...... Deployed successfully");
 
-      // Turn your transaction data to format JSON
-      const json = DeployUtil.deployToJson(mintDeploy);
-
-      // Sign transcation using casper-signer.
-      const signature = await window.casperlabsHelper.sign(
-        json,
-        publicKeyHex,
-        publicKeyHex
-      );
-      const deployObject = DeployUtil.deployFromJson(signature);
-      let mintDeployHash;
-      if (deployObject.val) {
-        // Here we are sending the signed deploy.
-        mintDeployHash = await casperClient.putDeploy(
-          deployObject.val as Deploy
-        );
-        console.log(`...... Mint deployed: ${mintDeployHash}`);
-        console.log({ ids, metas });
-        await getDeploy(NODE_ADDRESS!, mintDeployHash);
-        console.log("...... Token minted successfully");
-      }
-      console.log("...... Mint deploy hash: ", mintDeployHash);
-      const result = await getDeploy(
-        process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS!,
-        mintDeployHash || ""
-      );
-      console.log("...... Token minted successfully");
-
-      resolve(mintDeployHash);
+      resolve(deployHash);
     } catch (e) {
       console.log(e);
       reject();

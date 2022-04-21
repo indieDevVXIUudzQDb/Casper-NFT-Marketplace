@@ -19,6 +19,7 @@ import styles from "../../styles/dashboard-cyber.module.scss";
 import {
   EVENT_STREAM_ADDRESS,
   getActiveAccountBalance,
+  getDeployResult,
   initClient,
   subscribeToContractEvents,
   triggerMintDeploy,
@@ -124,11 +125,16 @@ export default function Mint() {
 
     const mapped: Map<string, string> = new Map(Object.entries(item));
     console.log("...... Triggered Mint Deploy: ");
-    toast.promise(triggerMintDeploy([`${startIndex}`], [mapped]), {
-      loading: "Minting in progress",
-      success: "Minting Successful",
-      error: "Error when minting",
-    });
+    const mintDeployHash = await triggerMintDeploy([`${startIndex}`], [mapped]);
+    if (mintDeployHash) {
+      toast.promise(getDeployResult(mintDeployHash), {
+        loading: "Minting in progress",
+        success: "Minting Successful",
+        error: "Error when minting",
+      });
+    } else {
+      toast.error("Failed to mint NFT.");
+    }
   };
 
   const createNFT = async (values: {

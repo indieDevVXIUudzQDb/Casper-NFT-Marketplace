@@ -3,7 +3,7 @@ import React from "react";
 import { Navbar } from "@mantine/core";
 
 import MainLinks from "../pages/_mainLinks";
-import User from "../pages/_user";
+import User from "../pages/_status";
 import styles from "../styles/dashboard-cyber.module.scss";
 
 export const CustomNavbar = (props: {

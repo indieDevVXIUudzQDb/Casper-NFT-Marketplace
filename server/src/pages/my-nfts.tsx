@@ -4,9 +4,9 @@ import { AppShell, SimpleGrid, Title } from "@mantine/core";
 import { EventStream, Signer } from "casper-js-sdk";
 import { toast } from "react-hot-toast";
 
+import { CustomCard } from "../components/CustomCard";
 import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
-import { CustomCard } from "../components/MyCard";
 import styles from "../styles/dashboard-cyber.module.scss";
 import {
   EVENT_STREAM_ADDRESS,
