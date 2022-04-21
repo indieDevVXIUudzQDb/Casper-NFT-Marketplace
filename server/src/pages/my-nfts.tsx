@@ -4,9 +4,9 @@ import { AppShell, SimpleGrid, Title } from "@mantine/core";
 import { EventStream, Signer } from "casper-js-sdk";
 import { toast } from "react-hot-toast";
 
+import { CustomCard } from "../components/CustomCard";
 import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
-import { MyCard } from "../components/MyCard";
 import styles from "../styles/dashboard-cyber.module.scss";
 import {
   EVENT_STREAM_ADDRESS,
@@ -14,6 +14,7 @@ import {
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
+import { NFTMeta } from "../utils/types";
 
 export async function getServerSideProps(_context: any) {
   const { data: items } = await supabaseServerSideClient
@@ -24,16 +25,7 @@ export async function getServerSideProps(_context: any) {
   };
 }
 
-export interface NFTItem {
-  hash: string;
-  image_url: string;
-  name: string;
-  copies: number;
-  symbol: string;
-  contract_name: string;
-}
-
-export default function DashboardCyber(props: { items: NFTItem[] }) {
+export default function DashboardCyber(props: { items: NFTMeta[] }) {
   const { items } = props;
   const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
@@ -134,15 +126,15 @@ export default function DashboardCyber(props: { items: NFTItem[] }) {
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} />}
+      navbar={<CustomNavbar connected={connected} locked={locked} />}
       header={<CustomHeader address={address} locked={locked} />}
     >
       <Title order={1}>My NFTs</Title>
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
         {items.map((nft, index) => (
-          <MyCard
+          <CustomCard
             key={index}
-            image={nft.image_url}
+            image={nft.url}
             title={nft.name}
             description={""}
             buttonText={"Sell (Coming Soon)"}

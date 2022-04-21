@@ -12,8 +12,9 @@ import { Wallet } from "tabler-icons-react";
 
 import { MainLink } from "./_mainLinks";
 
-export default function User(props: { connected: boolean }) {
+export default function Status(props: { connected: boolean; locked: boolean }) {
   const theme = useMantineTheme();
+  console.log({ props });
   return (
     <>
       <Box
@@ -45,29 +46,37 @@ export default function User(props: { connected: boolean }) {
         >
           <Group>
             <Box sx={{ flex: 1 }}>
-              {props.connected ? (
+              {/* eslint-disable-next-line no-nested-ternary */}
+              {props.locked ? (
                 <>
-                  <Text weight={700} color={"green"}>
-                    <b>&bull; &nbsp;</b> Connected to Casper Signer
+                  <Text
+                    weight={700}
+                    color={"gray"}
+                    onClick={() => Signer.sendConnectionRequest()}
+                  >
+                    <b>&bull; &nbsp;</b> Casper Signer Locked
                   </Text>
                 </>
+              ) : props.connected ? (
+                <Text weight={700} color={"green"}>
+                  <b>&bull; &nbsp;</b> Connected to Casper Signer
+                </Text>
               ) : null}
             </Box>
           </Group>
         </UnstyledButton>
       </Box>
       <Box sx={{ flex: 1 }}>
-        {props.connected ? (
-          <>
-            <MainLink
-              color={"red"}
-              func={async () => {
-                await window.casperlabsHelper.disconnectFromSite();
-              }}
-              icon={<Wallet />}
-              label={"Disconnect Casper Signer"}
-            />
-          </>
+        {/* eslint-disable-next-line no-nested-ternary */}
+        {props.locked ? null : props.connected ? (
+          <MainLink
+            color={"red"}
+            func={async () => {
+              await Signer.disconnectFromSite();
+            }}
+            icon={<Wallet />}
+            label={"Disconnect Casper Signer"}
+          />
         ) : (
           <MainLink
             color={"green"}
