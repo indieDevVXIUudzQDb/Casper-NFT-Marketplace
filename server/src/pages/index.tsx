@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 
-import { AppShell, SimpleGrid, Title } from "@mantine/core";
-import { Signer } from "casper-js-sdk";
-import { toast, Toaster } from "react-hot-toast";
+import {AppShell, SimpleGrid, Title} from "@mantine/core";
+import {Signer} from "casper-js-sdk";
+import {toast, Toaster} from "react-hot-toast";
 
-import { CustomHeader } from "../components/CustomHeader";
-import { CustomNavbar } from "../components/CustomNavbar";
-import { MyCard } from "../components/MyCard";
-import { mockData } from "../mockData";
+import {CustomHeader} from "../components/CustomHeader";
+import {CustomNavbar} from "../components/CustomNavbar";
+import {MyCard} from "../components/MyCard";
+import {mockData} from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
 // import {
 //   EVENT_STREAM_ADDRESS,
@@ -112,7 +112,7 @@ export default function DashboardCyber() {
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} />}
+      navbar={<CustomNavbar connected={connected} locked={locked} />}
       header={<CustomHeader address={address} locked={locked} />}
     >
       <div>

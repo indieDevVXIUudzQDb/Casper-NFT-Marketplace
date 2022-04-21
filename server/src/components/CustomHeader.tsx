@@ -12,6 +12,8 @@ import { useClipboard } from "@mantine/hooks";
 import { Lock, Wallet } from "tabler-icons-react";
 
 import styles from "../styles/dashboard-cyber.module.scss";
+import { Signer } from "casper-js-sdk";
+import { toast, Toaster } from "react-hot-toast";
 
 export const addressShortener = (address: string) => {
   const maxLength = 6;
@@ -31,6 +33,7 @@ export const CustomHeader = (props: {
 
   return (
     <Header height={60}>
+      <Toaster />
       {/* Handle other responsive styles with MediaQuery component or createStyles function */}
       <MediaQuery largerThan="sm" styles={{ display: "none" }}>
         <Burger
@@ -54,13 +57,16 @@ export const CustomHeader = (props: {
         <div />
         {/* eslint-disable-next-line no-nested-ternary */}
         {props.locked ? (
-          <Button color={"gray"}>
+          <Button color={"gray"} onClick={() => Signer.sendConnectionRequest()}>
             <Lock size={16} />
           </Button>
         ) : props.address ? (
           <Button
             color={clipboard.copied ? "teal" : "blue"}
-            onClick={() => clipboard.copy(props.address)}
+            onClick={() => {
+              clipboard.copy(props.address);
+              toast.success("Address copied to clipboard!");
+            }}
           >
             <Wallet size={16} /> &nbsp; {addressShortener(props.address)}
           </Button>

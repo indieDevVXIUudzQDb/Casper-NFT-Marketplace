@@ -6,7 +6,10 @@ import MainLinks from "../pages/_mainLinks";
 import User from "../pages/_user";
 import styles from "../styles/dashboard-cyber.module.scss";
 
-export const CustomNavbar = (props: { connected: boolean }) => {
+export const CustomNavbar = (props: {
+  connected: boolean;
+  locked: boolean;
+}) => {
   return (
     <Navbar
       p="md"
@@ -23,7 +26,7 @@ export const CustomNavbar = (props: { connected: boolean }) => {
             <MainLinks />
           </Navbar.Section>
           <Navbar.Section>
-            <User connected={props.connected} />
+            <User connected={props.connected} locked={props.locked} />
           </Navbar.Section>
         </div>
         <div className={styles.lineRight}>

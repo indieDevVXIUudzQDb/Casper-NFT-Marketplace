@@ -126,7 +126,7 @@ export default function DashboardCyber(props: { items: NFTMeta[] }) {
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} />}
+      navbar={<CustomNavbar connected={connected} locked={locked} />}
       header={<CustomHeader address={address} locked={locked} />}
     >
       <Title order={1}>My NFTs</Title>

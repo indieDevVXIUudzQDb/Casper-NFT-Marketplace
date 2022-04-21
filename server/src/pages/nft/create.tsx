@@ -172,7 +172,7 @@ export default function Mint() {
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} />}
+      navbar={<CustomNavbar connected={connected} locked={locked} />}
       header={<CustomHeader address={address} locked={locked} />}
     >
       <Toaster />
@@ -199,7 +199,7 @@ export default function Mint() {
           {/* eslint-disable-next-line react/jsx-no-undef */}
           <Textarea
             // placeholder="Enter"
-            label="Custom Meta (JSON Format)"
+            label="Custom Meta (JSON Object)"
             autosize
             {...form.getInputProps("customMeta")}
             minRows={2}
