@@ -90,9 +90,25 @@ const getContractHash = async () => {
   );
 
   console.log(`... Contract Hash: ${contractHash}`);
+
+  const contractPackageHash = await getAccountNamedKeyValue(
+    accountInfo,
+    `contract_package_hash`
+  );
+  console.log(`... Contract Package Hash: ${contractPackageHash}`);
   return contractHash;
+};
+
+const getTotalSupply = async () => {
+  const cep47 = new CEP47Client(NODE_ADDRESS!, CHAIN_NAME!);
+  const contractHash = await getContractHash();
+
+  cep47.setContractHash(contractHash);
+  let totalSupply = await cep47.totalSupply();
+  console.log(`... Total supply: ${totalSupply}`);
+  // return totalSupply;
 };
 
 // test();
 
-getContractHash();
+getTotalSupply();
