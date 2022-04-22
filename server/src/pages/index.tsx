@@ -7,8 +7,8 @@ import {toast, Toaster} from "react-hot-toast";
 import {CustomCard} from "../components/CustomCard";
 import {CustomHeader} from "../components/CustomHeader";
 import {CustomNavbar} from "../components/CustomNavbar";
-import {mockData} from "../mockData";
 import styles from "../styles/dashboard-cyber.module.scss";
+import {initClient} from "../utils/cep47_utils";
 // import {
 //   EVENT_STREAM_ADDRESS,
 //   getActiveAccountBalance,
@@ -20,6 +20,7 @@ export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [items, setItems] = useState<Map<string, string>[]>();
 
   // Without the timeout it doesn't always work properly
   setTimeout(async () => {
@@ -29,24 +30,6 @@ export default function DashboardCyber() {
       console.log(err);
     }
   }, 100);
-
-  // const [publicKey, setPublicKey] = useState("");
-  // const [balance, setBalance] = useState("");
-  // const [nftBalance, setNFTBalance] = useState(0);
-  // const [tx, setTx] = useState("");
-  // const [to, setTo] = useState("");
-  // const [amount, setAmount] = useState("");
-  // const updateAccountInformation = async () => {
-  //   // const {
-  //   //   textAddress: updatedTextAddress,
-  //   //   // textBalance,
-  //   //   // publicKey: updatedPublicKey,
-  //   // } = await accountInformation();
-  //   // setAddress(updatedTextAddress);
-  //   // setBalance(textBalance);
-  //   // setPublicKey(updatedPublicKey);
-  //   // setNFTBalance(await getActiveAccountBalance());
-  // };
 
   // useEffect(() => {
   //   console.log("subscription called");
@@ -109,6 +92,26 @@ export default function DashboardCyber() {
       setAddress(msg.detail.activeKey);
     });
   }, []);
+
+  const retrieveNFTS = async () => {
+    const { cep47 } = await initClient();
+    if (!cep47) return;
+    const totalSupply = await cep47.totalSupply();
+
+    const nfts = [];
+
+    // eslint-disable-next-line no-plusplus
+    for (let i = 0; i < totalSupply; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      const tokenMeta = await cep47.getTokenMeta(`${i}`);
+      nfts.push(tokenMeta);
+    }
+    setItems(nfts);
+    console.log(nfts);
+  };
+  useEffect(() => {
+    retrieveNFTS();
+  }, []);
   return (
     <AppShell
       padding="md"
@@ -122,16 +125,19 @@ export default function DashboardCyber() {
       <Title order={1}>Distant Planet Collection</Title>
 
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
-        {mockData.planets.map((planet, index) => (
+        {/* {mockData.planets.map((planet, index) => ( */}
+        {items?.map((item, index) => (
           <CustomCard
             // index={index}
             key={index}
-            image={planet.url}
-            title={planet.name}
-            description={planet.description}
-            buttonText={planet.actionText}
+            image={item.get("image_url") || ""}
+            title={item.get("name") || ""}
+            description={item.get("description") || ""}
+            buttonText={"Coming Soon"}
           />
         ))}
+
+        {/* ))} */}
       </SimpleGrid>
 
       <div className={styles.bg}>
