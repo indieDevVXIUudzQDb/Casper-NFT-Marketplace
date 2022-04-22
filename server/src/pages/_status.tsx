@@ -68,16 +68,7 @@ export default function Status(props: { connected: boolean; locked: boolean }) {
       </Box>
       <Box sx={{ flex: 1 }}>
         {/* eslint-disable-next-line no-nested-ternary */}
-        {props.locked ? null : props.connected ? (
-          <MainLink
-            color={"red"}
-            func={async () => {
-              await Signer.disconnectFromSite();
-            }}
-            icon={<Wallet />}
-            label={"Disconnect Casper Signer"}
-          />
-        ) : (
+        {props.locked ? null : props.connected ? null : (
           <MainLink
             color={"green"}
             func={async () => {

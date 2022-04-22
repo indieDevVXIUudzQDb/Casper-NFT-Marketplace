@@ -11,9 +11,10 @@ import {
 import { useClipboard } from "@mantine/hooks";
 import { Signer } from "casper-js-sdk";
 import { toast, Toaster } from "react-hot-toast";
-import { Lock, Wallet } from "tabler-icons-react";
+import { LockOpen, Wallet } from "tabler-icons-react";
 
 import styles from "../styles/dashboard-cyber.module.scss";
+import { toastConfig } from "../toastConfig";
 
 export const addressShortener = (address: string) => {
   const maxLength = 6;
@@ -58,9 +59,9 @@ export const CustomHeader = (props: {
         {/* eslint-disable-next-line no-nested-ternary */}
         {props.locked ? (
           <Button color={"gray"} onClick={() => Signer.sendConnectionRequest()}>
-            <Lock size={16} />
+            <LockOpen size={16} /> &nbsp; Unlock Casper Signer
           </Button>
-        ) : props.address ? (
+        ) : props.address && props.address !== "" ? (
           <Button
             color={clipboard.copied ? "teal" : "blue"}
             onClick={() => {
@@ -72,10 +73,10 @@ export const CustomHeader = (props: {
           </Button>
         ) : (
           <Button
-            color={clipboard.copied ? "teal" : "blue"}
-            onClick={() => clipboard.copy(props.address)}
+            color={"green"}
+            onClick={() => Signer.sendConnectionRequest()}
           >
-            <Wallet size={16} />
+            <Wallet size={16} /> &nbsp; Connect Casper Signer
           </Button>
         )}
       </Group>
