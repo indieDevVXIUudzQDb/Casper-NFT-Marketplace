@@ -9,7 +9,7 @@ import {CustomHeader} from "../components/CustomHeader";
 import {CustomNavbar} from "../components/CustomNavbar";
 import styles from "../styles/dashboard-cyber.module.scss";
 import {toastConfig} from "../toastConfig";
-import {initClient} from "../utils/cep47_utils";
+import {getNFTS} from "../utils/cep47_utils";
 // import {
 //   EVENT_STREAM_ADDRESS,
 //   getActiveAccountBalance,
@@ -37,6 +37,21 @@ export default function DashboardCyber() {
   //   const es = new EventStream(EVENT_STREAM_ADDRESS!);
   //   subscribeToContractEvents(es, () => getActiveAccountBalance());
   // }, []);
+
+  const retrieveNFTS = async () => {
+    const result = await toast.promise(
+      getNFTS(),
+      {
+        loading: "Loading",
+        success: "Loaded NFTs",
+        error: "Error retrieving owned NFTs",
+      },
+      toastConfig
+    );
+    if (result) {
+      setItems(result);
+    }
+  };
 
   useEffect(() => {
     window.addEventListener("signer:connected", (msg) => {
@@ -67,6 +82,7 @@ export default function DashboardCyber() {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
       toast("Active key changed", toastConfig);
+      retrieveNFTS();
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
@@ -94,22 +110,6 @@ export default function DashboardCyber() {
     });
   }, []);
 
-  const retrieveNFTS = async () => {
-    const { cep47 } = await initClient();
-    if (!cep47) return;
-    const totalSupply = await cep47.totalSupply();
-
-    const nfts = [];
-
-    // eslint-disable-next-line no-plusplus
-    for (let i = 0; i < totalSupply; i++) {
-      // eslint-disable-next-line no-await-in-loop
-      const tokenMeta = await cep47.getTokenMeta(`${i}`);
-      nfts.push(tokenMeta);
-    }
-    setItems(nfts);
-    console.log(nfts);
-  };
   useEffect(() => {
     retrieveNFTS();
   }, []);
@@ -126,7 +126,6 @@ export default function DashboardCyber() {
       <Title order={1}>Distant Planet Collection</Title>
 
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
-        {/* {mockData.planets.map((planet, index) => ( */}
         {items.map((item, index) => (
           <CustomCard
             key={index}
@@ -136,8 +135,6 @@ export default function DashboardCyber() {
             buttonText={"Coming Soon"}
           />
         ))}
-
-        {/* ))} */}
       </SimpleGrid>
 
       <div className={styles.bg}>

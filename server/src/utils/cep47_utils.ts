@@ -270,6 +270,29 @@ export const getDeployResult = (deployHash: string) => {
   });
 };
 
+export const getNFTS = (): Promise<Map<string, string>[]> => {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    try {
+      const { cep47 } = await initClient();
+      if (!cep47) return;
+      const totalSupply = await cep47.totalSupply();
+      const nfts = [];
+
+      // eslint-disable-next-line no-plusplus
+      for (let i = 0; i < totalSupply; i++) {
+        // eslint-disable-next-line no-await-in-loop
+        const tokenMeta = await cep47.getTokenMeta(`${i}`);
+        nfts.push(tokenMeta);
+      }
+      resolve(nfts);
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+  });
+};
+
 export const getOwnedNFTS = (): Promise<Map<string, string>[]> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
