@@ -9,11 +9,11 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { useClipboard } from "@mantine/hooks";
+import { Signer } from "casper-js-sdk";
+import { toast, Toaster } from "react-hot-toast";
 import { Lock, Wallet } from "tabler-icons-react";
 
 import styles from "../styles/dashboard-cyber.module.scss";
-import { Signer } from "casper-js-sdk";
-import { toast, Toaster } from "react-hot-toast";
 
 export const addressShortener = (address: string) => {
   const maxLength = 6;
@@ -65,7 +65,7 @@ export const CustomHeader = (props: {
             color={clipboard.copied ? "teal" : "blue"}
             onClick={() => {
               clipboard.copy(props.address);
-              toast.success("Address copied to clipboard!");
+              toast.success("Address copied to clipboard!", toastConfig);
             }}
           >
             <Wallet size={16} /> &nbsp; {addressShortener(props.address)}

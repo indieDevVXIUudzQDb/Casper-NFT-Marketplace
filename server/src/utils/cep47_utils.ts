@@ -273,11 +273,11 @@ export const getDeployResult = (deployHash: string) => {
 export const getOwnedNFTS = (): Promise<Map<string, string>[]> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
-    const { cep47 } = await initClient();
-    if (!cep47) return;
-    const totalSupply = await cep47.totalSupply();
-    const nfts = [];
     try {
+      const { cep47 } = await initClient();
+      if (!cep47) return;
+      const totalSupply = await cep47.totalSupply();
+      const nfts = [];
       const publicKey = await window.casperlabsHelper.getActivePublicKey();
       const activePublicKey = CLPublicKey.fromHex(publicKey);
       const activeAccountHash = activePublicKey.toAccountHashStr();
@@ -296,7 +296,7 @@ export const getOwnedNFTS = (): Promise<Map<string, string>[]> => {
       resolve(nfts);
     } catch (e) {
       console.log(e);
-      reject(e);
+      reject();
     }
   });
 };

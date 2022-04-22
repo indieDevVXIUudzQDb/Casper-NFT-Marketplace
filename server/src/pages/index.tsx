@@ -8,6 +8,7 @@ import {CustomCard} from "../components/CustomCard";
 import {CustomHeader} from "../components/CustomHeader";
 import {CustomNavbar} from "../components/CustomNavbar";
 import styles from "../styles/dashboard-cyber.module.scss";
+import {toastConfig} from "../toastConfig";
 import {initClient} from "../utils/cep47_utils";
 // import {
 //   EVENT_STREAM_ADDRESS,
@@ -44,7 +45,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!");
+      toast.success("Connected to Signer!", toastConfig);
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -52,7 +53,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer");
+      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -65,7 +66,7 @@ export default function DashboardCyber() {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed");
+      toast("Active key changed", toastConfig);
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore

@@ -16,6 +16,7 @@ import { toast, Toaster } from "react-hot-toast";
 import { CustomHeader } from "../../components/CustomHeader";
 import { CustomNavbar } from "../../components/CustomNavbar";
 import styles from "../../styles/dashboard-cyber.module.scss";
+import { toastConfig } from "../../toastConfig";
 import {
   EVENT_STREAM_ADDRESS,
   getActiveAccountBalance,
@@ -59,7 +60,7 @@ export default function Mint() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!");
+      toast.success("Connected to Signer!", toastConfig);
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -67,7 +68,7 @@ export default function Mint() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer");
+      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -80,7 +81,7 @@ export default function Mint() {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed");
+      toast("Active key changed", toastConfig);
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
@@ -127,13 +128,17 @@ export default function Mint() {
     console.log("...... Triggered Mint Deploy: ");
     const mintDeployHash = await triggerMintDeploy([`${startIndex}`], [mapped]);
     if (mintDeployHash) {
-      toast.promise(getDeployResult(mintDeployHash), {
-        loading: "Minting in progress",
-        success: "Minting Successful",
-        error: "Error when minting",
-      });
+      toast.promise(
+        getDeployResult(mintDeployHash),
+        {
+          loading: "Minting in progress",
+          success: "Minting Successful",
+          error: "Error when minting",
+        },
+        toastConfig
+      );
     } else {
-      toast.error("Failed to mint NFT.");
+      toast.error("Failed to mint NFT.", toastConfig);
     }
   };
 
@@ -169,7 +174,10 @@ export default function Mint() {
       console.log(
         "Invalid format passed to Custom Meta. Expecting JSON Object."
       );
-      toast.error("Invalid Custom Meta format. Expecting JSON Object.");
+      toast.error(
+        "Invalid Custom Meta format. Expecting JSON Object.",
+        toastConfig
+      );
       return;
     }
     const deployHash = await mintNFT(item);

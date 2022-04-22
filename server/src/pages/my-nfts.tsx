@@ -8,6 +8,7 @@ import { CustomCard } from "../components/CustomCard";
 import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
 import styles from "../styles/dashboard-cyber.module.scss";
+import { toastConfig } from "../toastConfig";
 import { getOwnedNFTS } from "../utils/cep47_utils";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
 
@@ -43,11 +44,15 @@ export default function DashboardCyber() {
   // }, []);
 
   const retrieveNFTS = async () => {
-    const result = await toast.promise(getOwnedNFTS(), {
-      loading: "Loading",
-      success: "Loaded NFTs",
-      error: "Error retrieving owned NFTs",
-    });
+    const result = await toast.promise(
+      getOwnedNFTS(),
+      {
+        loading: "Loading",
+        success: "Loaded NFTs",
+        error: "Error retrieving owned NFTs",
+      },
+      toastConfig
+    );
     if (result) {
       setItems(result);
     }
@@ -63,7 +68,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!");
+      toast.success("Connected to Signer!", toastConfig);
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -71,7 +76,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer");
+      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -84,7 +89,7 @@ export default function DashboardCyber() {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed");
+      toast("Active key changed", toastConfig);
       retrieveNFTS();
     });
     window.addEventListener("signer:locked", (msg) => {
