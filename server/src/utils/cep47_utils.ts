@@ -252,6 +252,7 @@ export const triggerMintDeploy = async (
 export const getDeployResult = (deployHash: string) => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(reject, 10000);
     try {
       // @ts-ignore
       const { cep47 } = await initClient();
@@ -261,7 +262,7 @@ export const getDeployResult = (deployHash: string) => {
         deployHash
       );
       console.log("...... Deployed successfully");
-
+      clearTimeout(timeout);
       resolve(deployHash);
     } catch (e) {
       console.log(e);
@@ -273,6 +274,7 @@ export const getDeployResult = (deployHash: string) => {
 export const getNFTS = (): Promise<Map<string, string>[]> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(reject, 10000);
     try {
       const { cep47 } = await initClient();
       if (!cep47) return;
@@ -285,6 +287,7 @@ export const getNFTS = (): Promise<Map<string, string>[]> => {
         const tokenMeta = await cep47.getTokenMeta(`${i}`);
         nfts.push(tokenMeta);
       }
+      clearTimeout(timeout);
       resolve(nfts);
     } catch (e) {
       console.log(e);
@@ -296,6 +299,7 @@ export const getNFTS = (): Promise<Map<string, string>[]> => {
 export const getOwnedNFTS = (): Promise<Map<string, string>[]> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(reject, 10000);
     try {
       const { cep47 } = await initClient();
       if (!cep47) return;
@@ -316,6 +320,7 @@ export const getOwnedNFTS = (): Promise<Map<string, string>[]> => {
           nfts.push(tokenMeta);
         }
       }
+      clearTimeout(timeout);
       resolve(nfts);
     } catch (e) {
       console.log(e);

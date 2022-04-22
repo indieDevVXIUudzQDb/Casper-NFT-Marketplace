@@ -44,7 +44,7 @@ export default function DashboardCyber() {
       {
         loading: "Loading",
         success: "Loaded NFTs",
-        error: "Error retrieving owned NFTs",
+        error: "Error retrieving NFTs",
       },
       toastConfig
     );
