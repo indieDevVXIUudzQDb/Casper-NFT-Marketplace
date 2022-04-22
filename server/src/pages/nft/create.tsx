@@ -170,6 +170,9 @@ export default function Mint() {
   return (
     <AppShell
       padding="md"
+      navbarOffsetBreakpoint="sm"
+      asideOffsetBreakpoint="sm"
+      fixed
       navbar={
         <CustomNavbar
           connected={connected}
@@ -187,8 +190,15 @@ export default function Mint() {
       }
     >
       <Toaster />
-
-      <Title order={1}>Create your NFT</Title>
+      <div
+        style={{
+          textAlign: "center",
+          margin: "1em",
+          marginLeft: "3em",
+        }}
+      >
+        <Title order={1}>Create your NFT</Title>
+      </div>
       <Box sx={{ maxWidth: 300 }} mx="auto">
         <form onSubmit={form.onSubmit((values) => createNFT(values))}>
           <TextInput required label="Name" {...form.getInputProps("name")} />

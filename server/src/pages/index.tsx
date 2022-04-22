@@ -140,8 +140,15 @@ export default function DashboardCyber() {
         <Toaster />
       </div>
 
-      <Title order={1}>Distant Planet Collection</Title>
-
+      <div
+        style={{
+          textAlign: "center",
+          margin: "1em",
+          marginLeft: "3em",
+        }}
+      >
+        <Title order={1}>Distant Planet Collection</Title>
+      </div>
       <SimpleGrid
         cols={3}
         spacing="lg"
@@ -150,7 +157,7 @@ export default function DashboardCyber() {
           { maxWidth: 755, cols: 1, spacing: "sm" },
           { maxWidth: 600, cols: 1, spacing: "sm" },
         ]}
-        style={{ margin: "5em" }}
+        style={{ marginLeft: "3em" }}
       >
         {items.map((item, index) => (
           <CustomCard

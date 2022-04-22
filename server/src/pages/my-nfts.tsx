@@ -123,6 +123,9 @@ export default function DashboardCyber() {
   return (
     <AppShell
       padding="md"
+      navbarOffsetBreakpoint="sm"
+      asideOffsetBreakpoint="sm"
+      fixed
       navbar={
         <CustomNavbar
           connected={connected}
@@ -139,8 +142,25 @@ export default function DashboardCyber() {
         />
       }
     >
-      <Title order={1}>My NFTs</Title>
-      <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
+      <div
+        style={{
+          textAlign: "center",
+          margin: "1em",
+          marginLeft: "3em",
+        }}
+      >
+        <Title order={1}>My NFTs</Title>
+      </div>
+      <SimpleGrid
+        cols={3}
+        spacing="lg"
+        breakpoints={[
+          { maxWidth: 980, cols: 2, spacing: "md" },
+          { maxWidth: 755, cols: 1, spacing: "sm" },
+          { maxWidth: 600, cols: 1, spacing: "sm" },
+        ]}
+        style={{ marginLeft: "3em" }}
+      >
         {items.map((item, index) => (
           <CustomCard
             key={index}
