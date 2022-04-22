@@ -270,6 +270,37 @@ export const getDeployResult = (deployHash: string) => {
   });
 };
 
+export const getOwnedNFTS = (): Promise<Map<string, string>[]> => {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    const { cep47 } = await initClient();
+    if (!cep47) return;
+    const totalSupply = await cep47.totalSupply();
+    const nfts = [];
+    try {
+      const publicKey = await window.casperlabsHelper.getActivePublicKey();
+      const activePublicKey = CLPublicKey.fromHex(publicKey);
+      const activeAccountHash = activePublicKey.toAccountHashStr();
+
+      // eslint-disable-next-line no-plusplus
+      for (let i = 0; i < totalSupply; i++) {
+        // eslint-disable-next-line no-await-in-loop
+        const ownerOf = await cep47.getOwnerOf(`${i}`);
+
+        if (ownerOf === activeAccountHash) {
+          // eslint-disable-next-line no-await-in-loop
+          const tokenMeta = await cep47.getTokenMeta(`${i}`);
+          nfts.push(tokenMeta);
+        }
+      }
+      resolve(nfts);
+    } catch (e) {
+      console.log(e);
+      reject(e);
+    }
+  });
+};
+
 export const getActiveAccountBalance = async function (): Promise<number> {
   let activeAccountBalance = 0;
   // @ts-ignore

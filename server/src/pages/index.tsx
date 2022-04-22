@@ -20,7 +20,7 @@ export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
-  const [items, setItems] = useState<Map<string, string>[]>();
+  const [items, setItems] = useState<Map<string, string>[]>([]);
 
   // Without the timeout it doesn't always work properly
   setTimeout(async () => {
@@ -126,9 +126,8 @@ export default function DashboardCyber() {
 
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
         {/* {mockData.planets.map((planet, index) => ( */}
-        {items?.map((item, index) => (
+        {items.map((item, index) => (
           <CustomCard
-            // index={index}
             key={index}
             image={item.get("image_url") || ""}
             title={item.get("name") || ""}

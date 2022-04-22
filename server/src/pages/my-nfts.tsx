@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from "react";
 
 import { AppShell, SimpleGrid, Title } from "@mantine/core";
-import { EventStream, Signer } from "casper-js-sdk";
+import { Signer } from "casper-js-sdk";
 import { toast } from "react-hot-toast";
 
 import { CustomCard } from "../components/CustomCard";
 import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
 import styles from "../styles/dashboard-cyber.module.scss";
-import {
-  EVENT_STREAM_ADDRESS,
-  getActiveAccountBalance,
-  subscribeToContractEvents,
-} from "../utils/cep47_utils";
+import { getOwnedNFTS } from "../utils/cep47_utils";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
-import { NFTMeta } from "../utils/types";
 
 export async function getServerSideProps(_context: any) {
   const { data: items } = await supabaseServerSideClient
@@ -25,8 +20,10 @@ export async function getServerSideProps(_context: any) {
   };
 }
 
-export default function DashboardCyber(props: { items: NFTMeta[] }) {
-  const { items } = props;
+export default function DashboardCyber() {
+  // const { items } = props;
+
+  const [items, setItems] = useState<Map<string, string>[]>([]);
   const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
@@ -38,32 +35,25 @@ export default function DashboardCyber(props: { items: NFTMeta[] }) {
       console.log(err);
     }
   }, 100);
-  // const [publicKey, setPublicKey] = useState("");
-  // const [balance, setBalance] = useState("");
-  // const [nftBalance, setNFTBalance] = useState(0);
-  // const [tx, setTx] = useState("");
-  // const [to, setTo] = useState("");
-  // const [amount, setAmount] = useState("");
-  // const updateAccountInformation = async () => {
 
-  //   // const {
-  //   //   textAddress,
-  //   //   // textBalance,
-  //   //   // publicKey: updatedPublicKey,
-  //   // } = await accountInformation();
-  //   // setAddress(textAddress);
-  //   // // setBalance(textBalance);
-  //   // // setPublicKey(updatedPublicKey);
-  //   // // setNFTBalance(await getActiveAccountBalance());
-  //   // if (textAddress) {
-  //   //   setConnected(true);
-  //   // }
-  // };
+  // useEffect(() => {
+  //   console.log("subscription called");
+  //   const es = new EventStream(EVENT_STREAM_ADDRESS!);
+  //   subscribeToContractEvents(es, () => getActiveAccountBalance());
+  // }, []);
 
+  const retrieveNFTS = async () => {
+    const result = await toast.promise(getOwnedNFTS(), {
+      loading: "Loading",
+      success: "Loaded NFTs",
+      error: "Error retrieving owned NFTs",
+    });
+    if (result) {
+      setItems(result);
+    }
+  };
   useEffect(() => {
-    console.log("subscription called");
-    const es = new EventStream(EVENT_STREAM_ADDRESS!);
-    subscribeToContractEvents(es, () => getActiveAccountBalance());
+    retrieveNFTS();
   }, []);
 
   useEffect(() => {
@@ -95,6 +85,7 @@ export default function DashboardCyber(props: { items: NFTMeta[] }) {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
       toast("Active key changed");
+      retrieveNFTS();
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
@@ -131,13 +122,13 @@ export default function DashboardCyber(props: { items: NFTMeta[] }) {
     >
       <Title order={1}>My NFTs</Title>
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
-        {items.map((nft, index) => (
+        {items.map((item, index) => (
           <CustomCard
             key={index}
-            image={nft.url}
-            title={nft.name}
-            description={""}
-            buttonText={"Sell (Coming Soon)"}
+            image={item.get("image_url") || ""}
+            title={item.get("name") || ""}
+            description={item.get("description") || ""}
+            buttonText={"Coming Soon"}
           />
         ))}
       </SimpleGrid>
