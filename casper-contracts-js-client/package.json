@@ -14,6 +14,7 @@
     "publish:ci": "lerna publish from-package --yes --no-verify-access",
     "e2e:cep47:install": "ts-node ./e2e/cep47/install.ts",
     "e2e:cep47:usage": "ts-node ./e2e/cep47/usage.ts",
+    "e2e:cep47:fixture": "ts-node ./e2e/cep47/fixture.ts",
     "e2e:erc20:install": "ts-node ./e2e/erc20/install.ts",
     "e2e:erc20:installed": "ts-node ./e2e/erc20/installed.ts"
   },
