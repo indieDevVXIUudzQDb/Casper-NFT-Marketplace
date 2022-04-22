@@ -26,6 +26,7 @@ import { NFTMeta } from "../../utils/types";
 
 export default function Mint() {
   const [address, setAddress] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
 
@@ -169,8 +170,21 @@ export default function Mint() {
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} locked={locked} />}
-      header={<CustomHeader address={address} locked={locked} />}
+      navbar={
+        <CustomNavbar
+          connected={connected}
+          locked={locked}
+          menuOpen={menuOpen}
+        />
+      }
+      header={
+        <CustomHeader
+          address={address}
+          locked={locked}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+        />
+      }
     >
       <Toaster />
 

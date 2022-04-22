@@ -20,6 +20,7 @@ import {getNFTS} from "../utils/cep47_utils";
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [locked, setLocked] = useState(false);
   const [items, setItems] = useState<Map<string, string>[]>([]);
 
@@ -116,8 +117,24 @@ export default function DashboardCyber() {
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} locked={locked} />}
-      header={<CustomHeader address={address} locked={locked} />}
+      navbarOffsetBreakpoint="sm"
+      asideOffsetBreakpoint="sm"
+      fixed
+      navbar={
+        <CustomNavbar
+          connected={connected}
+          locked={locked}
+          menuOpen={menuOpen}
+        />
+      }
+      header={
+        <CustomHeader
+          address={address}
+          locked={locked}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+        />
+      }
     >
       <div>
         <Toaster />
@@ -125,7 +142,16 @@ export default function DashboardCyber() {
 
       <Title order={1}>Distant Planet Collection</Title>
 
-      <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
+      <SimpleGrid
+        cols={3}
+        spacing="lg"
+        breakpoints={[
+          { maxWidth: 980, cols: 2, spacing: "md" },
+          { maxWidth: 755, cols: 1, spacing: "sm" },
+          { maxWidth: 600, cols: 1, spacing: "sm" },
+        ]}
+        style={{ margin: "5em" }}
+      >
         {items.map((item, index) => (
           <CustomCard
             key={index}

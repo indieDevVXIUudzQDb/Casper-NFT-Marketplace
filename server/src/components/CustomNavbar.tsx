@@ -9,6 +9,7 @@ import styles from "../styles/dashboard-cyber.module.scss";
 export const CustomNavbar = (props: {
   connected: boolean;
   locked: boolean;
+  menuOpen: boolean;
 }) => {
   return (
     <Navbar
@@ -20,6 +21,7 @@ export const CustomNavbar = (props: {
         margin: "2em",
         borderRadius: "30px",
       }}
+      hidden={!props.menuOpen}
     >
       <div className={styles.copyBox}>
         <div className={styles.inner}>

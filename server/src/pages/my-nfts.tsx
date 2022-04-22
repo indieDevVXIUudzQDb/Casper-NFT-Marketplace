@@ -26,6 +26,7 @@ export default function DashboardCyber() {
 
   const [items, setItems] = useState<Map<string, string>[]>([]);
   const [address, setAddress] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
   // Without the timeout it doesn't always work properly
@@ -122,8 +123,21 @@ export default function DashboardCyber() {
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} locked={locked} />}
-      header={<CustomHeader address={address} locked={locked} />}
+      navbar={
+        <CustomNavbar
+          connected={connected}
+          locked={locked}
+          menuOpen={menuOpen}
+        />
+      }
+      header={
+        <CustomHeader
+          address={address}
+          locked={locked}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+        />
+      }
     >
       <Title order={1}>My NFTs</Title>
       <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
