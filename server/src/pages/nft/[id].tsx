@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 
 import {
+  Anchor,
   AppShell,
   Button,
   Card,
-  Code,
   Group,
   Image,
+  SimpleGrid,
   Title,
 } from "@mantine/core";
 import { EventStream, Signer } from "casper-js-sdk";
@@ -21,6 +22,7 @@ import {
   RetrievedNFT,
   subscribeToContractEvents,
 } from "../../utils/cep47_utils";
+import { Prism } from "@mantine/prism";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
@@ -170,58 +172,74 @@ export default function DashboardCyber() {
             // borderRadius: " 30px",
           }}
         >
-          <Group position="center" style={{ marginBottom: 5 }}>
-            <Title align={"center"}>{item?.meta.get("name")}</Title>
-          </Group>
-          <Card.Section>
-            <div style={{ textAlign: "center" }}>
-              <Image
-                src={item?.meta.get("image_url")}
-                height={160}
-                alt="Norway"
-                fit="contain"
-                withPlaceholder
-                placeholder={
-                  <Image
-                    src={`http://localhost:3000/logoipsum-logo-39.svg`}
-                    height={160}
-                    alt="Norway"
-                    fit="contain"
-                  />
-                }
-              />
-            </div>
-          </Card.Section>
-          <Group position={"left"}>
-            <p>
-              <b>Description: </b> {item?.meta.get("description")}
-            </p>
-          </Group>
-          <Group position={"left"}>
-            <p>
-              <b>URL: </b>{" "}
-              <a className={"underline"} href={item?.meta.get("url")}>
-                {item?.meta.get("url")}
-              </a>
-            </p>
-          </Group>
-          <Group position={"left"}>
-            <p>
-              <b>JSON Data: </b>
-              <br />
-              <Code>{item?.meta.get("json_data")}</Code>
-            </p>
-          </Group>
-          {item.isOwner ? (
-            <Group position={"apart"} grow>
-              <Button>Sell</Button>
-              <Button color={"red"}>Burn</Button>
+          <SimpleGrid cols={1}>
+            <Group position="center" style={{ marginBottom: 5 }}>
+              <Title align={"center"}>{item?.meta.get("name")}</Title>
             </Group>
-          ) : (
-            <Group position={"apart"} grow>
-              <Button>Buy</Button>
+            <Card.Section>
+              <div style={{ textAlign: "center" }}>
+                <Image
+                  src={item?.meta.get("image_url")}
+                  height={160}
+                  alt="Norway"
+                  fit="contain"
+                  withPlaceholder
+                  placeholder={
+                    <Image
+                      src={`http://localhost:3000/logoipsum-logo-39.svg`}
+                      height={160}
+                      alt="Norway"
+                      fit="contain"
+                    />
+                  }
+                />
+              </div>
+            </Card.Section>
+            <Group position={"left"}>
+              <p>
+                <b>Description: </b>
+                <br />
+                {item?.meta.get("description")}
+              </p>
             </Group>
-          )}
+            <Group position={"left"}>
+              <p>
+                <b>URL: </b>
+                <br />
+                <Anchor href={item?.meta.get("url")} target="_blank">
+                  {item?.meta.get("url")}
+                </Anchor>
+              </p>
+            </Group>
+            <Group position={"left"} grow>
+              <p>
+                <b>JSON Data: </b>
+                <br />
+                <Prism language={"json"} color={"blue"}>
+                  {item?.meta.get("json_data") || ""}
+                </Prism>
+              </p>
+            </Group>
+            {item.isOwner ? (
+              <Group position={"apart"} grow>
+                <Button>Sell</Button>
+                <Button color={"red"}>Burn</Button>
+              </Group>
+            ) : (
+              <>
+                {" "}
+                <Group position={"left"}>
+                  <p>
+                    <b>Price:</b> <br />{" "}
+                    <b className={"text-3xl"}>120000 CSPR</b>
+                  </p>
+                </Group>
+                <Group position={"apart"} grow className={"mt-2"}>
+                  <Button color={"green"}>Buy Now</Button>
+                </Group>
+              </>
+            )}
+          </SimpleGrid>
         </Card>
       ) : null}
 
