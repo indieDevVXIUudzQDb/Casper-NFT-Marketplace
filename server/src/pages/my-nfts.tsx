@@ -29,14 +29,6 @@ export default function DashboardCyber() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
-  // Without the timeout it doesn't always work properly
-  setTimeout(async () => {
-    try {
-      setConnected(await Signer.isConnected());
-    } catch (err) {
-      console.log(err);
-    }
-  }, 100);
 
   // useEffect(() => {
   //   console.log("subscription called");
@@ -59,7 +51,15 @@ export default function DashboardCyber() {
     }
   };
   useEffect(() => {
-    retrieveNFTS();
+    // Without the timeout it doesn't always work properly
+    setTimeout(async () => {
+      try {
+        setConnected(await Signer.isConnected());
+        retrieveNFTS();
+      } catch (err) {
+        console.log(err);
+      }
+    }, 100);
   }, []);
 
   useEffect(() => {
@@ -70,6 +70,7 @@ export default function DashboardCyber() {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
       toast.success("Connected to Signer!", toastConfig);
+      retrieveNFTS();
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -108,6 +109,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
+      retrieveNFTS();
     });
     window.addEventListener("signer:initialState", (msg) => {
       // @ts-ignore

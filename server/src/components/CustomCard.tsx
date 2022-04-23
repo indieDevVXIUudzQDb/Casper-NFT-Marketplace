@@ -2,8 +2,6 @@ import React from "react";
 
 import { Button, Card, Group, Image, Title } from "@mantine/core";
 
-import { prefix } from "../prefix";
-
 interface Props {
   image: string;
   title: string;
@@ -19,7 +17,7 @@ export const CustomCard = (props: Props) => {
         <Card.Section>
           <div style={{ textAlign: "center" }}>
             <Image
-              src={`${prefix}${image}`}
+              src={image}
               height={160}
               alt="Norway"
               fit="contain"

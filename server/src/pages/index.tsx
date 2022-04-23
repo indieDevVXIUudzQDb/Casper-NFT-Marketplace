@@ -24,21 +24,6 @@ export default function DashboardCyber() {
   const [locked, setLocked] = useState(false);
   const [items, setItems] = useState<Map<string, string>[]>([]);
 
-  // Without the timeout it doesn't always work properly
-  setTimeout(async () => {
-    try {
-      setConnected(await Signer.isConnected());
-    } catch (err) {
-      console.log(err);
-    }
-  }, 100);
-
-  // useEffect(() => {
-  //   console.log("subscription called");
-  //   const es = new EventStream(EVENT_STREAM_ADDRESS!);
-  //   subscribeToContractEvents(es, () => getActiveAccountBalance());
-  // }, []);
-
   const retrieveNFTS = async () => {
     const result = await toast.promise(
       getNFTS(),
@@ -55,6 +40,29 @@ export default function DashboardCyber() {
   };
 
   useEffect(() => {
+    // Without the timeout it doesn't always work properly
+    setTimeout(async () => {
+      try {
+        setConnected(await Signer.isConnected());
+        retrieveNFTS();
+      } catch (err) {
+        console.log(err);
+      }
+    }, 100);
+  }, []);
+
+  // useEffect(() => {
+  //   console.log("subscription called");
+  //   const es = new EventStream(
+  //     process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
+  //   );
+  //   subscribeToContractEvents(es, () => {
+  //     retrieveNFTS();
+  //     console.log(es);
+  //   });
+  // }, []);
+
+  useEffect(() => {
     window.addEventListener("signer:connected", (msg) => {
       setConnected(true);
       // @ts-ignore
@@ -62,6 +70,7 @@ export default function DashboardCyber() {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
       toast.success("Connected to Signer!", toastConfig);
+      retrieveNFTS();
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -100,6 +109,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
+      retrieveNFTS();
     });
     window.addEventListener("signer:initialState", (msg) => {
       // @ts-ignore
@@ -111,9 +121,9 @@ export default function DashboardCyber() {
     });
   }, []);
 
-  useEffect(() => {
-    retrieveNFTS();
-  }, []);
+  // useEffect(() => {
+  //   retrieveNFTS();
+  // }, []);
   return (
     <AppShell
       padding="md"

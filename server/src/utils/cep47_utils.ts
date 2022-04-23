@@ -17,6 +17,7 @@ import {
 import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
 
 import { getAccountInfo, getDeploy } from "./utils";
+import { StoredValue } from "casper-js-sdk/dist/lib/StoredValue";
 
 export const NODE_ADDRESS =
   process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS ||
@@ -275,24 +276,32 @@ export const getNFTS = (): Promise<Map<string, string>[]> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     const timeout = setTimeout(reject, 10000);
+    let totalSupply: StoredValue = 0 as StoredValue;
+    let cep47;
     try {
-      const { cep47 } = await initClient();
+      const { cep47: client } = await initClient();
+      cep47 = client;
       if (!cep47) return;
-      const totalSupply = await cep47.totalSupply();
-      const nfts = [];
-
-      // eslint-disable-next-line no-plusplus
-      for (let i = 0; i < totalSupply; i++) {
-        // eslint-disable-next-line no-await-in-loop
-        const tokenMeta = await cep47.getTokenMeta(`${i}`);
-        nfts.push(tokenMeta);
-      }
-      clearTimeout(timeout);
-      resolve(nfts);
+      totalSupply = await cep47.totalSupply();
     } catch (e) {
-      console.log(e);
+      console.log("getNFTS", e);
       reject();
     }
+    if (!cep47) return;
+    const nfts = [];
+    // eslint-disable-next-line no-plusplus
+    for (let i = 0; i < totalSupply; i++) {
+      try {
+        const tokenMeta = await cep47.getTokenMeta(`${i}`);
+        nfts.push(tokenMeta);
+      } catch (e) {
+        console.log(e);
+      }
+      // eslint-disable-next-line no-await-in-loop
+    }
+    clearTimeout(timeout);
+
+    resolve(nfts);
   });
 };
 
@@ -300,32 +309,40 @@ export const getOwnedNFTS = (): Promise<Map<string, string>[]> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     const timeout = setTimeout(reject, 10000);
+    let cep47;
+    let totalSupply = 0 as StoredValue;
+    let activeAccountHash = "";
     try {
-      const { cep47 } = await initClient();
+      const { cep47: client } = await initClient();
+      cep47 = client;
       if (!cep47) return;
-      const totalSupply = await cep47.totalSupply();
-      const nfts = [];
+      totalSupply = await cep47.totalSupply();
       const publicKey = await window.casperlabsHelper.getActivePublicKey();
       const activePublicKey = CLPublicKey.fromHex(publicKey);
-      const activeAccountHash = activePublicKey.toAccountHashStr();
+      activeAccountHash = activePublicKey.toAccountHashStr();
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+    if (!cep47) return;
+    const nfts = [];
 
-      // eslint-disable-next-line no-plusplus
-      for (let i = 0; i < totalSupply; i++) {
+    // eslint-disable-next-line no-plusplus
+    for (let i = 0; i < totalSupply; i++) {
+      try {
         // eslint-disable-next-line no-await-in-loop
         const ownerOf = await cep47.getOwnerOf(`${i}`);
-
         if (ownerOf === activeAccountHash) {
           // eslint-disable-next-line no-await-in-loop
           const tokenMeta = await cep47.getTokenMeta(`${i}`);
           nfts.push(tokenMeta);
         }
+      } catch (e) {
+        console.log(e);
       }
-      clearTimeout(timeout);
-      resolve(nfts);
-    } catch (e) {
-      console.log(e);
-      reject();
     }
+    clearTimeout(timeout);
+    resolve(nfts);
   });
 };
 
