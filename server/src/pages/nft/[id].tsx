@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
 
-import { AppShell, SimpleGrid, Title } from "@mantine/core";
+import {
+  AppShell,
+  Button,
+  Card,
+  Code,
+  Group,
+  Image,
+  Title,
+} from "@mantine/core";
 import { EventStream, Signer } from "casper-js-sdk";
 import { useRouter } from "next/router";
 import { toast, Toaster } from "react-hot-toast";
-
-import { CustomCard } from "../../components/CustomCard";
 import { CustomHeader } from "../../components/CustomHeader";
 import { CustomNavbar } from "../../components/CustomNavbar";
 import styles from "../../styles/dashboard-cyber.module.scss";
@@ -26,8 +32,11 @@ export default function DashboardCyber() {
   const router = useRouter();
   const { id } = router.query;
 
+  const [retrieving, setRetrieving] = useState(false);
+
   const retrieveNFT = async () => {
-    if (id) {
+    if (!retrieving) {
+      setRetrieving(true);
       const result = await toast.promise(
         getNFT(Number(id)),
         {
@@ -40,6 +49,7 @@ export default function DashboardCyber() {
       if (result) {
         setItem(result);
       }
+      setRetrieving(false);
     }
   };
 
@@ -126,7 +136,7 @@ export default function DashboardCyber() {
 
   return (
     <AppShell
-      padding="md"
+      // padding="md"
       navbarOffsetBreakpoint="sm"
       asideOffsetBreakpoint="sm"
       fixed
@@ -149,35 +159,71 @@ export default function DashboardCyber() {
       <div>
         <Toaster />
       </div>
-
-      <div
-        style={{
-          textAlign: "center",
-          margin: "1em",
-          marginLeft: "3em",
-        }}
-      >
-        <Title order={1}>Distant Planet Collection</Title>
-      </div>
-      <SimpleGrid
-        cols={3}
-        spacing="lg"
-        breakpoints={[
-          { maxWidth: 980, cols: 2, spacing: "md" },
-          { maxWidth: 755, cols: 1, spacing: "sm" },
-          { maxWidth: 600, cols: 1, spacing: "sm" },
-        ]}
-        style={{ marginLeft: "3em" }}
-      >
-        <CustomCard
-          key={item?.meta.get("id")}
-          linkTo={""}
-          id={item?.meta.get("id") || ""}
-          image={item?.meta.get("image_url") || ""}
-          title={item?.meta.get("name") || ""}
-          description={item?.meta.get("description") || ""}
-        />
-      </SimpleGrid>
+      {item ? (
+        <Card
+          shadow="sm"
+          p="lg"
+          style={{
+            margin: "3em",
+            marginLeft: "3em",
+            minHeight: "90%",
+            // borderRadius: " 30px",
+          }}
+        >
+          <Group position="center" style={{ marginBottom: 5 }}>
+            <Title align={"center"}>{item?.meta.get("name")}</Title>
+          </Group>
+          <Card.Section>
+            <div style={{ textAlign: "center" }}>
+              <Image
+                src={item?.meta.get("image_url")}
+                height={160}
+                alt="Norway"
+                fit="contain"
+                withPlaceholder
+                placeholder={
+                  <Image
+                    src={`http://localhost:3000/logoipsum-logo-39.svg`}
+                    height={160}
+                    alt="Norway"
+                    fit="contain"
+                  />
+                }
+              />
+            </div>
+          </Card.Section>
+          <Group position={"left"}>
+            <p>
+              <b>Description: </b> {item?.meta.get("description")}
+            </p>
+          </Group>
+          <Group position={"left"}>
+            <p>
+              <b>URL: </b>{" "}
+              <a className={"underline"} href={item?.meta.get("url")}>
+                {item?.meta.get("url")}
+              </a>
+            </p>
+          </Group>
+          <Group position={"left"}>
+            <p>
+              <b>JSON Data: </b>
+              <br />
+              <Code>{item?.meta.get("json_data")}</Code>
+            </p>
+          </Group>
+          {item.isOwner ? (
+            <Group position={"apart"} grow>
+              <Button>Sell</Button>
+              <Button color={"red"}>Burn</Button>
+            </Group>
+          ) : (
+            <Group position={"apart"} grow>
+              <Button>Buy</Button>
+            </Group>
+          )}
+        </Card>
+      ) : null}
 
       <div className={styles.bg}>
         <div className={styles.starField}>

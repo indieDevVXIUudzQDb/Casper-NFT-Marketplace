@@ -16,12 +16,12 @@ export const CustomNavbar = (props: {
       p="md"
       hiddenBreakpoint="sm"
       width={{ sm: 300, lg: 400 }}
-      className={"border-r-0"}
-      style={{
-        margin: "2em",
-        borderRadius: "30px",
-        height: "85%",
-      }}
+      // className={"border-r-0"}
+      // style={{
+      //   margin: "2em",
+      //   borderRadius: "30px",
+      //   height: "85%",
+      // }}
       hidden={!props.menuOpen}
     >
       <div className={styles.copyBox}>

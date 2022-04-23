@@ -239,7 +239,8 @@ export const getDeployResult = (deployHash: string) => {
     try {
       // @ts-ignore
       const { cep47 } = await initClient();
-      if (!cep47) return;
+      if (!cep47) reject();
+
       await getDeploy(
         process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS!!,
         deployHash
@@ -264,22 +265,48 @@ export const getNFT = (id: number): Promise<RetrievedNFT> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     const timeout = setTimeout(reject, 10000);
+    let activeAccountHash = "";
     let cep47;
     try {
       const { cep47: client } = await initClient();
       cep47 = client;
-      if (!cep47) return;
       // eslint-disable-next-line no-plusplus
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+    if (!cep47) reject();
+
+    try {
+      const publicKey = await window.casperlabsHelper.getActivePublicKey();
+      const activePublicKey = CLPublicKey.fromHex(publicKey);
+      activeAccountHash = activePublicKey.toAccountHashStr();
+    } catch (e) {
+      console.log(e);
+    }
+    let isOwner = false;
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      // @ts-ignore
+      const ownerOf = await cep47.getOwnerOf(`${id}`);
+      if (ownerOf) {
+        isOwner = ownerOf === activeAccountHash;
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    try {
       const tokenMeta = await cep47.getTokenMeta(`${id}`);
+
       const nft = {
         meta: tokenMeta,
-        isOwner: false,
+        isOwner,
         id: id.toString(),
       };
       clearTimeout(timeout);
       resolve(nft);
     } catch (e) {
-      console.log(e);
+      console.error(e);
       reject();
     }
   });

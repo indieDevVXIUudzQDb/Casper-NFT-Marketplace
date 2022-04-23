@@ -2,11 +2,7 @@ import React from "react";
 
 import { Group, Text, ThemeIcon, UnstyledButton } from "@mantine/core";
 import { useRouter } from "next/router";
-import {
-  BuildingFactory,
-  PictureInPicture,
-  ShoppingCart,
-} from "tabler-icons-react";
+import { PictureInPicture, Plus, ShoppingCart } from "tabler-icons-react";
 
 interface MainLinkProps {
   icon: React.ReactNode;
@@ -63,7 +59,7 @@ export default function MainLinks() {
       func: () => router.push("/my-nfts"),
     },
     {
-      icon: <BuildingFactory size={16} />,
+      icon: <Plus size={16} />,
       color: "blue",
       label: "Create NFT",
       func: () => router.push("/nft/create"),
