@@ -7,7 +7,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/1.png",
       name: "Azeroth",
       json_data: `{ "water": 10, "air": 4, "gravity": 10 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -16,7 +16,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/2.png",
       name: "Skaro",
       json_data: `{ "water": 3, "air": 5, "gravity": 8 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -25,7 +25,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/3.png",
       name: "Eternium",
       json_data: `{ "water": 4, "air": 8, "gravity": 4 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -34,7 +34,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/4.png",
       name: "Gallifrey",
       json_data: `{ "water": 5, "air": 7, "gravity": 10 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -43,7 +43,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/5.png",
       name: "Zenn-La",
       json_data: `{ "water": 3, "air": 6, "gravity": 8 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -52,7 +52,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/6.png",
       name: "Wormulon",
       json_data: `{ "water": 5, "air": 10, "gravity": 8 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -61,7 +61,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/7.png",
       name: "Pandora",
       json_data: `{ "water": 10, "air": 3, "gravity": 6 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -70,7 +70,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/8.png",
       name: "Amazonia",
       json_data: `{ "water": 4, "air": 6, "gravity": 7 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -80,7 +80,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/9.png",
       name: "Hoth",
       json_data: `{ "water": 10, "air": 10, "gravity": 2 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -90,7 +90,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/10.png",
       name: "New Zion",
       json_data: `{ "water": 3, "air": 5, "gravity": 1 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -99,7 +99,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/11.png",
       name: "Mondas",
       json_data: `{ "water": 6, "air": 4, "gravity": 1 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -109,7 +109,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/12.png",
       name: "Alderaan",
       json_data: `{ "water": 6, "air": 3, "gravity": 10 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
     {
       description:
@@ -118,7 +118,7 @@ export const mockData = {
       image_url: "http://localhost:3000/assets/planets/13.png",
       name: "Endor",
       json_data: `{ "water": 2, "air": 4, "gravity": 5 }`,
-      url: "test.com",
+      url: "http://localhost:3000/",
     },
   ],
 };
