@@ -272,40 +272,38 @@ export const getDeployResult = (deployHash: string) => {
   });
 };
 
-export const getNFTS = (): Promise<Map<string, string>[]> => {
+export interface RetrievedNFT {
+  id: string;
+  meta: Map<string, string>;
+  isOwner: boolean;
+}
+
+export const getNFT = (id: number): Promise<RetrievedNFT> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     const timeout = setTimeout(reject, 10000);
-    let totalSupply: StoredValue = 0 as StoredValue;
     let cep47;
     try {
       const { cep47: client } = await initClient();
       cep47 = client;
       if (!cep47) return;
-      totalSupply = await cep47.totalSupply();
+      // eslint-disable-next-line no-plusplus
+      const tokenMeta = await cep47.getTokenMeta(`${id}`);
+      tokenMeta.set("id", id);
+      const nft = {
+        meta: tokenMeta,
+        isOwner: false,
+      };
+      clearTimeout(timeout);
+      resolve(nft);
     } catch (e) {
-      console.log("getNFTS", e);
+      console.log(e);
       reject();
     }
-    if (!cep47) return;
-    const nfts = [];
-    // eslint-disable-next-line no-plusplus
-    for (let i = 0; i < totalSupply; i++) {
-      try {
-        const tokenMeta = await cep47.getTokenMeta(`${i}`);
-        nfts.push(tokenMeta);
-      } catch (e) {
-        console.log(e);
-      }
-      // eslint-disable-next-line no-await-in-loop
-    }
-    clearTimeout(timeout);
-
-    resolve(nfts);
   });
 };
 
-export const getOwnedNFTS = (): Promise<Map<string, string>[]> => {
+export const getOwnedNFTS = (): Promise<RetrievedNFT[]> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     const timeout = setTimeout(reject, 10000);
@@ -325,18 +323,29 @@ export const getOwnedNFTS = (): Promise<Map<string, string>[]> => {
       reject();
     }
     if (!cep47) return;
-    const nfts = [];
+    const nfts: RetrievedNFT[] = [];
 
     // eslint-disable-next-line no-plusplus
     for (let i = 0; i < totalSupply; i++) {
+      let isOwner = false;
       try {
         // eslint-disable-next-line no-await-in-loop
         const ownerOf = await cep47.getOwnerOf(`${i}`);
-        if (ownerOf === activeAccountHash) {
-          // eslint-disable-next-line no-await-in-loop
-          const tokenMeta = await cep47.getTokenMeta(`${i}`);
-          nfts.push(tokenMeta);
+        if (ownerOf) {
+          isOwner = ownerOf === activeAccountHash;
         }
+      } catch (e) {
+        console.log(e);
+      }
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const tokenMeta = await cep47.getTokenMeta(`${i}`);
+        const nft: RetrievedNFT = {
+          meta: tokenMeta,
+          id: i.toString(),
+          isOwner,
+        };
+        nfts.push(nft);
       } catch (e) {
         console.log(e);
       }

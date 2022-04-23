@@ -1,18 +1,20 @@
 import React from "react";
 
 import { Button, Card, Group, Image, Title } from "@mantine/core";
+import Link from "next/link";
 
 import { textShortener } from "../utils/utils";
 
 interface Props {
+  id: string;
+  linkTo: string;
   image: string;
   title: string;
   description: string;
-  buttonText: string;
 }
 
 export const CustomCard = (props: Props) => {
-  const { image, title, description, buttonText } = props;
+  const { image, title, description, linkTo } = props;
   return (
     <div style={{}}>
       <Card shadow="sm" p="lg">
@@ -40,14 +42,16 @@ export const CustomCard = (props: Props) => {
           <Title align={"center"}>{title}</Title>
         </Group>
         {textShortener(description, 200)}
-        <Button
-          variant="light"
-          color="blue"
-          fullWidth
-          style={{ marginTop: 14 }}
-        >
-          {buttonText}
-        </Button>
+        <Link href={linkTo}>
+          <Button
+            variant="light"
+            color="blue"
+            fullWidth
+            style={{ marginTop: 14 }}
+          >
+            View
+          </Button>
+        </Link>
       </Card>
     </div>
   );

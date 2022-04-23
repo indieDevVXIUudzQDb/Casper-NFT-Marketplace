@@ -9,18 +9,22 @@ import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
 import styles from "../styles/dashboard-cyber.module.scss";
 import { toastConfig } from "../toastConfig";
-import { getNFTS, subscribeToContractEvents } from "../utils/cep47_utils";
+import {
+  getOwnedNFTS,
+  RetrievedNFT,
+  subscribeToContractEvents,
+} from "../utils/cep47_utils";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [locked, setLocked] = useState(false);
-  const [items, setItems] = useState<Map<string, string>[]>([]);
+  const [items, setItems] = useState<RetrievedNFT[]>([]);
 
   const retrieveNFTS = async () => {
     const result = await toast.promise(
-      getNFTS(),
+      getOwnedNFTS(),
       {
         loading: "Loading",
         success: "Loaded NFTs",
@@ -163,10 +167,11 @@ export default function DashboardCyber() {
         {items.map((item, index) => (
           <CustomCard
             key={index}
-            image={item.get("image_url") || ""}
-            title={item.get("name") || ""}
-            description={item.get("description") || ""}
-            buttonText={"Coming Soon"}
+            id={item.id}
+            image={item.meta.get("image_url") || ""}
+            title={item.meta.get("name") || ""}
+            description={item.meta.get("description") || ""}
+            linkTo={`nft/${item.id}`}
           />
         ))}
       </SimpleGrid>

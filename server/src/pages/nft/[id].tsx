@@ -2,52 +2,58 @@ import React, { useEffect, useState } from "react";
 
 import { AppShell, SimpleGrid, Title } from "@mantine/core";
 import { EventStream, Signer } from "casper-js-sdk";
-import { toast } from "react-hot-toast";
+import { useRouter } from "next/router";
+import { toast, Toaster } from "react-hot-toast";
 
-import { CustomCard } from "../components/CustomCard";
-import { CustomHeader } from "../components/CustomHeader";
-import { CustomNavbar } from "../components/CustomNavbar";
-import styles from "../styles/dashboard-cyber.module.scss";
-import { toastConfig } from "../toastConfig";
+import { CustomCard } from "../../components/CustomCard";
+import { CustomHeader } from "../../components/CustomHeader";
+import { CustomNavbar } from "../../components/CustomNavbar";
+import styles from "../../styles/dashboard-cyber.module.scss";
+import { toastConfig } from "../../toastConfig";
 import {
-  getOwnedNFTS,
+  getNFT,
   RetrievedNFT,
   subscribeToContractEvents,
-} from "../utils/cep47_utils";
-import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
-
-export async function getServerSideProps(_context: any) {
-  const { data: items } = await supabaseServerSideClient
-    .from("item")
-    .select("*");
-  return {
-    props: { items }, // will be passed to the page component as props
-  };
-}
+} from "../../utils/cep47_utils";
 
 export default function DashboardCyber() {
-  // const { items } = props;
-
-  const [items, setItems] = useState<RetrievedNFT[]>([]);
   const [address, setAddress] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [item, setItem] = useState<RetrievedNFT | null>();
 
-  const retrieveNFTS = async () => {
-    const result = await toast.promise(
-      getOwnedNFTS(),
-      {
-        loading: "Loading",
-        success: "Loaded NFTs",
-        error: "Error retrieving owned NFTs",
-      },
-      toastConfig
-    );
-    if (result) {
-      setItems(result);
+  const router = useRouter();
+  const { id } = router.query;
+
+  const retrieveNFT = async () => {
+    if (id) {
+      const result = await toast.promise(
+        getNFT(Number(id)),
+        {
+          loading: "Loading",
+          success: "Loaded NFT",
+          error: "Error retrieving NFT",
+        },
+        toastConfig
+      );
+      if (result) {
+        setItem(result);
+      }
     }
   };
+
+  useEffect(() => {
+    // Without the timeout it doesn't always work properly
+    setTimeout(async () => {
+      try {
+        setConnected(await Signer.isConnected());
+        retrieveNFT();
+      } catch (err) {
+        console.log(err);
+      }
+    }, 100);
+  }, []);
 
   useEffect(() => {
     console.log("subscription called");
@@ -55,21 +61,9 @@ export default function DashboardCyber() {
       process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
     );
     subscribeToContractEvents(es, () => {
-      retrieveNFTS();
+      retrieveNFT();
       console.log(es);
     });
-  }, []);
-
-  useEffect(() => {
-    // Without the timeout it doesn't always work properly
-    setTimeout(async () => {
-      try {
-        setConnected(await Signer.isConnected());
-        retrieveNFTS();
-      } catch (err) {
-        console.log(err);
-      }
-    }, 100);
   }, []);
 
   useEffect(() => {
@@ -80,7 +74,7 @@ export default function DashboardCyber() {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
       toast.success("Connected to Signer!", toastConfig);
-      retrieveNFTS();
+      retrieveNFT();
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -102,7 +96,7 @@ export default function DashboardCyber() {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
       toast("Active key changed", toastConfig);
-      retrieveNFTS();
+      retrieveNFT();
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
@@ -119,7 +113,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      retrieveNFTS();
+      retrieveNFT();
     });
     window.addEventListener("signer:initialState", (msg) => {
       // @ts-ignore
@@ -131,7 +125,6 @@ export default function DashboardCyber() {
     });
   }, []);
 
-  console.log(items);
   return (
     <AppShell
       padding="md"
@@ -154,6 +147,10 @@ export default function DashboardCyber() {
         />
       }
     >
+      <div>
+        <Toaster />
+      </div>
+
       <div
         style={{
           textAlign: "center",
@@ -161,7 +158,7 @@ export default function DashboardCyber() {
           marginLeft: "3em",
         }}
       >
-        <Title order={1}>My NFTs</Title>
+        <Title order={1}>Distant Planet Collection</Title>
       </div>
       <SimpleGrid
         cols={3}
@@ -173,19 +170,16 @@ export default function DashboardCyber() {
         ]}
         style={{ marginLeft: "3em" }}
       >
-        {items
-          .filter((item) => item.isOwner === true)
-          .map((item, index) => (
-            <CustomCard
-              key={index}
-              id={item.id}
-              image={item.meta.get("image_url") || ""}
-              title={item.meta.get("name") || ""}
-              description={item.meta.get("description") || ""}
-              linkTo={`nft/${item.id}`}
-            />
-          ))}
+        <CustomCard
+          key={item?.meta.get("id")}
+          linkTo={""}
+          id={item?.meta.get("id") || ""}
+          image={item?.meta.get("image_url") || ""}
+          title={item?.meta.get("name") || ""}
+          description={item?.meta.get("description") || ""}
+        />
       </SimpleGrid>
+
       <div className={styles.bg}>
         <div className={styles.starField}>
           <div className={styles.layer}></div>
