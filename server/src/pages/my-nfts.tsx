@@ -50,7 +50,6 @@ export default function DashboardCyber() {
   };
 
   useEffect(() => {
-    console.log("subscription called");
     const es = new EventStream(
       process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
     );
@@ -67,7 +66,7 @@ export default function DashboardCyber() {
         setConnected(await Signer.isConnected());
         retrieveNFTS();
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
     }, 100);
   }, []);
@@ -131,7 +130,6 @@ export default function DashboardCyber() {
     });
   }, []);
 
-  console.log(items);
   return (
     <AppShell
       padding="md"

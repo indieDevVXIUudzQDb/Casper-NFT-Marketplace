@@ -14,7 +14,6 @@ import { MainLink } from "./_mainLinks";
 
 export default function Status(props: { connected: boolean; locked: boolean }) {
   const theme = useMantineTheme();
-  console.log({ props });
   return (
     <>
       <Box

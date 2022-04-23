@@ -20,6 +20,7 @@ export const CustomNavbar = (props: {
       style={{
         margin: "2em",
         borderRadius: "30px",
+        height: "85%",
       }}
       hidden={!props.menuOpen}
     >

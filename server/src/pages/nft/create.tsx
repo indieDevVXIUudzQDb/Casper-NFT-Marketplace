@@ -35,7 +35,7 @@ export default function Mint() {
     try {
       setConnected(await Signer.isConnected());
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   }, 100);
 
@@ -157,10 +157,9 @@ export default function Mint() {
       const item = {
         ...values,
       };
-      console.log({ item });
       await mintNFT(item);
     } catch (e) {
-      console.log(e);
+      console.error(e);
       toast.error(
         "Invalid Custom Meta format. Expecting JSON Object.",
         toastConfig

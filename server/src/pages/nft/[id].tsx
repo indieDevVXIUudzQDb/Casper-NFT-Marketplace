@@ -50,13 +50,12 @@ export default function DashboardCyber() {
         setConnected(await Signer.isConnected());
         retrieveNFT();
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
     }, 100);
   }, []);
 
   useEffect(() => {
-    console.log("subscription called");
     const es = new EventStream(
       process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
     );

@@ -16,7 +16,7 @@ import {
 } from "casper-js-sdk";
 import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
 
-import { getAccountInfo, getDeploy } from "./utils";
+import { getDeploy } from "./utils";
 import { StoredValue } from "casper-js-sdk/dist/lib/StoredValue";
 
 export const NODE_ADDRESS =
@@ -174,24 +174,6 @@ export const initClient = async () => {
   try {
     contractPublicKey = CLPublicKey.fromHex(CONTRACT_HOLDER_ADDRESS);
     cep47 = new CEP47Client(NODE_ADDRESS!, CHAIN_NAME!);
-    const contractAccountInfo = await getAccountInfo(
-      NODE_ADDRESS!,
-      contractPublicKey
-    );
-    console.log(`... Account Info: `, contractAccountInfo);
-    // const contractHashKey = `${CONTRACT_NAME!}_contract_hash`;
-    // console.log({ contractHashKey });
-    // const contractHash = await getAccountNamedKeyValue(
-    //   contractAccountInfo,
-    //   contractHashKey
-    // );
-    // console.log(`... Contract Hash: ${contractHash}`);
-    //
-    // const contractPackageHash = await getAccountNamedKeyValue(
-    //   contractAccountInfo,
-    //   `contract_package_hash`
-    // );
-    // console.log(`... Contract Package Hash: ${contractPackageHash}`);
     const contractHash = process.env.NEXT_PUBLIC_CEP47_CONTRACT_HASH;
     const contractPackageHash =
       process.env.NEXT_PUBLIC_CEP47_CONTRACT_PACKAGE_HASH;
@@ -289,10 +271,10 @@ export const getNFT = (id: number): Promise<RetrievedNFT> => {
       if (!cep47) return;
       // eslint-disable-next-line no-plusplus
       const tokenMeta = await cep47.getTokenMeta(`${id}`);
-      tokenMeta.set("id", id);
       const nft = {
         meta: tokenMeta,
         isOwner: false,
+        id: id.toString(),
       };
       clearTimeout(timeout);
       resolve(nft);
@@ -315,13 +297,18 @@ export const getOwnedNFTS = (): Promise<RetrievedNFT[]> => {
       cep47 = client;
       if (!cep47) return;
       totalSupply = await cep47.totalSupply();
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+    try {
       const publicKey = await window.casperlabsHelper.getActivePublicKey();
       const activePublicKey = CLPublicKey.fromHex(publicKey);
       activeAccountHash = activePublicKey.toAccountHashStr();
     } catch (e) {
       console.log(e);
-      reject();
     }
+
     if (!cep47) return;
     const nfts: RetrievedNFT[] = [];
 
