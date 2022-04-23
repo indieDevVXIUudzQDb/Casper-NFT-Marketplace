@@ -1,3 +1,8 @@
+use std::borrow::Borrow;
+use std::collections::BTreeMap;
+use std::hash::Hash;
+use std::path::PathBuf;
+
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
@@ -17,12 +22,8 @@ use casper_types::{
     ContractPackageHash, HashAddr, Key, Motes, PublicKey, RuntimeArgs, SecretKey, StoredValue,
     U256, U512,
 };
-use cep47_tests::cep47_instance::CEP47Instance;
-use std::borrow::Borrow;
-use std::collections::BTreeMap;
-use std::hash::Hash;
-use std::path::PathBuf;
 
+use cep47_tests::cep47_instance::CEP47Instance;
 use test_env::TestEnv;
 
 use crate::market_instance::{MarketContractInstance, Meta, TokenId, MARKET_NAME_KEY};
@@ -30,10 +31,12 @@ use crate::market_tests::meta::contract_meta;
 
 const CEP47_NAME: &str = "Dragon NFT";
 const CEP47_CONTRACT_NAME: &str = "cep47";
-const CEP47_PACKAGE_KEY: &str = "cep47_contract_hash";
+const CEP47_CONTRACT_KEY: &str = "cep47_contract_hash";
+const CEP47_PACKAGE_HASH_KEY: &str = "cep47_contract_hash_wrapped";
 const MARKET_NAME: &str = "Galactic Market";
 const MARKET_CONTRACT_NAME: &str = "market";
-const MARKET_PACKAGE_KEY: &str = "market_contract_hash";
+const MARKET_CONTRACT_HASH: &str = "market_contract_hash";
+const MARKET_PACKAGE_HASH: &str = "market_contract_hash_wrapped";
 const SYMBOL: &str = "DGNFT";
 pub const ITEM_STATUS_AVAILABLE: &str = "available";
 pub const ITEM_STATUS_CANCELLED: &str = "cancelled";
@@ -141,7 +144,9 @@ pub fn get_test_accounts() -> (InMemoryWasmTestBuilder, Vec<TestAccount>) {
 
 pub struct TestFixture {
     owner: TestAccount,
+    cep47_contract_hash_key: Key,
     cep47_package_hash_key: Key,
+    market_contract_hash_key: Key,
     market_package_hash_key: Key,
 }
 
@@ -228,10 +233,16 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture, Vec<TestAccount>) {
 
     // ========= install market contract start========= //
 
+    //get cep47 contract hash
+    let cep47_contract_hash_key = *account
+        .named_keys()
+        .get(CEP47_CONTRACT_KEY)
+        .expect("should have cep47 contract");
+
     //get cep47 package hash
     let cep47_package_hash_key = *account
         .named_keys()
-        .get(CEP47_PACKAGE_KEY)
+        .get(CEP47_PACKAGE_HASH_KEY)
         .expect("should have cep47 contract");
 
     let exec_request = {
@@ -259,16 +270,26 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture, Vec<TestAccount>) {
         .expect("should be account");
 
     //get market package hash
+    let market_contract_hash_key = *account
+        .named_keys()
+        .get(MARKET_CONTRACT_HASH)
+        .expect("should have market contract");
+
+    //get market package hash
     let market_package_hash_key = *account
         .named_keys()
-        .get(MARKET_PACKAGE_KEY)
+        // .get(MARKET_CONTRACT_HASH)
+        // TODO
+        .get(MARKET_PACKAGE_HASH)
         .expect("should have market contract");
 
     // ========= install market contract end========= //
 
     let test_context = TestFixture {
         owner,
+        cep47_contract_hash_key,
         cep47_package_hash_key,
+        market_contract_hash_key,
         market_package_hash_key,
     };
 
@@ -285,7 +306,7 @@ fn nft_mint(
 ) {
     let method: &str = "mint";
     let source = DeploySource::ByHash {
-        hash: ContractHash::from(test_context.cep47_package_hash_key.into_hash().unwrap()),
+        hash: ContractHash::from(test_context.cep47_contract_hash_key.into_hash().unwrap()),
         method: method.to_string(),
     };
     let args = runtime_args! {
@@ -328,7 +349,7 @@ fn create_market_item(
                 "recipient" => Key::Account(test_context.owner.account_hash),
                 "item_ids" => item_ids,
                 // TODO change item_nft_contract_addresses to keys
-                "item_nft_contract_addresses" => vec![ContractHash::from(test_context.cep47_package_hash_key.into_hash().unwrap())],
+                "item_nft_contract_addresses" => vec![ContractHash::from(test_context.cep47_contract_hash_key.into_hash().unwrap())],
                 "item_asking_prices" => vec![U256::from("2000000")],
                 "item_token_ids" => vec![TokenId::zero()],
     };
@@ -362,7 +383,7 @@ fn process_market_sale(
     let deploy = DeployItemBuilder::new()
         .with_address(test_context.owner.account_hash)
         .with_stored_session_named_key(
-            MARKET_PACKAGE_KEY,
+            MARKET_CONTRACT_HASH,
             "process_market_sale",
             runtime_args! {
             "recipient" => buyer,
@@ -386,7 +407,7 @@ fn owner_of(
 ) -> Option<Key> {
     match query_dictionary_item(
         builder,
-        test_context.cep47_package_hash_key,
+        test_context.cep47_contract_hash_key,
         "owners".to_string(),
         TokenId::zero().to_string(),
     ) {
@@ -411,7 +432,7 @@ fn get_approved(
 ) -> Option<Key> {
     match query_dictionary_item(
         builder,
-        test_context.cep47_package_hash_key,
+        test_context.cep47_contract_hash_key,
         "allowances".to_string(),
         key_and_value_to_str::<String>(&owner, &token_id.to_string()),
     ) {
@@ -437,7 +458,7 @@ fn approve(
 ) {
     let method: &str = "approve";
     let source = DeploySource::ByHash {
-        hash: ContractHash::from(test_context.cep47_package_hash_key.into_hash().unwrap()),
+        hash: ContractHash::from(test_context.cep47_contract_hash_key.into_hash().unwrap()),
         method: method.to_string(),
     };
     let args = runtime_args! {
@@ -473,7 +494,7 @@ fn transfer_from(
 ) {
     let method: &str = "transfer_from";
     let source = DeploySource::ByHash {
-        hash: ContractHash::from(test_context.cep47_package_hash_key.into_hash().unwrap()),
+        hash: ContractHash::from(test_context.cep47_contract_hash_key.into_hash().unwrap()),
         method: method.to_string(),
     };
     let args = runtime_args! {
@@ -525,29 +546,28 @@ fn should_process_valid_nft_sale() {
     let owner_before = owner_of(&mut builder, &test_context, TokenId::zero());
     assert_eq!(owner_before.unwrap(), Key::Account(seller.account_hash));
 
-    approve(
-        &mut builder,
-        &test_context,
-        seller.account_hash,
-        Key::Account(test_context.owner.account_hash),
-        vec![TokenId::zero()],
-    );
-
-    // TODO get_approved value
-
-    transfer_from(
-        &mut builder,
-        &test_context,
-        test_context.owner.account_hash,
-        seller.account_hash,
-        buyer.account_hash,
-    );
-    let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
-    assert_eq!(owner_after.unwrap(), Key::Account(buyer.account_hash));
+    // approve(
+    //     &mut builder,
+    //     &test_context,
+    //     seller.account_hash,
+    //     Key::Account(test_context.owner.account_hash),
+    //     vec![TokenId::zero()],
+    // );
+    //
+    // // TODO get_approved value
+    //
+    // transfer_from(
+    //     &mut builder,
+    //     &test_context,
+    //     test_context.owner.account_hash,
+    //     seller.account_hash,
+    //     buyer.account_hash,
+    // );
+    // let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
+    // assert_eq!(owner_after.unwrap(), Key::Account(buyer.account_hash));
 
     // --------------- Desired --------------- //
 
-    //TODO
     // approve(
     //     &mut builder,
     //     &test_context,
@@ -555,6 +575,15 @@ fn should_process_valid_nft_sale() {
     //     test_context.market_package_hash_key,
     //     vec![TokenId::zero()],
     // );
+
+    // transfer_from(
+    //     &mut builder,
+    //     &test_context,
+    //     test_context.owner.account_hash,
+    //     seller.account_hash,
+    //     buyer.account_hash,
+    // );
+
     // create_market_item(
     //     &mut builder,
     //     &test_context,
