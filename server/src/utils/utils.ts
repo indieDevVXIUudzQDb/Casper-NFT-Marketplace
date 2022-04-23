@@ -85,3 +85,11 @@ export const getAccountNamedKeyValue = (accountInfo: any, namedKey: string) => {
   }
   return undefined;
 };
+
+export const textShortener = (text: string, maxLength: number) => {
+  if (text.length > maxLength) {
+    const start = text.substring(0, maxLength);
+    return `${start}…`;
+  }
+  return text;
+};

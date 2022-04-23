@@ -1,21 +1,15 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 
-import {AppShell, SimpleGrid, Title} from "@mantine/core";
-import {Signer} from "casper-js-sdk";
-import {toast, Toaster} from "react-hot-toast";
+import { AppShell, SimpleGrid, Title } from "@mantine/core";
+import { EventStream, Signer } from "casper-js-sdk";
+import { toast, Toaster } from "react-hot-toast";
 
-import {CustomCard} from "../components/CustomCard";
-import {CustomHeader} from "../components/CustomHeader";
-import {CustomNavbar} from "../components/CustomNavbar";
+import { CustomCard } from "../components/CustomCard";
+import { CustomHeader } from "../components/CustomHeader";
+import { CustomNavbar } from "../components/CustomNavbar";
 import styles from "../styles/dashboard-cyber.module.scss";
-import {toastConfig} from "../toastConfig";
-import {getNFTS} from "../utils/cep47_utils";
-// import {
-//   EVENT_STREAM_ADDRESS,
-//   getActiveAccountBalance,
-//   subscribeToContractEvents,
-// } from "../utils/cep47_utils";
-// import { EventStream } from "casper-js-sdk";
+import { toastConfig } from "../toastConfig";
+import { getNFTS, subscribeToContractEvents } from "../utils/cep47_utils";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
@@ -51,16 +45,16 @@ export default function DashboardCyber() {
     }, 100);
   }, []);
 
-  // useEffect(() => {
-  //   console.log("subscription called");
-  //   const es = new EventStream(
-  //     process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
-  //   );
-  //   subscribeToContractEvents(es, () => {
-  //     retrieveNFTS();
-  //     console.log(es);
-  //   });
-  // }, []);
+  useEffect(() => {
+    console.log("subscription called");
+    const es = new EventStream(
+      process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
+    );
+    subscribeToContractEvents(es, () => {
+      retrieveNFTS();
+      console.log(es);
+    });
+  }, []);
 
   useEffect(() => {
     window.addEventListener("signer:connected", (msg) => {
@@ -121,9 +115,6 @@ export default function DashboardCyber() {
     });
   }, []);
 
-  // useEffect(() => {
-  //   retrieveNFTS();
-  // }, []);
   return (
     <AppShell
       padding="md"

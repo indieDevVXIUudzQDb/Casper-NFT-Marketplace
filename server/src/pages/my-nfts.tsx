@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { AppShell, SimpleGrid, Title } from "@mantine/core";
-import { Signer } from "casper-js-sdk";
+import { EventStream, Signer } from "casper-js-sdk";
 import { toast } from "react-hot-toast";
 
 import { CustomCard } from "../components/CustomCard";
@@ -9,7 +9,7 @@ import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
 import styles from "../styles/dashboard-cyber.module.scss";
 import { toastConfig } from "../toastConfig";
-import { getOwnedNFTS } from "../utils/cep47_utils";
+import { getOwnedNFTS, subscribeToContractEvents } from "../utils/cep47_utils";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
 
 export async function getServerSideProps(_context: any) {
@@ -30,12 +30,6 @@ export default function DashboardCyber() {
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
 
-  // useEffect(() => {
-  //   console.log("subscription called");
-  //   const es = new EventStream(EVENT_STREAM_ADDRESS!);
-  //   subscribeToContractEvents(es, () => getActiveAccountBalance());
-  // }, []);
-
   const retrieveNFTS = async () => {
     const result = await toast.promise(
       getOwnedNFTS(),
@@ -50,6 +44,18 @@ export default function DashboardCyber() {
       setItems(result);
     }
   };
+
+  useEffect(() => {
+    console.log("subscription called");
+    const es = new EventStream(
+      process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
+    );
+    subscribeToContractEvents(es, () => {
+      retrieveNFTS();
+      console.log(es);
+    });
+  }, []);
+
   useEffect(() => {
     // Without the timeout it doesn't always work properly
     setTimeout(async () => {

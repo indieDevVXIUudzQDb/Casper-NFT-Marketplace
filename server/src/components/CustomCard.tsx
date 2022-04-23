@@ -2,6 +2,8 @@ import React from "react";
 
 import { Button, Card, Group, Image, Title } from "@mantine/core";
 
+import { textShortener } from "../utils/utils";
+
 interface Props {
   image: string;
   title: string;
@@ -30,35 +32,14 @@ export const CustomCard = (props: Props) => {
                   fit="contain"
                 />
               }
-              // style={{ padding: "3em" }}
-              // onError={({ currentTarget }) => {
-              //   // eslint-disable-next-line no-param-reassign
-              //   currentTarget.onerror = null; // prevents looping
-              //   // eslint-disable-next-line no-param-reassign
-              // //   currentTarget.src =
-              // //     "http://localhost:3000/logoipsum-logo-39.svg";
-              // // }}
             />
-
-            {/* <img */}
-            {/*  style={{ width: "80%", padding: "1em" }} */}
-            {/*  src={`${prefix}${image}`} */}
-            {/*  onError={({ currentTarget }) => { */}
-            {/*    // eslint-disable-next-line no-param-reassign */}
-            {/*    currentTarget.onerror = null; // prevents looping */}
-            {/*    // eslint-disable-next-line no-param-reassign */}
-            {/*    currentTarget.src = */}
-            {/*      "http://localhost:3000/logoipsum-logo-39.svg"; */}
-            {/*  }} */}
-            {/*  alt={title} */}
-            {/* /> */}
           </div>
         </Card.Section>
 
         <Group position="apart" style={{ marginBottom: 5 }}>
           <Title align={"center"}>{title}</Title>
         </Group>
-        {description}
+        {textShortener(description, 200)}
         <Button
           variant="light"
           color="blue"
