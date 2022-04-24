@@ -38,11 +38,7 @@ export const CustomHeader = (props: {
       {/* Handle other responsive styles with MediaQuery component or createStyles function */}
       <MediaQuery smallerThan="sm" styles={{ display: "none" }}>
         <Group sx={{ height: "100%" }} px={20} position="apart">
-          <div
-            style={{
-              marginLeft: "8%",
-            }}
-          >
+          <div className={"pl-10"}>
             <a href={""} className={styles.neonText}>
               GALACTIC NFTs
             </a>
