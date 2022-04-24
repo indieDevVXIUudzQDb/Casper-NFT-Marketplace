@@ -73,26 +73,18 @@ const test = async () => {
   console.log(`... Account Info: `);
   console.log(JSON.stringify(accountInfo, null, 2));
 
-  const contractHash = getAccountNamedKeyValue(
+  const contractHash = await getAccountNamedKeyValue(
     accountInfo,
     `${CONTRACT_NAME!}_contract_hash`
   );
 
   console.log(`... Contract Hash: ${contractHash}`);
-};
 
-const getContractHash = async () => {
-  let accountInfo = await getAccountInfo(NODE_ADDRESS!, KEYS.publicKey);
-
-  const contractHash = getAccountNamedKeyValue(
+  const contractPackageHash = await getAccountNamedKeyValue(
     accountInfo,
-    `${CONTRACT_NAME!}_contract_hash`
+    `contract_package_hash`
   );
-
-  console.log(`... Contract Hash: ${contractHash}`);
-  return contractHash;
+  console.log(`... Contract Package Hash: ${contractPackageHash}`);
 };
 
-// test();
-
-getContractHash();
+test();

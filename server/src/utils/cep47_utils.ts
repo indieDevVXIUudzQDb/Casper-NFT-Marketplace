@@ -16,7 +16,8 @@ import {
 } from "casper-js-sdk";
 import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
 
-import { getAccountInfo, getDeploy } from "./utils";
+import { getDeploy } from "./utils";
+import { StoredValue } from "casper-js-sdk/dist/lib/StoredValue";
 
 export const NODE_ADDRESS =
   process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS ||
@@ -173,24 +174,6 @@ export const initClient = async () => {
   try {
     contractPublicKey = CLPublicKey.fromHex(CONTRACT_HOLDER_ADDRESS);
     cep47 = new CEP47Client(NODE_ADDRESS!, CHAIN_NAME!);
-    const contractAccountInfo = await getAccountInfo(
-      NODE_ADDRESS!,
-      contractPublicKey
-    );
-    console.log(`... Account Info: `, contractAccountInfo);
-    // const contractHashKey = `${CONTRACT_NAME!}_contract_hash`;
-    // console.log({ contractHashKey });
-    // const contractHash = await getAccountNamedKeyValue(
-    //   contractAccountInfo,
-    //   contractHashKey
-    // );
-    // console.log(`... Contract Hash: ${contractHash}`);
-    //
-    // const contractPackageHash = await getAccountNamedKeyValue(
-    //   contractAccountInfo,
-    //   `contract_package_hash`
-    // );
-    // console.log(`... Contract Package Hash: ${contractPackageHash}`);
     const contractHash = process.env.NEXT_PUBLIC_CEP47_CONTRACT_HASH;
     const contractPackageHash =
       process.env.NEXT_PUBLIC_CEP47_CONTRACT_PACKAGE_HASH;
@@ -252,21 +235,137 @@ export const triggerMintDeploy = async (
 export const getDeployResult = (deployHash: string) => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(reject, 10000);
     try {
       // @ts-ignore
       const { cep47 } = await initClient();
-      if (!cep47) return;
+      if (!cep47) reject();
+
       await getDeploy(
         process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS!!,
         deployHash
       );
       console.log("...... Deployed successfully");
-
+      clearTimeout(timeout);
       resolve(deployHash);
     } catch (e) {
       console.log(e);
       reject();
     }
+  });
+};
+
+export interface RetrievedNFT {
+  id: string;
+  meta: Map<string, string>;
+  isOwner: boolean;
+}
+
+export const getNFT = (id: number): Promise<RetrievedNFT> => {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(reject, 10000);
+    let activeAccountHash = "";
+    let cep47;
+    try {
+      const { cep47: client } = await initClient();
+      cep47 = client;
+      // eslint-disable-next-line no-plusplus
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+    if (!cep47) reject();
+
+    try {
+      const publicKey = await window.casperlabsHelper.getActivePublicKey();
+      const activePublicKey = CLPublicKey.fromHex(publicKey);
+      activeAccountHash = activePublicKey.toAccountHashStr();
+    } catch (e) {
+      console.log(e);
+    }
+    let isOwner = false;
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      // @ts-ignore
+      const ownerOf = await cep47.getOwnerOf(`${id}`);
+      if (ownerOf) {
+        isOwner = ownerOf === activeAccountHash;
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    try {
+      const tokenMeta = await cep47.getTokenMeta(`${id}`);
+
+      const nft = {
+        meta: tokenMeta,
+        isOwner,
+        id: id.toString(),
+      };
+      clearTimeout(timeout);
+      resolve(nft);
+    } catch (e) {
+      console.error(e);
+      reject();
+    }
+  });
+};
+
+export const getOwnedNFTS = (): Promise<RetrievedNFT[]> => {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(reject, 10000);
+    let cep47;
+    let totalSupply = 0 as StoredValue;
+    let activeAccountHash = "";
+    try {
+      const { cep47: client } = await initClient();
+      cep47 = client;
+      if (!cep47) return;
+      totalSupply = await cep47.totalSupply();
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+    try {
+      const publicKey = await window.casperlabsHelper.getActivePublicKey();
+      const activePublicKey = CLPublicKey.fromHex(publicKey);
+      activeAccountHash = activePublicKey.toAccountHashStr();
+    } catch (e) {
+      console.log(e);
+    }
+
+    if (!cep47) return;
+    const nfts: RetrievedNFT[] = [];
+
+    // eslint-disable-next-line no-plusplus
+    for (let i = 0; i < totalSupply; i++) {
+      let isOwner = false;
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const ownerOf = await cep47.getOwnerOf(`${i}`);
+        if (ownerOf) {
+          isOwner = ownerOf === activeAccountHash;
+        }
+      } catch (e) {
+        console.log(e);
+      }
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const tokenMeta = await cep47.getTokenMeta(`${i}`);
+        const nft: RetrievedNFT = {
+          meta: tokenMeta,
+          id: i.toString(),
+          isOwner,
+        };
+        nfts.push(nft);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+    clearTimeout(timeout);
+    resolve(nfts);
   });
 };
 

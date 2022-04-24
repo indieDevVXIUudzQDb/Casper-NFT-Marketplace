@@ -167,15 +167,22 @@ export class CEP47Client {
     )}`;
   }
 
-  public async getTokenMeta(tokenId: string) {
-    const result = await this.contractClient.queryContractDictionary(
-      "metadata",
-      tokenId
-    );
+  public async getTokenMeta(
+    tokenId: string
+  ): Promise<Map<string, string> | null> {
+    try {
+      const result = await this.contractClient.queryContractDictionary(
+        "metadata",
+        tokenId
+      );
 
-    const maybeValue = result.value().unwrap().value();
+      const maybeValue = result.value().unwrap().value();
 
-    return fromCLMap(maybeValue);
+      return fromCLMap(maybeValue);
+    } catch (e) {
+      console.log("getTokenMeta", e);
+      return null;
+    }
   }
 
   public async getTokenByIndex(owner: CLPublicKey, index: string) {

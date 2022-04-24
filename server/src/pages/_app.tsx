@@ -10,6 +10,7 @@ import { getCookie, setCookies } from "cookies-next";
 import { GetServerSidePropsContext } from "next";
 import { AppProps } from "next/app";
 import Head from "next/head";
+import "../styles/global.css";
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   const { Component, pageProps } = props;
@@ -40,6 +41,7 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
       >
         <MantineProvider
           theme={{ colorScheme }}
+          emotionOptions={{ key: "mantine", prepend: false }}
           withGlobalStyles
           withNormalizeCSS
         >

@@ -1,27 +1,39 @@
 import React from "react";
 
-import { Button, Card, Group, Title } from "@mantine/core";
+import { Button, Card, Group, Image, Title } from "@mantine/core";
+import Link from "next/link";
 
-import { prefix } from "../prefix";
+import { textShortener } from "../utils/utils";
 
 interface Props {
+  id: string;
+  linkTo: string;
   image: string;
   title: string;
   description: string;
-  buttonText: string;
 }
 
 export const CustomCard = (props: Props) => {
-  const { image, title, description, buttonText } = props;
+  const { image, title, description, linkTo } = props;
   return (
     <div style={{}}>
       <Card shadow="sm" p="lg">
         <Card.Section>
           <div style={{ textAlign: "center" }}>
-            <img
-              style={{ width: "80%", padding: "1em" }}
-              src={`${prefix}${image}`}
-              alt={title}
+            <Image
+              src={image}
+              height={160}
+              alt="Norway"
+              fit="contain"
+              withPlaceholder
+              placeholder={
+                <Image
+                  src={`http://localhost:3000/logoipsum-logo-39.svg`}
+                  height={160}
+                  alt="Norway"
+                  fit="contain"
+                />
+              }
             />
           </div>
         </Card.Section>
@@ -29,15 +41,17 @@ export const CustomCard = (props: Props) => {
         <Group position="apart" style={{ marginBottom: 5 }}>
           <Title align={"center"}>{title}</Title>
         </Group>
-        {description}
-        <Button
-          variant="light"
-          color="blue"
-          fullWidth
-          style={{ marginTop: 14 }}
-        >
-          {buttonText}
-        </Button>
+        {textShortener(description, 200)}
+        <Link href={linkTo}>
+          <Button
+            variant="light"
+            color="blue"
+            fullWidth
+            style={{ marginTop: 14 }}
+          >
+            View
+          </Button>
+        </Link>
       </Card>
     </div>
   );

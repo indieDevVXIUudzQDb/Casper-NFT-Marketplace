@@ -10,24 +10,23 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/hooks";
-import { EventStream, Signer } from "casper-js-sdk";
+import { Signer } from "casper-js-sdk";
 import { toast, Toaster } from "react-hot-toast";
 
 import { CustomHeader } from "../../components/CustomHeader";
 import { CustomNavbar } from "../../components/CustomNavbar";
 import styles from "../../styles/dashboard-cyber.module.scss";
+import { toastConfig } from "../../toastConfig";
 import {
-  EVENT_STREAM_ADDRESS,
-  getActiveAccountBalance,
   getDeployResult,
   initClient,
-  subscribeToContractEvents,
   triggerMintDeploy,
 } from "../../utils/cep47_utils";
 import { NFTMeta } from "../../utils/types";
 
 export default function Mint() {
   const [address, setAddress] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
 
@@ -36,22 +35,15 @@ export default function Mint() {
     try {
       setConnected(await Signer.isConnected());
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   }, 100);
 
-  // const [publicKey, setPublicKey] = useState("");
-  // const [balance, setBalance] = useState("");
-  // const [nftBalance, setNFTBalance] = useState(0);
-  // const [tx, setTx] = useState("");
-  // const [to, setTo] = useState("");
-  // const [amount, setAmount] = useState("");
+  // useEffect(() => {
+  //   const es = new EventStream(EVENT_STREAM_ADDRESS!);
+  //   subscribeToContractEvents(es, () => getActiveAccountBalance());
+  // }, []);
 
-  useEffect(() => {
-    console.log("subscription called");
-    const es = new EventStream(EVENT_STREAM_ADDRESS!);
-    subscribeToContractEvents(es, () => getActiveAccountBalance());
-  }, []);
   useEffect(() => {
     window.addEventListener("signer:connected", (msg) => {
       setConnected(true);
@@ -59,7 +51,7 @@ export default function Mint() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!");
+      toast.success("Connected to Signer!", toastConfig);
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -67,7 +59,7 @@ export default function Mint() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer");
+      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -80,7 +72,7 @@ export default function Mint() {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed");
+      toast("Active key changed", toastConfig);
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
@@ -113,7 +105,18 @@ export default function Mint() {
       name: "test",
       symbol: "TEST",
       url: "test.com",
-      customMeta: `{"hello":"world"}`,
+      image_url: "http://localhost:3000/assets/planets/1.png",
+      json_data: `{
+  "hello": "world",
+  "list": [
+    1,
+    2,
+    3
+  ],
+  "nested_1": {
+    "nested_2": "Im nested 2 deep"
+  }
+}`,
       description: "test description",
     },
   });
@@ -124,66 +127,77 @@ export default function Mint() {
     const startIndex = totalSupply;
 
     const mapped: Map<string, string> = new Map(Object.entries(item));
-    console.log("...... Triggered Mint Deploy: ");
     const mintDeployHash = await triggerMintDeploy([`${startIndex}`], [mapped]);
     if (mintDeployHash) {
-      toast.promise(getDeployResult(mintDeployHash), {
-        loading: "Minting in progress",
-        success: "Minting Successful",
-        error: "Error when minting",
-      });
+      toast.promise(
+        getDeployResult(mintDeployHash),
+        {
+          loading: "Minting in progress",
+          success: "Minting Successful",
+          error: "Error when minting",
+        },
+        toastConfig
+      );
     } else {
-      toast.error("Failed to mint NFT.");
+      toast.error("Failed to mint NFT.", toastConfig);
     }
   };
 
   const createNFT = async (values: {
     name: string;
     symbol: string;
+    json_data: string;
     url: string;
-    customMeta: string;
+    image_url: string;
     description: string;
   }) => {
-    let customMeta;
-    let item;
     try {
-      customMeta = JSON.parse(values.customMeta);
+      // Test meta is parsable
+      JSON.parse(values.json_data);
+      const item = {
+        ...values,
+      };
+      await mintNFT(item);
     } catch (e) {
-      console.log(e);
-    }
-
-    if (
-      typeof customMeta === "object" &&
-      !Array.isArray(customMeta) &&
-      customMeta !== null
-    ) {
-      item = {
-        ...values,
-        ...customMeta,
-      };
-    } else if (customMeta === null) {
-      item = {
-        ...values,
-      };
-    } else {
-      console.log(
-        "Invalid format passed to Custom Meta. Expecting JSON Object."
+      console.error(e);
+      toast.error(
+        "Invalid Custom Meta format. Expecting JSON Object.",
+        toastConfig
       );
-      toast.error("Invalid Custom Meta format. Expecting JSON Object.");
-      return;
     }
-    const deployHash = await mintNFT(item);
-    console.log({ deployHash });
   };
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} locked={locked} />}
-      header={<CustomHeader address={address} locked={locked} />}
+      navbarOffsetBreakpoint="sm"
+      asideOffsetBreakpoint="sm"
+      fixed
+      navbar={
+        <CustomNavbar
+          connected={connected}
+          locked={locked}
+          menuOpen={menuOpen}
+        />
+      }
+      header={
+        <CustomHeader
+          address={address}
+          locked={locked}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+        />
+      }
     >
       <Toaster />
-
-      <Title order={1}>Create your NFT</Title>
+      <div
+        style={{
+          textAlign: "center",
+          margin: "1em",
+          marginLeft: "3em",
+        }}
+      >
+        <Title order={1}>Create your NFT</Title>
+      </div>
       <Box sx={{ maxWidth: 300 }} mx="auto">
         <form onSubmit={form.onSubmit((values) => createNFT(values))}>
           <TextInput required label="Name" {...form.getInputProps("name")} />
@@ -194,26 +208,22 @@ export default function Mint() {
           />
           <TextInput
             required
-            label="Symbol"
-            {...form.getInputProps("symbol")}
+            label="Description"
+            {...form.getInputProps("description")}
           />
           <TextInput
             required
             label="Image URL"
-            {...form.getInputProps("url")}
+            {...form.getInputProps("image_url")}
           />
+          <TextInput required label="URL" {...form.getInputProps("url")} />
           {/* eslint-disable-next-line react/jsx-no-undef */}
           <Textarea
             // placeholder="Enter"
-            label="Custom Meta (JSON Object)"
+            label="JSON Data"
             autosize
-            {...form.getInputProps("customMeta")}
+            {...form.getInputProps("json_data")}
             minRows={2}
-          />
-          <TextInput
-            required
-            label="Description"
-            {...form.getInputProps("description")}
           />
 
           <Group position="right" mt="md">

@@ -8,13 +8,13 @@ import { CustomCard } from "../components/CustomCard";
 import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
 import styles from "../styles/dashboard-cyber.module.scss";
+import { toastConfig } from "../toastConfig";
 import {
-  EVENT_STREAM_ADDRESS,
-  getActiveAccountBalance,
+  getOwnedNFTS,
+  RetrievedNFT,
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
-import { NFTMeta } from "../utils/types";
 
 export async function getServerSideProps(_context: any) {
   const { data: items } = await supabaseServerSideClient
@@ -25,45 +25,50 @@ export async function getServerSideProps(_context: any) {
   };
 }
 
-export default function DashboardCyber(props: { items: NFTMeta[] }) {
-  const { items } = props;
+export default function DashboardCyber() {
+  // const { items } = props;
+
+  const [items, setItems] = useState<RetrievedNFT[]>([]);
   const [address, setAddress] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
-  // Without the timeout it doesn't always work properly
-  setTimeout(async () => {
-    try {
-      setConnected(await Signer.isConnected());
-    } catch (err) {
-      console.log(err);
-    }
-  }, 100);
-  // const [publicKey, setPublicKey] = useState("");
-  // const [balance, setBalance] = useState("");
-  // const [nftBalance, setNFTBalance] = useState(0);
-  // const [tx, setTx] = useState("");
-  // const [to, setTo] = useState("");
-  // const [amount, setAmount] = useState("");
-  // const updateAccountInformation = async () => {
 
-  //   // const {
-  //   //   textAddress,
-  //   //   // textBalance,
-  //   //   // publicKey: updatedPublicKey,
-  //   // } = await accountInformation();
-  //   // setAddress(textAddress);
-  //   // // setBalance(textBalance);
-  //   // // setPublicKey(updatedPublicKey);
-  //   // // setNFTBalance(await getActiveAccountBalance());
-  //   // if (textAddress) {
-  //   //   setConnected(true);
-  //   // }
-  // };
+  const retrieveNFTS = async () => {
+    const result = await toast.promise(
+      getOwnedNFTS(),
+      {
+        loading: "Loading",
+        success: "Loaded NFTs",
+        error: "Error retrieving owned NFTs",
+      },
+      toastConfig
+    );
+    if (result) {
+      setItems(result);
+    }
+  };
 
   useEffect(() => {
-    console.log("subscription called");
-    const es = new EventStream(EVENT_STREAM_ADDRESS!);
-    subscribeToContractEvents(es, () => getActiveAccountBalance());
+    const es = new EventStream(
+      process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
+    );
+    subscribeToContractEvents(es, () => {
+      retrieveNFTS();
+      console.log(es);
+    });
+  }, []);
+
+  useEffect(() => {
+    // Without the timeout it doesn't always work properly
+    setTimeout(async () => {
+      try {
+        setConnected(await Signer.isConnected());
+        retrieveNFTS();
+      } catch (err) {
+        console.error(err);
+      }
+    }, 100);
   }, []);
 
   useEffect(() => {
@@ -73,7 +78,8 @@ export default function DashboardCyber(props: { items: NFTMeta[] }) {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!");
+      toast.success("Connected to Signer!", toastConfig);
+      retrieveNFTS();
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -81,7 +87,7 @@ export default function DashboardCyber(props: { items: NFTMeta[] }) {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer");
+      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -94,7 +100,8 @@ export default function DashboardCyber(props: { items: NFTMeta[] }) {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed");
+      toast("Active key changed", toastConfig);
+      retrieveNFTS();
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
@@ -111,6 +118,7 @@ export default function DashboardCyber(props: { items: NFTMeta[] }) {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
+      retrieveNFTS();
     });
     window.addEventListener("signer:initialState", (msg) => {
       // @ts-ignore
@@ -122,24 +130,59 @@ export default function DashboardCyber(props: { items: NFTMeta[] }) {
     });
   }, []);
 
-  console.log(items);
   return (
     <AppShell
       padding="md"
-      navbar={<CustomNavbar connected={connected} locked={locked} />}
-      header={<CustomHeader address={address} locked={locked} />}
+      navbarOffsetBreakpoint="sm"
+      asideOffsetBreakpoint="sm"
+      fixed
+      navbar={
+        <CustomNavbar
+          connected={connected}
+          locked={locked}
+          menuOpen={menuOpen}
+        />
+      }
+      header={
+        <CustomHeader
+          address={address}
+          locked={locked}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+        />
+      }
     >
-      <Title order={1}>My NFTs</Title>
-      <SimpleGrid cols={3} spacing={50} style={{ margin: "5em" }}>
-        {items.map((nft, index) => (
-          <CustomCard
-            key={index}
-            image={nft.url}
-            title={nft.name}
-            description={""}
-            buttonText={"Sell (Coming Soon)"}
-          />
-        ))}
+      <div
+        style={{
+          textAlign: "center",
+          margin: "1em",
+          marginLeft: "3em",
+        }}
+      >
+        <Title order={1}>My NFTs</Title>
+      </div>
+      <SimpleGrid
+        cols={3}
+        spacing="lg"
+        breakpoints={[
+          { maxWidth: 980, cols: 2, spacing: "md" },
+          { maxWidth: 755, cols: 1, spacing: "sm" },
+          { maxWidth: 600, cols: 1, spacing: "sm" },
+        ]}
+        style={{ marginLeft: "3em" }}
+      >
+        {items
+          .filter((item) => item.isOwner === true)
+          .map((item, index) => (
+            <CustomCard
+              key={index}
+              id={item.id}
+              image={item.meta.get("image_url") || ""}
+              title={item.meta.get("name") || ""}
+              description={item.meta.get("description") || ""}
+              linkTo={`nft/${item.id}`}
+            />
+          ))}
       </SimpleGrid>
       <div className={styles.bg}>
         <div className={styles.starField}>
