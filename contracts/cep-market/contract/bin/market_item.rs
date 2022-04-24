@@ -4,17 +4,22 @@
 #[macro_use]
 extern crate alloc;
 
+use alloc::string::ToString;
 use alloc::{boxed::Box, collections::BTreeSet, format, string::String, vec::Vec};
+
 use casper_contract::{
     contract_api::{runtime, storage},
     unwrap_or_revert::UnwrapOrRevert,
 };
+use casper_types::account::AccountHash;
+use casper_types::bytesrepr::ToBytes;
 use casper_types::{
-    runtime_args, CLType, CLTyped, CLValue, ContractPackageHash, EntryPoint, EntryPointAccess,
-    EntryPointType, EntryPoints, Group, Key, Parameter, RuntimeArgs, URef, U256,
+    runtime_args, CLType, CLTyped, CLValue, ContractHash, ContractPackageHash, EntryPoint,
+    EntryPointAccess, EntryPointType, EntryPoints, Group, Key, Parameter, RuntimeArgs, URef, U256,
 };
+
 use contract::data::{MARKET_NAME, META, SYMBOL};
-use contract::{MarketContract, Meta, NFTContractAddress, TokenId};
+use contract::{Error, MarketContract, Meta, NFTContractAddress, TokenId};
 use contract_utils::{ContractContext, OnChainContractStorage};
 
 #[derive(Default)]
@@ -146,10 +151,11 @@ fn create_market_item() {
 
 #[no_mangle]
 fn process_market_sale() {
+    let owner = runtime::get_named_arg::<Key>("owner");
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let item_id = runtime::get_named_arg::<TokenId>("item_id");
     MarketItem::default()
-        .process_market_sale(recipient, item_id)
+        .process_market_sale(owner, recipient, item_id)
         .unwrap_or_revert();
 }
 
@@ -310,6 +316,7 @@ fn get_entry_points() -> EntryPoints {
     entry_points.add_entry_point(EntryPoint::new(
         "process_market_sale",
         vec![
+            Parameter::new("owner", Key::cl_type()),
             Parameter::new("recipient", Key::cl_type()),
             Parameter::new("item_id", TokenId::cl_type()),
         ],

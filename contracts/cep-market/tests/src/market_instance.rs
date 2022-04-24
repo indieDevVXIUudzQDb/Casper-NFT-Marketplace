@@ -1,3 +1,6 @@
+use std::collections::BTreeMap;
+use std::fmt::Debug;
+
 use blake2::{
     digest::{Update, VariableOutput},
     VarBlake2b,
@@ -8,8 +11,7 @@ use casper_types::{
     account::AccountHash, bytesrepr::ToBytes, runtime_args, CLTyped, ContractHash, Key,
     RuntimeArgs, U256,
 };
-use std::collections::BTreeMap;
-use std::fmt::Debug;
+
 use test_env::{TestContract, TestEnv};
 
 pub type TokenId = U256;
@@ -25,7 +27,7 @@ const ITEM_STATUS_DATA: &str = "item_statuses";
 const OWNERS_DICT: &str = "item_owners";
 const OWNED_ITEMS_BY_INDEX_DICT: &str = "owned_items_by_index";
 const OWNED_INDEXES_BY_ITEM_DICT: &str = "owned_indexes_by_item";
-pub const NFT_CONTRACT_ADDRESS: &str = "nft_contract_address";
+pub const NFT_CONTRACT_ADDRESS: &str = "nft_contract_hash";
 pub const TOTAL_SUPPLY: &str = "item_total_supply";
 pub const MARKET_NAME_KEY: &str = "market_name";
 pub const SYMBOL: &str = "market_symbol";

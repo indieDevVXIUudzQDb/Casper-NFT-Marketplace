@@ -1,6 +1,8 @@
 use alloc::string::{String, ToString};
+
 use casper_contract::{contract_api::runtime::get_call_stack, unwrap_or_revert::UnwrapOrRevert};
 use casper_types::{system::CallStackElement, ContractPackageHash, Key, U256};
+
 use contract_utils::{get_key, key_and_value_to_str, key_to_str, set_key, Dict};
 
 use crate::{event::MarketEvent, Meta, NFTContractAddress, TokenId};
@@ -15,7 +17,7 @@ const OWNERS_DICT: &str = "item_owners";
 
 const OWNED_ITEMS_BY_INDEX_DICT: &str = "owned_items_by_index";
 const OWNED_INDEXES_BY_ITEM_DICT: &str = "owned_indexes_by_item";
-pub const NFT_CONTRACT_ADDRESS: &str = "nft_contract_address";
+pub const NFT_CONTRACT_ADDRESS: &str = "nft_contract_hash";
 pub const TOTAL_SUPPLY: &str = "item_total_supply";
 pub const MARKET_NAME: &str = "market_name";
 pub const SYMBOL: &str = "market_symbol";

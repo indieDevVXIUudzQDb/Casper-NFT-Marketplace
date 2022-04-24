@@ -1,3 +1,13 @@
+use alloc::string::String;
+use alloc::vec;
+use alloc::vec::Vec;
+use core::convert::TryInto;
+
+use casper_contract::contract_api::{runtime, storage};
+use casper_types::{runtime_args, ApiError, Key, RuntimeArgs, U256};
+
+use contract_utils::{ContractContext, ContractStorage};
+
 use crate::data::{
     Allowances, ItemAskingPriceData, ItemStatusData, ItemTokenIdData, NFTContractAddresses,
     OwnedTokens, Owners,
@@ -7,11 +17,6 @@ use crate::{
     event::MarketEvent,
     Meta, NFTContractAddress, TokenId, ITEM_STATUS_AVAILABLE,
 };
-use alloc::{string::String, vec::Vec};
-
-use casper_types::{ApiError, Key, U256};
-use contract_utils::{ContractContext, ContractStorage};
-use core::convert::TryInto;
 
 #[repr(u16)]
 pub enum Error {
@@ -40,6 +45,10 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         ItemStatusData::init();
         ItemTokenIdData::init();
         Allowances::init();
+        let contract_hash = Key::Hash(self.self_addr().into_hash().unwrap());
+        let value_ref = storage::new_uref(contract_hash);
+        // TODO improve naming for this
+        runtime::put_key("market_item_hash", Key::URef(value_ref));
     }
 
     fn name(&self) -> String {
@@ -73,14 +82,14 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
     fn set_item_nft_contract_address(
         &mut self,
         item_id: TokenId,
-        nft_contract_address: NFTContractAddress,
+        nft_contract_hash: NFTContractAddress,
     ) -> Result<(), Error> {
         if self.owner_of(item_id).is_none() {
             return Err(Error::TokenIdDoesntExist);
         };
 
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
-        nft_contract_addresses_dict.set(&item_id, nft_contract_address);
+        nft_contract_addresses_dict.set(&item_id, nft_contract_hash);
 
         Ok(())
     }
@@ -226,24 +235,28 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Ok(item_ids)
     }
 
-    fn process_market_sale(&mut self, recipient: Key, item_id: TokenId) -> Result<TokenId, Error> {
-        //TODO
-        // let owner = self.owner_of(item_id);
-        // let nft_contract_address = self.item_nft_contract_address(item_id).unwrap();
-        // let token_id = self.item_token_id(item_id).unwrap();
-        // // let market_account_key = self.self_addr();
-        // let _: () = runtime::call_contract(
-        //     nft_contract_address,
-        //     "transfer_from",
-        //     runtime_args! {
-        //         "sender" => owner,
-        //         "recipient" => recipient,
-        //         "token_ids" => vec![token_id]
-        //     },
-        // );
-
+    fn process_market_sale(
+        &mut self,
+        owner: Key,
+        recipient: Key,
+        item_id: TokenId,
+    ) -> Result<(), Error> {
+        // TODO manage payment
+        // TODO permission checking
+        let nft_contract_hash = self.item_nft_contract_address(item_id).unwrap();
+        let token_id = self.item_token_id(item_id).unwrap();
+        // TODO error handling
+        let _: () = runtime::call_contract(
+            nft_contract_hash,
+            "transfer_from",
+            runtime_args! {
+                "sender" => owner,
+                "recipient" => recipient,
+                "token_ids" => vec![token_id]
+            },
+        );
         self.emit(MarketEvent::SoldItem { recipient, item_id });
-        Ok(item_id)
+        Ok(())
     }
 
     fn emit(&mut self, event: MarketEvent) {
