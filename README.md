@@ -28,7 +28,7 @@ Using Next.js for marketplace users to interact with. A rust Market contract to 
 
 ## TODO
 
-### Front end
+### Server - Nextjs
 
 ~~- Implement minting page~~
 ~~- Implement detail for buyer~~
@@ -42,7 +42,7 @@ Using Next.js for marketplace users to interact with. A rust Market contract to 
 - Link front end with market contract - Buy/Sell NFT
 - Link front end with market contract - Withdraw funds
 
-### CEP47 compatible Market contract
+### Market contract - CEP47 compatible
 
 ~~- Functionality - Changing ownership of nft~~
 - Functionality - Creating market item for sale
