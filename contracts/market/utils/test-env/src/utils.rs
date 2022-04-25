@@ -1,15 +1,14 @@
-use std::path::PathBuf;
-
 use casper_engine_test_support::{
-    DeployItemBuilder, ExecuteRequestBuilder, InMemoryWasmTestBuilder, WasmTestBuilder, ARG_AMOUNT,
-    DEFAULT_ACCOUNT_ADDR, DEFAULT_PAYMENT,
+    ARG_AMOUNT, DEFAULT_ACCOUNT_ADDR, DEFAULT_PAYMENT, DeployItemBuilder, ExecuteRequestBuilder,
+    InMemoryWasmTestBuilder, WasmTestBuilder,
 };
 use casper_execution_engine::core::engine_state::ExecuteRequest;
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{
-    account::AccountHash, bytesrepr::FromBytes, runtime_args, system::mint, CLTyped, ContractHash,
-    Key, RuntimeArgs, StoredValue, U512,
+    account::AccountHash, bytesrepr::FromBytes, CLTyped, ContractHash, Key, runtime_args,
+    RuntimeArgs, StoredValue, system::mint, U512,
 };
+use std::path::PathBuf;
 
 pub fn query<T: FromBytes + CLTyped>(
     builder: &InMemoryWasmTestBuilder,
