@@ -36,6 +36,9 @@ const CEP47_NAME: &str = "Dragon NFT";
 const CEP47_CONTRACT_NAME: &str = "cep47";
 const CEP47_CONTRACT_HASH_KEY: &str = "cep47_contract_hash";
 const CEP47_CONTRACT_PACKAGE_HASH_KEY: &str = "cep47_contract_hash_wrapped";
+const MARKET_OFFER_PURSE_CONTRACT_HASH_KEY: &str = "market_offer_purse_contract_hash";
+const MARKET_OFFER_PURSE_CONTRACT_PACKAGE_HASH_KEY: &str =
+    "market_offer_purse_contract_hash_wrapped";
 const MARKET_NAME: &str = "Galactic Market";
 const MARKET_CONTRACT_NAME: &str = "market";
 const MARKET_CONTRACT_HASH_KEY: &str = "market_contract_hash";
@@ -343,6 +346,7 @@ fn create_market_item(
     sender: AccountHash,
     recipient: Key,
     item_ids: Vec<TokenId>,
+    asking_prices: Vec<U512>,
 ) {
     let method: &str = "create_market_item";
     let source = DeploySource::ByHash {
@@ -353,7 +357,7 @@ fn create_market_item(
                 "recipient" => recipient,
                 "item_ids" => item_ids,
                 "item_nft_contract_addresses" => vec![ContractHash::from(test_context.cep47_contract_hash.into_hash().unwrap())],
-                "item_asking_prices" => vec![U256::from("2000000")],
+                "item_asking_prices" => asking_prices,
                 "item_token_ids" => vec![TokenId::zero()],
     };
     let mut deploy_builder = DeployItemBuilder::new()
@@ -380,19 +384,17 @@ fn process_market_sale(
     builder: &mut InMemoryWasmTestBuilder,
     test_context: &TestFixture,
     recipient: Key,
-    owner: Key,
     sender: AccountHash,
     item_id: TokenId,
+    amount: U512,
 ) {
-    let method: &str = "process_market_sale";
-    let source = DeploySource::ByHash {
-        hash: ContractHash::from(test_context.market_contract_hash.into_hash().unwrap()),
-        method: method.to_string(),
-    };
+    let session_code = PathBuf::from("market-offer-purse.wasm");
+    let source = DeploySource::Code(session_code);
     let args = runtime_args! {
-            "recipient" => recipient,
-            "owner" => owner,
-            "item_id" => item_id,
+        "recipient" => recipient,
+        "item_id" => item_id,
+        "amount" => amount,
+        "market_contract_hash" => ContractHash::from(test_context.market_contract_hash.into_hash().unwrap())
     };
     let mut deploy_builder = DeployItemBuilder::new()
         .with_empty_payment_bytes(runtime_args! {ARG_AMOUNT => *DEFAULT_PAYMENT})
@@ -607,6 +609,7 @@ fn should_process_valid_nft_sale() {
     // --------------- End Working --------------- //
 
     // --------------- Using contract to transfer --------------- //
+    let amount: U512 = 12345.into();
 
     create_market_item(
         &mut builder,
@@ -614,6 +617,7 @@ fn should_process_valid_nft_sale() {
         seller.account_hash,
         Key::Account(seller.account_hash),
         vec![TokenId::zero()],
+        vec![amount],
     );
 
     let market_function_hash = builder
@@ -651,21 +655,19 @@ fn should_process_valid_nft_sale() {
     );
     // println!("get_approved_result {:?}", get_approved_result);
     assert_eq!(get_approved_result.unwrap(), market_function_hash);
-
     process_market_sale(
         &mut builder,
         &test_context,
         Key::Account(buyer.account_hash),
-        Key::Account(seller.account_hash),
         buyer.account_hash,
         TokenId::zero(),
+        amount,
     );
+    // TODO check seller account balance
 
     // // Check nft new owner
     let owner_after = owner_of(&mut builder, &test_context, TokenId::zero());
-    // println!("owner_before {:?}", owner_before);
-    // println!("owner_after {:?}", owner_after);
-    assert_ne!(owner_before, owner_after);
+    assert_eq!(owner_after.unwrap(), Key::Account(buyer.account_hash));
 }
 
 #[ignore]

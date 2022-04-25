@@ -1,0 +1,15 @@
+[package]
+name = "market-offer-purse"
+version = "0.0.1"
+edition = "2018"
+
+[dependencies]
+casper-contract = "1.4.3"
+casper-types = "1.4.4"
+
+[[bin]]
+name = "market-offer-purse"
+path = "src/main.rs"
+bench = false
+doctest = false
+test = false

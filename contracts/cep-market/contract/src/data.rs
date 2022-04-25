@@ -1,7 +1,7 @@
 use alloc::string::{String, ToString};
 
 use casper_contract::{contract_api::runtime::get_call_stack, unwrap_or_revert::UnwrapOrRevert};
-use casper_types::{system::CallStackElement, ContractPackageHash, Key, U256};
+use casper_types::{system::CallStackElement, ContractPackageHash, Key, URef, U256, U512};
 
 use contract_utils::{get_key, key_and_value_to_str, key_to_str, set_key, Dict};
 
@@ -13,6 +13,7 @@ const NFT_CONTRACT_ADDRESSES: &str = "nft_contract_addresses";
 const ITEM_ASKING_PRICE_DATA: &str = "item_asking_prices";
 const ITEM_TOKEN_ID_DATA: &str = "item_token_ids";
 const ITEM_STATUS_DATA: &str = "item_statuses";
+const ITEM_PURSE_DATA: &str = "item_purses";
 const OWNERS_DICT: &str = "item_owners";
 
 const OWNED_ITEMS_BY_INDEX_DICT: &str = "owned_items_by_index";
@@ -94,16 +95,16 @@ impl ItemAskingPriceData {
         Dict::init(ITEM_ASKING_PRICE_DATA)
     }
 
-    pub fn get(&self, key: &TokenId) -> Option<U256> {
+    pub fn get(&self, key: &TokenId) -> Option<U512> {
         self.dict.get(&key.to_string())
     }
 
-    pub fn set(&self, key: &TokenId, value: U256) {
+    pub fn set(&self, key: &TokenId, value: U512) {
         self.dict.set(&key.to_string(), value);
     }
 
     pub fn remove(&self, key: &TokenId) {
-        self.dict.remove::<U256>(&key.to_string());
+        self.dict.remove::<U512>(&key.to_string());
     }
 }
 
@@ -162,27 +163,6 @@ impl ItemStatusData {
         self.dict.remove::<String>(&key.to_string());
     }
 }
-
-//TODO
-// pub struct ItemData {
-//     dict: Dict,
-// }
-// impl ItemData {
-//     pub fn instance() -> ItemData {
-//         ItemData {
-//             dict: Dict::instance(ITEMS_BY_INDEX_DICT),
-//         }
-//     }
-//     pub fn init() {
-//         Dict::init(ITEMS_BY_INDEX_DICT)
-//     }
-//     pub fn get(&self, key: &TokenId) -> Option<String> {
-//         self.dict.get(&key.to_string())
-//     }
-//     pub fn set(&self, key: &TokenId, value: String) {
-//         self.dict.set(&key.to_string(), value);
-//     }
-// }
 
 pub struct OwnedTokens {
     tokens_dict: Dict,

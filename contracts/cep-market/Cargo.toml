@@ -2,6 +2,7 @@
 
 members = [
     "contract",
+    "market-offer-purse",
     "tests"
 ]
 

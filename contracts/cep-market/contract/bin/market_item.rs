@@ -16,6 +16,7 @@ use casper_types::bytesrepr::ToBytes;
 use casper_types::{
     runtime_args, CLType, CLTyped, CLValue, ContractHash, ContractPackageHash, EntryPoint,
     EntryPointAccess, EntryPointType, EntryPoints, Group, Key, Parameter, RuntimeArgs, URef, U256,
+    U512,
 };
 
 use contract::data::{MARKET_NAME, META, SYMBOL};
@@ -136,7 +137,7 @@ fn create_market_item() {
     let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
     let item_nft_contract_addresses =
         runtime::get_named_arg::<Vec<NFTContractAddress>>("item_nft_contract_addresses");
-    let item_asking_prices = runtime::get_named_arg::<Vec<U256>>("item_asking_prices");
+    let item_asking_prices = runtime::get_named_arg::<Vec<U512>>("item_asking_prices");
     let item_token_ids = runtime::get_named_arg::<Vec<U256>>("item_token_ids");
     MarketItem::default()
         .create_market_item(
@@ -151,11 +152,11 @@ fn create_market_item() {
 
 #[no_mangle]
 fn process_market_sale() {
-    let owner = runtime::get_named_arg::<Key>("owner");
     let recipient = runtime::get_named_arg::<Key>("recipient");
     let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let market_offer_purse = runtime::get_named_arg::<URef>("market_offer_purse");
     MarketItem::default()
-        .process_market_sale(owner, recipient, item_id)
+        .process_market_sale(recipient, item_id, market_offer_purse)
         .unwrap_or_revert();
 }
 
@@ -276,7 +277,7 @@ fn get_entry_points() -> EntryPoints {
     entry_points.add_entry_point(EntryPoint::new(
         "item_asking_price",
         vec![Parameter::new("item_id", TokenId::cl_type())],
-        U256::cl_type(),
+        U512::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
@@ -316,9 +317,9 @@ fn get_entry_points() -> EntryPoints {
     entry_points.add_entry_point(EntryPoint::new(
         "process_market_sale",
         vec![
-            Parameter::new("owner", Key::cl_type()),
             Parameter::new("recipient", Key::cl_type()),
             Parameter::new("item_id", TokenId::cl_type()),
+            Parameter::new("market_offer_purse", URef::cl_type()),
         ],
         <()>::cl_type(),
         EntryPointAccess::Public,

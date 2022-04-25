@@ -9,7 +9,7 @@ use casper_engine_test_support::WasmTestBuilder;
 use casper_execution_engine::storage::global_state::in_memory::InMemoryGlobalState;
 use casper_types::{
     account::AccountHash, bytesrepr::ToBytes, runtime_args, CLTyped, ContractHash, Key,
-    RuntimeArgs, U256,
+    RuntimeArgs, U256, U512,
 };
 
 use test_env::{TestContract, TestEnv};
@@ -24,6 +24,7 @@ const NFT_CONTRACT_ADDRESSES: &str = "nft_contract_addresses";
 const ITEM_ASKING_PRICE_DATA: &str = "item_asking_prices";
 const ITEM_TOKEN_ID_DATA: &str = "item_token_ids";
 const ITEM_STATUS_DATA: &str = "item_statuses";
+const ITEM_PURSE_DATA: &str = "item_purses";
 const OWNERS_DICT: &str = "item_owners";
 const OWNED_ITEMS_BY_INDEX_DICT: &str = "owned_items_by_index";
 const OWNED_INDEXES_BY_ITEM_DICT: &str = "owned_indexes_by_item";
@@ -75,7 +76,7 @@ impl MarketContractInstance {
         recipient: T,
         item_id: TokenId,
         item_nft_contract_address: NFTContractAddress,
-        item_asking_price: U256,
+        item_asking_price: U512,
         item_token_id: U256,
     ) -> WasmTestBuilder<InMemoryGlobalState> {
         self.0.call_contract(
@@ -163,7 +164,7 @@ impl MarketContractInstance {
             .query_dictionary(NFT_CONTRACT_ADDRESSES, item_id.to_string())
     }
 
-    pub fn item_asking_price(&self, item_id: TokenId) -> Option<U256> {
+    pub fn item_asking_price(&self, item_id: TokenId) -> Option<U512> {
         self.0
             .query_dictionary(ITEM_ASKING_PRICE_DATA, item_id.to_string())
     }
@@ -177,12 +178,6 @@ impl MarketContractInstance {
         self.0
             .query_dictionary(ITEM_STATUS_DATA, item_id.to_string())
     }
-
-    //TODO
-    // pub fn get_market_items(&self) -> Option<String> {
-    //     // self.0.query_named_key("items_by_index".to_string())
-    //     self.0.query_dictionary("items_by_index", TokenId::zero().to_string())
-    // }
 
     pub fn name(&self) -> String {
         self.0.query_named_key(String::from(MARKET_NAME_KEY))

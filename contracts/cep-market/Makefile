@@ -2,8 +2,9 @@ prepare:
 	rustup target add wasm32-unknown-unknown
 
 build-contract:
-	cargo build --release -p contract --target wasm32-unknown-unknown
+	cargo build --release -p contract -p market-offer-purse --target wasm32-unknown-unknown
 	wasm-strip target/wasm32-unknown-unknown/release/contract.wasm 2>/dev/null | true
+	wasm-strip target/wasm32-unknown-unknown/release/market-offer-purse.wasm 2>/dev/null | true
 
 test-only:
 	cargo test -p tests -- --nocapture
