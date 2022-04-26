@@ -38,8 +38,6 @@ impl MarketItem {
     }
 }
 
-const KEY_NAME: &str = "my-key-name";
-const RUNTIME_ARG_NAME: &str = "message";
 
 #[no_mangle]
 fn constructor() {
