@@ -72,11 +72,12 @@ Using Next.js for marketplace users to interact with. A rust Market contract to 
 
 ```
 cd casper-contracts-js-client
-cp ..env.cep47.example .env.cep47
+cp ..env.example .env
 npm i
 
 # Take note of Contract Hash and Contract Package Hash for adding to server .env.local
 npm run e2e:cep47:install
+npm run e2e:market:install
 
 Optional - for some mock nfts:
 e2e:cep47:fixture

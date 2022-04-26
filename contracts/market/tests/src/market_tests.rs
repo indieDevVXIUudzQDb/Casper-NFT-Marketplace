@@ -254,7 +254,7 @@ fn setup() -> (InMemoryWasmTestBuilder, TestFixture, Vec<TestAccount>) {
             account_address,
             MARKET_WASM,
             runtime_args! {
-                MARKET_NAME_KEY => MARKET_NAME,
+                "market_name" => MARKET_NAME,
                 "market_symbol" => SYMBOL,
                 "market_meta" => meta::contract_meta(),
                 "contract_name" => MARKET_CONTRACT_NAME,
