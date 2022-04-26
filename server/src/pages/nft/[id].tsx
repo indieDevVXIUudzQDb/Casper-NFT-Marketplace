@@ -24,6 +24,11 @@ import {
 } from "../../utils/cep47_utils";
 import { Prism } from "@mantine/prism";
 import { triggerCreateMarketItemDeploy } from "../../utils/marketUtils";
+import { SellModal } from "../../components/SellModal";
+
+export interface RetrievedNFTDetailed extends RetrievedNFT {
+  isApproved: boolean;
+}
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
@@ -31,6 +36,7 @@ export default function DashboardCyber() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [locked, setLocked] = useState(false);
   const [item, setItem] = useState<RetrievedNFT | null>();
+  const [opened, setOpened] = useState(false);
 
   const router = useRouter();
   const { id } = router.query;
@@ -50,17 +56,18 @@ export default function DashboardCyber() {
         toastConfig
       );
       if (result) {
+        console.log(result);
         setItem(result);
       }
       setRetrieving(false);
     }
   };
 
-  const sellNFT = async () => {
+  const sellNFT = async (item: RetrievedNFTDetailed, amount: string) => {
     if (!retrieving && item) {
       setRetrieving(true);
       const result = await toast.promise(
-        triggerCreateMarketItemDeploy([item.id]),
+        triggerCreateMarketItemDeploy(item, amount),
         {
           loading: "Listing NFT on Market",
           success: "Listed NFT",
@@ -156,6 +163,13 @@ export default function DashboardCyber() {
     });
   }, []);
 
+  const onTransferClick = () => {
+    //  TODO approve with cep47 contract
+  };
+  const onSellClick = (amount: string) => {
+    sellNFT(item, amount);
+  };
+
   return (
     <AppShell
       // padding="md"
@@ -179,6 +193,12 @@ export default function DashboardCyber() {
       }
     >
       <div>
+        <SellModal
+          opened={opened}
+          setOpened={setOpened}
+          onTransferClick={onTransferClick}
+          onSellClick={onSellClick}
+        />
         <Toaster />
       </div>
       {item ? (
@@ -242,7 +262,7 @@ export default function DashboardCyber() {
             </Group>
             {item.isOwner ? (
               <Group position={"apart"} grow>
-                <Button onClick={() => sellNFT(item)}>Sell</Button>
+                <Button onClick={() => setOpened(true)}>Sell</Button>
                 <Button color={"red"}>Burn</Button>
               </Group>
             ) : (

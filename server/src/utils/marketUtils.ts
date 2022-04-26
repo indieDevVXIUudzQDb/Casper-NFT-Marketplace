@@ -1,6 +1,7 @@
 import { CasperClient, CLPublicKey, DeployUtil } from "casper-js-sdk";
 import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
 import { MARKETClient } from "./marketClient";
+import { RetrievedNFTDetailed } from "../pages/nft/[id]";
 
 export const NODE_ADDRESS =
   process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS ||
@@ -63,7 +64,8 @@ export const initClient = async () => {
 // };
 
 export const triggerCreateMarketItemDeploy = async (
-  ids: string[]
+  item: RetrievedNFTDetailed,
+  amount: string
 ): Promise<unknown> => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -78,12 +80,14 @@ export const triggerCreateMarketItemDeploy = async (
         // const nftContractAddresses = [].fill(nftContractAddress, 0, ids.length);
         const nftContractAddresses = [nftContractAddress.slice(5)];
         console.log(nftContractAddress, nftContractAddresses);
+        //TODO need to get next item id
+        const marketItemId = 0;
         const deployItem = marketClient.createMarketItem(
           activePublicKey,
-          ids,
+          [`${marketItemId}`],
           nftContractAddresses,
-          ["5000000"],
-          ["0"],
+          [amount],
+          [item.id || ""],
           MINT_ONE_PAYMENT_AMOUNT!,
           activePublicKey
         );
@@ -104,7 +108,6 @@ export const triggerCreateMarketItemDeploy = async (
             deployObject.val as Deploy
           );
           console.log(`...... Create Market Item deployed: ${deployItemHash}`);
-          console.log({ ids });
           // eslint-disable-next-line consistent-return
           resolve(deployItemHash);
         }
