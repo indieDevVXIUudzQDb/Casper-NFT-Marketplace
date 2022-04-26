@@ -12,6 +12,7 @@
     "test": "npm run dist && lerna run test --stream",
     "dist": "lerna run dist --include-dependencies",
     "publish:ci": "lerna publish from-package --yes --no-verify-access",
+    "e2e:market:install": "ts-node ./e2e/market/install.ts",
     "e2e:cep47:install": "ts-node ./e2e/cep47/install.ts",
     "e2e:cep47:usage": "ts-node ./e2e/cep47/usage.ts",
     "e2e:cep47:fixture": "ts-node ./e2e/cep47/fixture.ts",

@@ -1,14 +1,9 @@
-import { config } from "dotenv";
-import { CEP47Client } from "casper-cep47-js-client";
-import {
-  getAccountInfo,
-  getAccountNamedKeyValue,
-  getDeploy,
-  sleep,
-} from "../utils";
+import {config} from "dotenv";
+import {CEP47Client} from "casper-cep47-js-client";
+import {getAccountInfo, getAccountNamedKeyValue, getDeploy, sleep,} from "../utils";
 
-import { Keys } from "casper-js-sdk";
-import { mockData } from "../../mockData";
+import {Keys} from "casper-js-sdk";
+import {mockData} from "../../mockData";
 
 config({ path: ".env.cep47" });
 
@@ -63,38 +58,12 @@ const loadFixture = async () => {
     `contract_package_hash`
   );
 
-  console.log(`... Contract Hash: ${contractHash}`);
-  console.log(`... Contract Package Hash: ${contractPackageHash}`);
+  console.log(`... CEP47 Contract Hash: ${contractHash}`);
+  console.log(`... CEP47 Contract Package Hash: ${contractPackageHash}`);
 
   await cep47.setContractHash(contractHash, contractPackageHash);
 
   await sleep(5 * 1000);
-  //
-  // const es = new EventStream(EVENT_STREAM_ADDRESS!);
-  //
-  // es.subscribe(EventName.DeployProcessed, (event) => {
-  //   const parsedEvents = CEP47EventParser(
-  //     {
-  //       contractPackageHash,
-  //       eventNames: [
-  //         CEP47Events.MintOne,
-  //         CEP47Events.TransferToken,
-  //         CEP47Events.BurnOne,
-  //         CEP47Events.MetadataUpdate,
-  //         CEP47Events.ApproveToken,
-  //       ],
-  //     },
-  //     event
-  //   );
-  //
-  //   if (parsedEvents && parsedEvents.success) {
-  //     console.log("*** EVENT ***");
-  //     console.log(parsedEvents.data);
-  //     console.log("*** ***");
-  //   }
-  // });
-  //
-  // es.start();
 
   const name = await cep47.name();
   console.log(`... Contract name: ${name}`);
