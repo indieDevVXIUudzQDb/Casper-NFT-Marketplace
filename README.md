@@ -28,29 +28,41 @@ Using Next.js for marketplace users to interact with. A rust Market contract to 
 
 ## TODO
 
-### Front end
+### Server - Nextjs
 
-~~- Deploy front end~~
 ~~- Implement minting page~~
-- Link front end with cep47 contract(Some functionality still wip)
-- Link front end with market contract
+~~- Implement detail for buyer~~
+~~- Implement detail for seller~~
+~~- Implement list all nfts~~
+~~- Implement list owned nfts~~
+~~- Link front end with cep47 contract - Retrieve NFT info~~
+~~- Link front end with cep47 contract - Mint NFT~~
+- Link front end with cep47 contract - Burn NFT
+- Link front end with market contract - List NFT for sale
+- Link front end with market contract - Sell NFT
+- Link front end with market contract - Buy NFT
+- Link front end with market contract - Withdraw funds
 
-### CEP47 compatible market contract
+### Market contract - CEP47 compatible
 
 ~~- Functionality - Changing ownership of nft~~
-- Functionality - Creating market item for sale
-- Functionality - Processing sale of market item
+~~- Functionality - Creating market item for sale~~
+~~- Functionality - Processing sale of market item~~
+~~- Functionality - Funds from sale of market item transferred to seller~~
+~~- Functionality - Adding payments for buy/sell~~
+- Functionality - Cancel sale of market item
 - Security - Ensuring no loopholes in logic
 - Error Handling - Provide correct errors within Contract
 - Tests around securing transactions
-- Functionality - Adding payments
-- Functionality - Add quantity to nft
 
 ### Wishlist
 
 - Create collections
+- Market commission
+- Seller commission
 - Upload meta to online buckets instead of asking for url in mint page
 - Transaction history on NFT detail page
+- Functionality - Add quantity to nft
 - Code improvement - Change market item to struct
 
 
@@ -60,11 +72,12 @@ Using Next.js for marketplace users to interact with. A rust Market contract to 
 
 ```
 cd casper-contracts-js-client
-cp ..env.cep47.example .env.cep47
+cp ..env.example .env
 npm i
 
 # Take note of Contract Hash and Contract Package Hash for adding to server .env.local
 npm run e2e:cep47:install
+npm run e2e:market:install
 
 Optional - for some mock nfts:
 e2e:cep47:fixture

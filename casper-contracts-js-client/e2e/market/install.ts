@@ -1,9 +1,9 @@
 import {config} from "dotenv";
-import {CEP47Client} from "casper-cep47-js-client";
 import {getAccountInfo, getAccountNamedKeyValue, getDeploy, parseTokenMeta,} from "../utils";
 import * as fs from "fs";
 
 import {Keys} from "casper-js-sdk";
+import {MARKETClient} from "../../packages/market-client/src";
 
 config({ path: ".env" });
 
@@ -11,10 +11,10 @@ const {
   NODE_ADDRESS,
   EVENT_STREAM_ADDRESS,
   CHAIN_NAME,
-  WASM_PATH,
+  MARKET_WASM_PATH,
   MASTER_KEY_PAIR_PATH,
-  TOKEN_NAME,
-  CONTRACT_NAME,
+  MARKET_NAME,
+  MARKET_CONTRACT_NAME,
   TOKEN_SYMBOL,
   CONTRACT_HASH,
   INSTALL_PAYMENT_AMOUNT,
@@ -40,15 +40,15 @@ const KEYS = Keys.Ed25519.parseKeyFiles(
 );
 
 const test = async () => {
-  const cep47 = new CEP47Client(NODE_ADDRESS!, CHAIN_NAME!);
-
-  const installDeployHash = await cep47.install(
-    getBinary(WASM_PATH!),
+  //TODO change to generic client
+  const marketClient = new MARKETClient(NODE_ADDRESS!, CHAIN_NAME!);
+  const installDeployHash = await marketClient.install(
+    getBinary(MARKET_WASM_PATH!),
     {
-      name: TOKEN_NAME!,
-      contractName: CONTRACT_NAME!,
-      symbol: TOKEN_SYMBOL!,
-      meta: TOKEN_META,
+      marketName: MARKET_NAME!,
+      contractName: MARKET_CONTRACT_NAME!,
+      marketSymbol: TOKEN_SYMBOL!,
+      marketMeta: TOKEN_META,
     },
     INSTALL_PAYMENT_AMOUNT!,
     KEYS.publicKey,
@@ -57,11 +57,11 @@ const test = async () => {
 
   const hash = await installDeployHash.send(NODE_ADDRESS!);
 
-  console.log(`... CEP47 Contract installation deployHash: ${hash}`);
+  console.log(`... Market Contract installation deployHash: ${hash}`);
 
   await getDeploy(NODE_ADDRESS!, hash);
 
-  console.log(`... CEP47 Contract installed successfully.`);
+  console.log(`... Market Contract installed successfully.`);
 
   let accountInfo = await getAccountInfo(NODE_ADDRESS!, KEYS.publicKey);
 
@@ -70,16 +70,16 @@ const test = async () => {
 
   const contractHash = await getAccountNamedKeyValue(
     accountInfo,
-    `${CONTRACT_NAME!}_contract_hash`
+    `${MARKET_CONTRACT_NAME!}_contract_hash`
   );
 
-  console.log(`... CEP47 Contract Hash: ${contractHash}`);
+  console.log(`... Market Contract Hash: ${contractHash}`);
 
   const contractPackageHash = await getAccountNamedKeyValue(
     accountInfo,
     `contract_package_hash`
   );
-  console.log(`... CEP47 Contract Package Hash: ${contractPackageHash}`);
+  console.log(`... Market Contract Package Hash: ${contractPackageHash}`);
 };
 
 test();
