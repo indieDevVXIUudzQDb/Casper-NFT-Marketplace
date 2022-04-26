@@ -15,9 +15,9 @@ import {
   EventStream,
 } from "casper-js-sdk";
 import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
+import { StoredValue } from "casper-js-sdk/dist/lib/StoredValue";
 
 import { getDeploy } from "./utils";
-import { StoredValue } from "casper-js-sdk/dist/lib/StoredValue";
 
 export const NODE_ADDRESS =
   process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS ||
@@ -296,6 +296,7 @@ export const getNFT = (id: number): Promise<RetrievedNFT> => {
       console.log(e);
     }
     try {
+      // @ts-ignore
       const tokenMeta = await cep47.getTokenMeta(`${id}`);
 
       const nft = {

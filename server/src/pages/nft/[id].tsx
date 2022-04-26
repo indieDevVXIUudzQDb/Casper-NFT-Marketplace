@@ -23,6 +23,7 @@ import {
   subscribeToContractEvents,
 } from "../../utils/cep47_utils";
 import { Prism } from "@mantine/prism";
+import { triggerCreateMarketItemDeploy } from "../../utils/marketUtils";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
@@ -50,6 +51,25 @@ export default function DashboardCyber() {
       );
       if (result) {
         setItem(result);
+      }
+      setRetrieving(false);
+    }
+  };
+
+  const sellNFT = async () => {
+    if (!retrieving && item) {
+      setRetrieving(true);
+      const result = await toast.promise(
+        triggerCreateMarketItemDeploy([item.id]),
+        {
+          loading: "Listing NFT on Market",
+          success: "Listed NFT",
+          error: "Error listing NFT",
+        },
+        toastConfig
+      );
+      if (result) {
+        console.log(result);
       }
       setRetrieving(false);
     }
@@ -222,7 +242,7 @@ export default function DashboardCyber() {
             </Group>
             {item.isOwner ? (
               <Group position={"apart"} grow>
-                <Button>Sell</Button>
+                <Button onClick={() => sellNFT(item)}>Sell</Button>
                 <Button color={"red"}>Burn</Button>
               </Group>
             ) : (

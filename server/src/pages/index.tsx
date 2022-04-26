@@ -43,6 +43,7 @@ export default function DashboardCyber() {
       try {
         setConnected(await Signer.isConnected());
         retrieveNFTS();
+        // retrieveMarketName();
       } catch (err) {
         console.error(err);
       }

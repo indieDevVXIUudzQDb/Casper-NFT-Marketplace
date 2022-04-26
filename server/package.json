@@ -27,6 +27,7 @@
     "@typescript-eslint/parser": "5.10.1",
     "autoprefixer": "10.4.2",
     "casper-cep47-js-client": "^1.0.1",
+    "casper-js-client-helper": "^1.0.1",
     "casper-js-sdk": "^2.9.1",
     "classnames": "2.3.1",
     "cookies-next": "2.0.4",
