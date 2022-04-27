@@ -7,28 +7,31 @@ use casper_types::{ApiError, Key, runtime_args, RuntimeArgs, U256, U512, URef};
 use contract_utils::{ContractContext, ContractStorage};
 use core::convert::TryInto;
 
-use crate::{
-    data::{self},
-    event::MarketEvent,
-    ITEM_STATUS_AVAILABLE, ITEM_STATUS_SOLD, Meta, NFTContractAddress, TokenId,
-};
-use crate::data::{
-    Allowances, ItemAskingPriceData, ItemStatusData, ItemTokenIdData, NFTContractAddresses,
-    OwnedTokens, Owners,
-};
+use crate::{data::{self}, event::MarketEvent, ITEM_STATUS_AVAILABLE, ITEM_STATUS_SOLD, Meta, NFTContractAddress, MarketItemId, TokenId};
+use crate::data::{Allowances, ItemAskingPriceData, ItemStatusData, ItemTokenIdData, NFTContractAddresses, NFTMarketItemIds, OwnedTokens, Owners};
 
 #[repr(u16)]
 pub enum Error {
     PermissionDenied = 1,
     WrongArguments = 2,
-    TokenIdAlreadyExists = 3,
-    TokenIdDoesntExist = 4,
+    MarketItemIdAlreadyExists = 3,
+    MarketItemIdDoesntExist = 4,
     MarketItemNotAvailable = 5,
     BalanceNotFound = 6,
     BalanceMismatch,
 }
+
 const METHOD_BALANCE: &str = "balance";
 const ARG_PURSE: &str = "purse";
+
+macro_rules! zip {
+    ($x: expr) => ($x);
+    ($x: expr, $($y: expr), +) => (
+        $x.iter().zip(
+            zip!($($y), +))
+    )
+}
+
 
 impl From<Error> for ApiError {
     fn from(error: Error) -> ApiError {
@@ -45,6 +48,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Owners::init();
         OwnedTokens::init();
         NFTContractAddresses::init();
+        NFTMarketItemIds::init();
         ItemAskingPriceData::init();
         ItemStatusData::init();
         ItemTokenIdData::init();
@@ -75,21 +79,26 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         OwnedTokens::instance().get_balances(&owner)
     }
 
-    fn owner_of(&self, item_id: TokenId) -> Option<Key> {
+    fn owner_of(&self, item_id: MarketItemId) -> Option<Key> {
         Owners::instance().get(&item_id)
     }
 
-    fn item_nft_contract_address(&self, item_id: TokenId) -> Option<NFTContractAddress> {
+    fn item_nft_contract_address(&self, item_id: MarketItemId) -> Option<NFTContractAddress> {
         NFTContractAddresses::instance().get(&item_id)
+    }
+
+    fn token_market_status(&self, item_token_id: U256) -> Option<String> {
+        let market_item_ids = NFTMarketItemIds::instance().get(item_token_id).unwrap();
+        self.item_status(*market_item_ids.last().unwrap())
     }
 
     fn set_item_nft_contract_address(
         &mut self,
-        item_id: TokenId,
+        item_id: MarketItemId,
         nft_contract_hash: NFTContractAddress,
     ) -> Result<(), Error> {
         if self.owner_of(item_id).is_none() {
-            return Err(Error::TokenIdDoesntExist);
+            return Err(Error::MarketItemIdDoesntExist);
         };
 
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
@@ -98,19 +107,19 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Ok(())
     }
 
-    fn item_asking_price(&self, item_id: TokenId) -> Option<U512> {
+    fn item_asking_price(&self, item_id: MarketItemId) -> Option<U512> {
         ItemAskingPriceData::instance().get(&item_id)
     }
 
-    fn item_token_id(&self, item_id: TokenId) -> Option<U256> {
+    fn item_token_id(&self, item_id: MarketItemId) -> Option<U256> {
         ItemTokenIdData::instance().get(&item_id)
     }
 
-    fn item_status(&self, item_id: TokenId) -> Option<String> {
+    fn item_status(&self, item_id: MarketItemId) -> Option<String> {
         ItemStatusData::instance().get(&item_id)
     }
 
-    fn set_item_status(&mut self, item_id: TokenId, value: String) -> Result<(), Error> {
+    fn set_item_status(&mut self, item_id: MarketItemId, value: String) -> Result<(), Error> {
         if self.owner_of(item_id).is_none() {
             return Err(Error::PermissionDenied);
         };
@@ -121,11 +130,11 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
         Ok(())
     }
 
-    fn get_item_by_index(&self, owner: Key, index: U256) -> Option<TokenId> {
+    fn get_item_by_index(&self, owner: Key, index: U256) -> Option<MarketItemId> {
         OwnedTokens::instance().get_item_by_index(&owner, &index)
     }
 
-    fn validate_item_ids(&self, item_ids: Vec<TokenId>) -> bool {
+    fn validate_item_ids(&self, item_ids: Vec<MarketItemId>) -> bool {
         for item_id in &item_ids {
             if self.owner_of(*item_id).is_some() {
                 return false;
@@ -137,18 +146,24 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
     fn create_market_item(
         &mut self,
         recipient: Key,
-        item_ids: Vec<TokenId>,
+        item_ids: Vec<MarketItemId>,
         nft_contract_addresses: Vec<NFTContractAddress>,
         item_asking_prices: Vec<U512>,
         item_token_ids: Vec<U256>,
-    ) -> Result<Vec<TokenId>, Error> {
+    ) -> Result<Vec<MarketItemId>, Error> {
         if item_ids.len() != nft_contract_addresses.len() {
+            return Err(Error::WrongArguments);
+        };
+        if item_ids.len() != item_asking_prices.len() {
+            return Err(Error::WrongArguments);
+        };
+        if item_ids.len() != item_token_ids.len() {
             return Err(Error::WrongArguments);
         };
 
         for item_id in &item_ids {
             if self.owner_of(*item_id).is_some() {
-                return Err(Error::TokenIdAlreadyExists);
+                return Err(Error::MarketItemIdAlreadyExists);
             }
         }
         // TODO check is owner
@@ -157,24 +172,24 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
 
         let owners_dict = Owners::instance();
         let owned_tokens_dict = OwnedTokens::instance();
+        let nft_market_item_ids_dict = NFTMarketItemIds::instance();
         let nft_contract_addresses_dict = NFTContractAddresses::instance();
         let item_asking_prices_dict = ItemAskingPriceData::instance();
         let item_token_ids_dict = ItemTokenIdData::instance();
         let item_status_dict = ItemStatusData::instance();
 
-        for (item_id, meta) in item_ids.iter().zip(&nft_contract_addresses) {
-            nft_contract_addresses_dict.set(item_id, meta.clone());
+        let zipped = zip!(&item_ids, &nft_contract_addresses, &item_token_ids);
+        for (item_id, (nft_contract_address, item_token_id)) in zipped {
+            nft_contract_addresses_dict.set(item_id, nft_contract_address.clone());
             owners_dict.set(item_id, recipient);
             owned_tokens_dict.set_token(&recipient, item_id);
+            item_status_dict.set(item_id, String::from(ITEM_STATUS_AVAILABLE));
+            item_token_ids_dict.set(item_id, *item_token_id);
+            nft_market_item_ids_dict.set(item_token_id, *item_id);
         }
 
         for (item_id, item_asking_price) in item_ids.iter().zip(item_asking_prices) {
             item_asking_prices_dict.set(item_id, item_asking_price);
-            item_status_dict.set(item_id, String::from(ITEM_STATUS_AVAILABLE));
-        }
-
-        for (item_id, item_token_id) in item_ids.iter().zip(&item_token_ids) {
-            item_token_ids_dict.set(item_id, *item_token_id);
         }
 
         let created_items_count: U256 = From::<u64>::from(item_ids.len().try_into().unwrap());
@@ -193,7 +208,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
     fn process_market_sale(
         &mut self,
         recipient: Key,
-        item_id: TokenId,
+        item_id: MarketItemId,
         market_offer_purse: URef,
     ) -> Result<(), Error> {
         // Check item status available
@@ -246,7 +261,7 @@ pub trait MarketContract<Storage: ContractStorage>: ContractContext<Storage> {
             asking_price,
             None,
         )
-        .unwrap_or_revert();
+            .unwrap_or_revert();
 
         self.set_item_status(item_id, ITEM_STATUS_SOLD.to_string())
             .unwrap_or_revert();
