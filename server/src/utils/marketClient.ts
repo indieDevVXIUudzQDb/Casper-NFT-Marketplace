@@ -11,6 +11,7 @@ import {
   RuntimeArgs,
 } from "casper-js-sdk";
 import { contractHashToByteArray } from "./utils";
+import { NFT } from "./cep47_utils";
 
 const { Contract, toCLMap } = Contracts;
 
@@ -84,7 +85,11 @@ export const MARKETEventParser = (
 //   return hex;
 // };
 
-export class MARKETClient {
+export interface MarketItem extends NFT {
+  isApproved: boolean;
+}
+
+export class MarketClient {
   casperClient: CasperClient;
 
   contractClient: Contracts.Contract;

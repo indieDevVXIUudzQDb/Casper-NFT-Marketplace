@@ -1,31 +1,27 @@
 import { CasperClient, CLPublicKey, DeployUtil } from "casper-js-sdk";
 import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
-import { MARKETClient } from "./marketClient";
-import { RetrievedNFTDetailed } from "../pages/nft/[id]";
+
+import { NFT } from "./cep47_utils";
+import { MarketClient, MarketItem } from "./marketClient";
 
 export const NODE_ADDRESS =
   process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS ||
   "http://localhost:11100/http://mynctl:11101/rpc";
 export const EVENT_STREAM_ADDRESS =
-  process.env.NEXT_PUBLIC ||
+  process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS ||
   "http://localhost:11100/http://mynctl:18101/events/main";
-export const CHAIN_NAME = process.env.NEXT_PUBLIC || "casper-net-1";
-export const MINT_ONE_PAYMENT_AMOUNT = process.env.NEXT_PUBLIC || "2000000000";
+export const CHAIN_NAME =
+  process.env.NEXT_PUBLIC_CASPER_CHAIN_NAME || "casper-net-1";
+export const MINT_ONE_PAYMENT_AMOUNT =
+  process.env.NEXT_PUBLIC_CASPER_MINT_ONE_PAYMENT_AMOUNT || "2000000000";
 
-// TODO make following dynamic
-export const CONTRACT_NAME = "doggy_contract";
-export const CONTRACT_HOLDER_ADDRESS =
-  "0146c64d0506c486f2b19f9cf73479fba550f33227b6ec1c12e58b437d2680e96d";
 // Create Casper client and service to interact with Casper node.
-// const casperUtils = new CasperServiceByJsonRPC(NODE_ADDRESS);
 const casperClient = new CasperClient(NODE_ADDRESS);
 
 export const initClient = async () => {
   let marketClient;
-  let contractPublicKey;
   try {
-    contractPublicKey = CLPublicKey.fromHex(CONTRACT_HOLDER_ADDRESS);
-    marketClient = new MARKETClient(NODE_ADDRESS!, CHAIN_NAME!);
+    marketClient = new MarketClient(NODE_ADDRESS!, CHAIN_NAME!);
     const contractHash = process.env.NEXT_PUBLIC_MARKET_CONTRACT_HASH;
     const contractPackageHash =
       process.env.NEXT_PUBLIC_MARKET_CONTRACT_PACKAGE_HASH;
@@ -36,37 +32,14 @@ export const initClient = async () => {
   }
   return {
     marketClient,
-    contractPublicKey,
   };
 };
 
-// const getDeployResult = (deployHash: string) => {
-//   // eslint-disable-next-line no-async-promise-executor
-//   return new Promise(async (resolve, reject) => {
-//     const timeout = setTimeout(reject, 10000);
-//     try {
-//       // @ts-ignore
-//       const { cep47 } = await initClient();
-//       if (!cep47) reject();
-//
-//       await getDeploy(
-//         process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS!!,
-//         deployHash
-//       );
-//       console.log("...... Deployed successfully");
-//       clearTimeout(timeout);
-//       resolve(deployHash);
-//     } catch (e) {
-//       console.log(e);
-//       reject();
-//     }
-//   });
-// };
-
 export const triggerCreateMarketItemDeploy = async (
-  item: RetrievedNFTDetailed,
+  item: MarketItem,
   amount: string
 ): Promise<unknown> => {
+  // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
       // @ts-ignore
@@ -80,7 +53,7 @@ export const triggerCreateMarketItemDeploy = async (
         // const nftContractAddresses = [].fill(nftContractAddress, 0, ids.length);
         const nftContractAddresses = [nftContractAddress.slice(5)];
         console.log(nftContractAddress, nftContractAddresses);
-        //TODO need to get next item id
+        // TODO need to get next item id
         const marketItemId = 0;
         const deployItem = marketClient.createMarketItem(
           activePublicKey,
@@ -141,6 +114,35 @@ export function retrieveMarketName() {
       // @ts-ignore
       const name = await marketClient.name();
       clearTimeout(timeout);
+
+      resolve(name);
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+  });
+}
+
+export function getMarketItem(_item: NFT) {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    // const timeout = setTimeout(reject, 10000);
+    let marketClient;
+    try {
+      const { marketClient: client } = await initClient();
+      marketClient = client;
+      // eslint-disable-next-line no-plusplus
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+    if (!marketClient) reject();
+
+    try {
+      // @ts-ignore
+      const name = await marketClient.name();
+      console.log({ name });
+      // clearTimeout(timeout);
 
       resolve(name);
     } catch (e) {

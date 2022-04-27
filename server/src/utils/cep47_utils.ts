@@ -255,13 +255,13 @@ export const getDeployResult = (deployHash: string) => {
   });
 };
 
-export interface RetrievedNFT {
+export interface NFT {
   id: string;
   meta: Map<string, string>;
   isOwner: boolean;
 }
 
-export const getNFT = (id: number): Promise<RetrievedNFT> => {
+export const getNFT = (id: number): Promise<NFT> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     const timeout = setTimeout(reject, 10000);
@@ -303,6 +303,7 @@ export const getNFT = (id: number): Promise<RetrievedNFT> => {
         meta: tokenMeta,
         isOwner,
         id: id.toString(),
+        isApproved: false,
       };
       clearTimeout(timeout);
       resolve(nft);
@@ -313,7 +314,7 @@ export const getNFT = (id: number): Promise<RetrievedNFT> => {
   });
 };
 
-export const getOwnedNFTS = (): Promise<RetrievedNFT[]> => {
+export const getOwnedNFTS = (): Promise<NFT[]> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     const timeout = setTimeout(reject, 10000);
@@ -338,7 +339,7 @@ export const getOwnedNFTS = (): Promise<RetrievedNFT[]> => {
     }
 
     if (!cep47) return;
-    const nfts: RetrievedNFT[] = [];
+    const nfts: NFT[] = [];
 
     // eslint-disable-next-line no-plusplus
     for (let i = 0; i < totalSupply; i++) {
@@ -355,7 +356,7 @@ export const getOwnedNFTS = (): Promise<RetrievedNFT[]> => {
       try {
         // eslint-disable-next-line no-await-in-loop
         const tokenMeta = await cep47.getTokenMeta(`${i}`);
-        const nft: RetrievedNFT = {
+        const nft: NFT = {
           meta: tokenMeta,
           id: i.toString(),
           isOwner,

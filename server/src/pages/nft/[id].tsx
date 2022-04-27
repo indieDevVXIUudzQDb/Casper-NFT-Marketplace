@@ -10,38 +10,62 @@ import {
   SimpleGrid,
   Title,
 } from "@mantine/core";
+import { Prism } from "@mantine/prism";
 import { EventStream, Signer } from "casper-js-sdk";
 import { useRouter } from "next/router";
 import { toast, Toaster } from "react-hot-toast";
+
 import { CustomHeader } from "../../components/CustomHeader";
 import { CustomNavbar } from "../../components/CustomNavbar";
+import { SellModal } from "../../components/SellModal";
 import styles from "../../styles/dashboard-cyber.module.scss";
 import { toastConfig } from "../../toastConfig";
 import {
   getNFT,
-  RetrievedNFT,
+  NFT,
   subscribeToContractEvents,
 } from "../../utils/cep47_utils";
-import { Prism } from "@mantine/prism";
-import { triggerCreateMarketItemDeploy } from "../../utils/marketUtils";
-import { SellModal } from "../../components/SellModal";
-
-export interface RetrievedNFTDetailed extends RetrievedNFT {
-  isApproved: boolean;
-}
+import { MarketItem } from "../../utils/marketClient";
+import {
+  getMarketItem,
+  triggerCreateMarketItemDeploy,
+} from "../../utils/marketUtils";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
   const [connected, setConnected] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [locked, setLocked] = useState(false);
-  const [item, setItem] = useState<RetrievedNFT | null>();
+  const [item, setItem] = useState<NFT | null>();
+  const [marketItem, setMarketItem] = useState<MarketItem | null>();
   const [opened, setOpened] = useState(false);
 
   const router = useRouter();
   const { id } = router.query;
 
   const [retrieving, setRetrieving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  const syncMarketNFT = async (itemToSync: NFT) => {
+    if (!syncing) {
+      setSyncing(true);
+      const result = await toast.promise(
+        getMarketItem(itemToSync),
+        {
+          loading: "Loading Market Data",
+          success: "Loaded Market Data",
+          error: "Error retrieving Market Data",
+        },
+        toastConfig
+      );
+      if (result) {
+        console.log(result);
+        setMarketItem(result);
+      }
+      setRetrieving(false);
+      return result;
+    }
+  };
 
   const retrieveNFT = async () => {
     if (!retrieving) {
@@ -60,14 +84,15 @@ export default function DashboardCyber() {
         setItem(result);
       }
       setRetrieving(false);
+      return result;
     }
   };
 
-  const sellNFT = async (item: RetrievedNFTDetailed, amount: string) => {
-    if (!retrieving && item) {
+  const sellNFT = async (sellItem: NFT, amount: string) => {
+    if (!retrieving) {
       setRetrieving(true);
       const result = await toast.promise(
-        triggerCreateMarketItemDeploy(item, amount),
+        triggerCreateMarketItemDeploy(sellItem, amount),
         {
           loading: "Listing NFT on Market",
           success: "Listed NFT",
@@ -87,7 +112,10 @@ export default function DashboardCyber() {
     setTimeout(async () => {
       try {
         setConnected(await Signer.isConnected());
-        retrieveNFT();
+        const nftItem = await retrieveNFT();
+        if (nftItem) {
+          syncMarketNFT(nftItem);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -162,12 +190,15 @@ export default function DashboardCyber() {
       setAddress(msg.detail.activeKey);
     });
   }, []);
+  // const onBurnClick = () => {};
 
-  const onTransferClick = () => {
+  const onApproveClick = () => {
     //  TODO approve with cep47 contract
   };
-  const onSellClick = (amount: string) => {
-    sellNFT(item, amount);
+  const onSellClick = (sellItem: NFT, amount: string) => {
+    if (item) {
+      sellNFT(sellItem, amount);
+    }
   };
 
   return (
@@ -193,12 +224,16 @@ export default function DashboardCyber() {
       }
     >
       <div>
-        <SellModal
-          opened={opened}
-          setOpened={setOpened}
-          onTransferClick={onTransferClick}
-          onSellClick={onSellClick}
-        />
+        {marketItem ? (
+          <SellModal
+            opened={opened}
+            setOpened={setOpened}
+            onTransferClick={onApproveClick}
+            onSellClick={onSellClick}
+            item={marketItem}
+          />
+        ) : null}
+
         <Toaster />
       </div>
       {item ? (
@@ -252,13 +287,12 @@ export default function DashboardCyber() {
               </p>
             </Group>
             <Group position={"left"} grow>
-              <p>
-                <b>JSON Data: </b>
-                <br />
-                <Prism language={"json"} color={"blue"}>
-                  {item?.meta.get("json_data") || ""}
-                </Prism>
-              </p>
+              <b>JSON Data: </b>
+            </Group>
+            <Group position={"left"} grow>
+              <Prism language={"json"} color={"blue"}>
+                {item?.meta.get("json_data") || ""}
+              </Prism>
             </Group>
             {item.isOwner ? (
               <Group position={"apart"} grow>

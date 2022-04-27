@@ -30,30 +30,33 @@ Using Next.js for marketplace users to interact with. A rust Market contract to 
 
 ### Server - Nextjs
 
-~~- Implement minting page~~
-~~- Implement detail for buyer~~
-~~- Implement detail for seller~~
-~~- Implement list all nfts~~
-~~- Implement list owned nfts~~
-~~- Link front end with cep47 contract - Retrieve NFT info~~
-~~- Link front end with cep47 contract - Mint NFT~~
-- Link front end with cep47 contract - Burn NFT
-- Link front end with market contract - List NFT for sale
-- Link front end with market contract - Sell NFT
-- Link front end with market contract - Buy NFT
-- Link front end with market contract - Withdraw funds
+- [x] Implement minting page
+- [x] Implement detail for buyer
+- [x] Implement detail for seller
+- [x] Implement list all nfts
+- [x] Implement list owned nfts
+- [x] Link front end with cep47 contract - Retrieve NFT info
+- [x] Link front end with cep47 contract - Mint NFT
+- [x] Link front end with cep47 contract - Approve Sale of NFT
+- [ ] Link front end with cep47 contract - Burn NFT
+- [x] Link front end with market contract - List NFT for sale
+- [ ] Link front end with market contract - Check NFT is for sale
+- [ ] Link front end with market contract - Sell NFT
+- [ ] Link front end with market contract - Buy NFT
+- [ ] Link front end with market contract - Withdraw funds
 
 ### Market contract - CEP47 compatible
 
-~~- Functionality - Changing ownership of nft~~
-~~- Functionality - Creating market item for sale~~
-~~- Functionality - Processing sale of market item~~
-~~- Functionality - Funds from sale of market item transferred to seller~~
-~~- Functionality - Adding payments for buy/sell~~
-- Functionality - Cancel sale of market item
-- Security - Ensuring no loopholes in logic
-- Error Handling - Provide correct errors within Contract
-- Tests around securing transactions
+- [x] Functionality - Changing ownership of nft
+- [x] Functionality - Creating market item for sale
+- [x] Functionality - Processing sale of market item
+- [x] Functionality - Funds from sale of market item transferred to seller
+- [x] Functionality - Adding payments for buy/sell
+- [ ] Functionality - Checking for nft available to buy
+- [ ] Functionality - Cancel sale of market item
+- [ ] Security - Ensuring no loopholes in logic
+- [ ] Error Handling - Provide correct errors within Contract
+- [ ] Tests around securing transactions
 
 ### Wishlist
 

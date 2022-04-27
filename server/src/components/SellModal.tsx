@@ -1,21 +1,23 @@
 import { Button, Group, Modal, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/hooks";
-import { RetrievedNFTDetailed } from "../pages/nft/[id]";
+
+import { MarketItem } from "../utils/marketClient";
 
 interface Props {
   opened: boolean;
   setOpened: (o: boolean) => void;
-  item: RetrievedNFTDetailed;
+  item: MarketItem;
   onTransferClick: () => void;
-  onSellClick: (amount: string) => void;
+  onSellClick: (item: MarketItem, amount: string) => void;
 }
 export function SellModal(props: Props) {
-  const { opened, setOpened, onSellClick } = props;
+  const { item, opened, setOpened, onSellClick } = props;
   const form = useForm({
     initialValues: {
-      amount: null,
+      amount: "",
     },
   });
+  // TODO check for approved
   return (
     <Modal
       opened={opened}
@@ -27,7 +29,7 @@ export function SellModal(props: Props) {
       <form
         onSubmit={form.onSubmit((values) => {
           if (values.amount) {
-            onSellClick(values.amount);
+            onSellClick(item, values.amount);
             setOpened(false);
           }
         })}

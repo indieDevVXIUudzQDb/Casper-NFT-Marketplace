@@ -54,6 +54,12 @@ fn name() {
 }
 
 #[no_mangle]
+fn market_item_hash() {
+    let ret = MarketItem::default().name();
+    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
+}
+
+#[no_mangle]
 fn symbol() {
     let ret = MarketItem::default().symbol();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
