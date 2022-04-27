@@ -11,7 +11,7 @@ import styles from "../styles/dashboard-cyber.module.scss";
 import { toastConfig } from "../toastConfig";
 import {
   getOwnedNFTS,
-  RetrievedNFT,
+  NFT,
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
 
@@ -20,7 +20,7 @@ export default function DashboardCyber() {
   const [connected, setConnected] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [locked, setLocked] = useState(false);
-  const [items, setItems] = useState<RetrievedNFT[]>([]);
+  const [items, setItems] = useState<NFT[]>([]);
 
   const retrieveNFTS = async () => {
     const result = await toast.promise(
@@ -43,6 +43,7 @@ export default function DashboardCyber() {
       try {
         setConnected(await Signer.isConnected());
         retrieveNFTS();
+        // retrieveMarketName();
       } catch (err) {
         console.error(err);
       }

@@ -18,7 +18,7 @@ use casper_types::{
 use casper_types::account::AccountHash;
 use casper_types::bytesrepr::ToBytes;
 use contract_utils::{ContractContext, OnChainContractStorage};
-use market::{Error, MarketContract, Meta, NFTContractAddress, TokenId};
+use market::{Error, MarketContract, Meta, NFTContractAddress, MarketItemId, TokenId};
 use market::data::{MARKET_NAME, META, SYMBOL};
 
 #[derive(Default)]
@@ -38,8 +38,6 @@ impl MarketItem {
     }
 }
 
-const KEY_NAME: &str = "my-key-name";
-const RUNTIME_ARG_NAME: &str = "message";
 
 #[no_mangle]
 fn constructor() {
@@ -51,6 +49,12 @@ fn constructor() {
 
 #[no_mangle]
 fn name() {
+    let ret = MarketItem::default().name();
+    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
+}
+
+#[no_mangle]
+fn market_item_hash() {
     let ret = MarketItem::default().name();
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
@@ -90,49 +94,51 @@ fn get_item_by_index() {
 
 #[no_mangle]
 fn owner_of_market_item() {
-    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let item_id = runtime::get_named_arg::<MarketItemId>("item_id");
     let ret = MarketItem::default().owner_of(item_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
+fn token_market_status() {
+    let item_token_id = runtime::get_named_arg::<MarketItemId>("item_token_id");
+    let ret = MarketItem::default().token_market_status(item_token_id);
+    runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
+}
+
+
+#[no_mangle]
 fn item_nft_contract_address() {
-    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let item_id = runtime::get_named_arg::<MarketItemId>("item_id");
     let ret = MarketItem::default().item_nft_contract_address(item_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn item_asking_price() {
-    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let item_id = runtime::get_named_arg::<MarketItemId>("item_id");
     let ret = MarketItem::default().item_asking_price(item_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn item_token_id() {
-    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let item_id = runtime::get_named_arg::<MarketItemId>("item_id");
     let ret = MarketItem::default().item_token_id(item_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
 
 #[no_mangle]
 fn item_status() {
-    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let item_id = runtime::get_named_arg::<MarketItemId>("item_id");
     let ret = MarketItem::default().item_status(item_id);
     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
 }
-//
-// #[no_mangle]
-// fn available_items() {
-//     let ret = MarketItem::default().available_items();
-//     runtime::ret(CLValue::from_t(ret).unwrap_or_revert());
-// }
 
 #[no_mangle]
 fn create_market_item() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
-    let item_ids = runtime::get_named_arg::<Vec<TokenId>>("item_ids");
+    let item_ids = runtime::get_named_arg::<Vec<MarketItemId>>("item_ids");
     let item_nft_contract_addresses =
         runtime::get_named_arg::<Vec<NFTContractAddress>>("item_nft_contract_addresses");
     let item_asking_prices = runtime::get_named_arg::<Vec<U512>>("item_asking_prices");
@@ -151,7 +157,7 @@ fn create_market_item() {
 #[no_mangle]
 fn process_market_sale() {
     let recipient = runtime::get_named_arg::<Key>("recipient");
-    let item_id = runtime::get_named_arg::<TokenId>("item_id");
+    let item_id = runtime::get_named_arg::<MarketItemId>("item_id");
     let market_offer_purse = runtime::get_named_arg::<URef>("market_offer_purse");
     MarketItem::default()
         .process_market_sale(recipient, item_id, market_offer_purse)
@@ -260,44 +266,44 @@ fn get_entry_points() -> EntryPoints {
     ));
     entry_points.add_entry_point(EntryPoint::new(
         "owner_of_market_item",
-        vec![Parameter::new("item_id", TokenId::cl_type())],
+        vec![Parameter::new("item_id", MarketItemId::cl_type())],
         CLType::Option(Box::new(CLType::Key)),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
         "item_nft_contract_address",
-        vec![Parameter::new("item_id", TokenId::cl_type())],
+        vec![Parameter::new("item_id", MarketItemId::cl_type())],
         NFTContractAddress::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
         "item_asking_price",
-        vec![Parameter::new("item_id", TokenId::cl_type())],
+        vec![Parameter::new("item_id", MarketItemId::cl_type())],
         U512::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
     entry_points.add_entry_point(EntryPoint::new(
         "item_token_id",
-        vec![Parameter::new("item_id", TokenId::cl_type())],
+        vec![Parameter::new("item_id", MarketItemId::cl_type())],
         U256::cl_type(),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));
-    // entry_points.add_entry_point(EntryPoint::new(
-    //     "available_items",
-    //     vec![],
-    //     MarketItemList::cl_type(),
-    //     EntryPointAccess::Public,
-    //     EntryPointType::Contract,
-    // ));
+    entry_points.add_entry_point(EntryPoint::new(
+        "token_market_status",
+        vec![Parameter::new("item_token_id", TokenId::cl_type())],
+        String::cl_type(),
+        EntryPointAccess::Public,
+        EntryPointType::Contract,
+    ));
     entry_points.add_entry_point(EntryPoint::new(
         "create_market_item",
         vec![
             Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("item_ids", CLType::List(Box::new(TokenId::cl_type()))),
+            Parameter::new("item_ids", CLType::List(Box::new(MarketItemId::cl_type()))),
             Parameter::new(
                 "item_nft_contract_addresses",
                 CLType::List(Box::new(NFTContractAddress::cl_type())),
@@ -316,7 +322,7 @@ fn get_entry_points() -> EntryPoints {
         "process_market_sale",
         vec![
             Parameter::new("recipient", Key::cl_type()),
-            Parameter::new("item_id", TokenId::cl_type()),
+            Parameter::new("item_id", MarketItemId::cl_type()),
             Parameter::new("market_offer_purse", URef::cl_type()),
         ],
         <()>::cl_type(),
@@ -329,7 +335,7 @@ fn get_entry_points() -> EntryPoints {
             Parameter::new("owner", Key::cl_type()),
             Parameter::new("index", U256::cl_type()),
         ],
-        CLType::Option(Box::new(TokenId::cl_type())),
+        CLType::Option(Box::new(MarketItemId::cl_type())),
         EntryPointAccess::Public,
         EntryPointType::Contract,
     ));

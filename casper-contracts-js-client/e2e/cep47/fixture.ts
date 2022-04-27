@@ -1,11 +1,16 @@
-import {config} from "dotenv";
-import {CEP47Client} from "casper-cep47-js-client";
-import {getAccountInfo, getAccountNamedKeyValue, getDeploy, sleep,} from "../utils";
+import { config } from "dotenv";
+import { CEP47Client } from "casper-cep47-js-client";
+import {
+  getAccountInfo,
+  getAccountNamedKeyValue,
+  getDeploy,
+  sleep,
+} from "../utils";
 
-import {Keys} from "casper-js-sdk";
-import {mockData} from "../../mockData";
+import { Keys } from "casper-js-sdk";
+import { mockData } from "../../mockData";
 
-config({ path: ".env.cep47" });
+config({ path: ".env" });
 
 const {
   NODE_ADDRESS,

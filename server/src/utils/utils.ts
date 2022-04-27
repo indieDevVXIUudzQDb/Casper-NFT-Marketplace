@@ -5,6 +5,10 @@ import {
   Keys,
 } from "casper-js-sdk";
 
+export const contractHashToByteArray = (contractHash: string): Uint8Array => {
+  return Uint8Array.from(Buffer.from(contractHash, "hex"));
+};
+
 export const parseTokenMeta = (str: string): Array<[string, string]> =>
   // @ts-ignore
   str.split(",").map((s) => {

@@ -11,7 +11,7 @@ import styles from "../styles/dashboard-cyber.module.scss";
 import { toastConfig } from "../toastConfig";
 import {
   getOwnedNFTS,
-  RetrievedNFT,
+  NFT,
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
@@ -28,7 +28,7 @@ export async function getServerSideProps(_context: any) {
 export default function DashboardCyber() {
   // const { items } = props;
 
-  const [items, setItems] = useState<RetrievedNFT[]>([]);
+  const [items, setItems] = useState<NFT[]>([]);
   const [address, setAddress] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [connected, setConnected] = useState(false);

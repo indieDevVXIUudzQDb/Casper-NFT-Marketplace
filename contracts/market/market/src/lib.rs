@@ -12,6 +12,7 @@ pub mod data;
 pub mod event;
 mod market;
 
+pub type MarketItemId = U256;
 pub type TokenId = U256;
 pub type NFTContractAddress = ContractHash;
 pub type Meta = BTreeMap<String, String>;

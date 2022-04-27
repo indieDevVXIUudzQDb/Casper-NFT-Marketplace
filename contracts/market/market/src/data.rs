@@ -1,13 +1,16 @@
+use alloc::{format, vec};
 use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 use casper_contract::{contract_api::runtime::get_call_stack, unwrap_or_revert::UnwrapOrRevert};
 use casper_types::{ContractPackageHash, Key, system::CallStackElement, U256, U512, URef};
 use contract_utils::{Dict, get_key, key_and_value_to_str, key_to_str, set_key};
 
-use crate::{event::MarketEvent, Meta, NFTContractAddress, TokenId};
+use crate::{event::MarketEvent, Meta, NFTContractAddress, MarketItemId, TokenId};
 
 const BALANCES_DICT: &str = "item_balances";
 pub const ALLOWANCES_DICT: &str = "item_allowances";
 const NFT_CONTRACT_ADDRESSES: &str = "nft_contract_addresses";
+const NFT_MARKET_ITEM_IDS: &str = "nft_market_item_ids";
 const ITEM_ASKING_PRICE_DATA: &str = "item_asking_prices";
 const ITEM_TOKEN_ID_DATA: &str = "item_token_ids";
 const ITEM_STATUS_DATA: &str = "item_statuses";
@@ -37,15 +40,15 @@ impl Owners {
         Dict::init(OWNERS_DICT)
     }
 
-    pub fn get(&self, key: &TokenId) -> Option<Key> {
+    pub fn get(&self, key: &MarketItemId) -> Option<Key> {
         self.dict.get(&key.to_string())
     }
 
-    pub fn set(&self, key: &TokenId, value: Key) {
+    pub fn set(&self, key: &MarketItemId, value: Key) {
         self.dict.set(&key.to_string(), value);
     }
 
-    pub fn remove(&self, key: &TokenId) {
+    pub fn remove(&self, key: &MarketItemId) {
         self.dict.remove::<Key>(&key.to_string());
     }
 }
@@ -65,18 +68,59 @@ impl NFTContractAddresses {
         Dict::init(NFT_CONTRACT_ADDRESSES)
     }
 
-    pub fn get(&self, key: &TokenId) -> Option<NFTContractAddress> {
+    pub fn get(&self, key: &MarketItemId) -> Option<NFTContractAddress> {
         self.dict.get(&key.to_string())
     }
 
-    pub fn set(&self, key: &TokenId, value: NFTContractAddress) {
+    pub fn set(&self, key: &MarketItemId, value: NFTContractAddress) {
         self.dict.set(&key.to_string(), value);
     }
 
-    pub fn remove(&self, key: &TokenId) {
+    pub fn remove(&self, key: &MarketItemId) {
         self.dict.remove::<NFTContractAddress>(&key.to_string());
     }
 }
+
+
+pub struct NFTMarketItemIds {
+    dict: Dict,
+}
+
+impl NFTMarketItemIds {
+    // Due to current key length limitations this has to just deal with a single nft contract
+    // See https://github.com/mpapierski/ceps/blob/ee-1212-local-key-proposal/text/0039-dictionary.md
+    // for details
+    // WISHLIST - Key is made up of nft contract hash and nft token id
+    pub fn instance() -> NFTMarketItemIds {
+        NFTMarketItemIds {
+            dict: Dict::instance(NFT_MARKET_ITEM_IDS),
+        }
+    }
+
+    pub fn init() {
+        Dict::init(NFT_MARKET_ITEM_IDS)
+    }
+
+    pub fn get(&self, item_token_id: U256 ) -> Option<Vec<MarketItemId>> {
+        let key = format!("{}", item_token_id);
+        self.dict.get(&key.to_string())
+    }
+
+    pub fn set(&self, item_token_id: &U256, value: MarketItemId) {
+        let key = format!("{}", item_token_id);
+
+        let existing:Option<Vec<MarketItemId>> = self.dict.get(&*key);
+        match existing {
+            Some(existing_list) => {
+                let mut updated_list = existing_list.clone();
+                updated_list.push(value);
+                self.dict.set(&key.to_string(), updated_list)
+            },
+            _ => self.dict.set(&key.to_string(), vec![value])
+        }
+    }
+}
+
 
 pub struct ItemAskingPriceData {
     dict: Dict,
@@ -93,15 +137,15 @@ impl ItemAskingPriceData {
         Dict::init(ITEM_ASKING_PRICE_DATA)
     }
 
-    pub fn get(&self, key: &TokenId) -> Option<U512> {
+    pub fn get(&self, key: &MarketItemId) -> Option<U512> {
         self.dict.get(&key.to_string())
     }
 
-    pub fn set(&self, key: &TokenId, value: U512) {
+    pub fn set(&self, key: &MarketItemId, value: U512) {
         self.dict.set(&key.to_string(), value);
     }
 
-    pub fn remove(&self, key: &TokenId) {
+    pub fn remove(&self, key: &MarketItemId) {
         self.dict.remove::<U512>(&key.to_string());
     }
 }
@@ -121,15 +165,15 @@ impl ItemTokenIdData {
         Dict::init(ITEM_TOKEN_ID_DATA)
     }
 
-    pub fn get(&self, key: &TokenId) -> Option<U256> {
+    pub fn get(&self, key: &MarketItemId) -> Option<U256> {
         self.dict.get(&key.to_string())
     }
 
-    pub fn set(&self, key: &TokenId, value: U256) {
+    pub fn set(&self, key: &MarketItemId, value: U256) {
         self.dict.set(&key.to_string(), value);
     }
 
-    pub fn remove(&self, key: &TokenId) {
+    pub fn remove(&self, key: &MarketItemId) {
         self.dict.remove::<U256>(&key.to_string());
     }
 }
@@ -149,15 +193,15 @@ impl ItemStatusData {
         Dict::init(ITEM_STATUS_DATA)
     }
 
-    pub fn get(&self, key: &TokenId) -> Option<String> {
+    pub fn get(&self, key: &MarketItemId) -> Option<String> {
         self.dict.get(&key.to_string())
     }
 
-    pub fn set(&self, key: &TokenId, value: String) {
+    pub fn set(&self, key: &MarketItemId, value: String) {
         self.dict.set(&key.to_string(), value);
     }
 
-    pub fn remove(&self, key: &TokenId) {
+    pub fn remove(&self, key: &MarketItemId) {
         self.dict.remove::<String>(&key.to_string());
     }
 }
@@ -183,11 +227,11 @@ impl OwnedTokens {
         Dict::init(BALANCES_DICT);
     }
 
-    pub fn get_item_by_index(&self, owner: &Key, index: &U256) -> Option<TokenId> {
+    pub fn get_item_by_index(&self, owner: &Key, index: &U256) -> Option<MarketItemId> {
         self.tokens_dict.get(&key_and_value_to_str(owner, index))
     }
 
-    pub fn get_index_by_token(&self, owner: &Key, value: &TokenId) -> Option<U256> {
+    pub fn get_index_by_token(&self, owner: &Key, value: &MarketItemId) -> Option<U256> {
         self.indexes_dict.get(&key_and_value_to_str(owner, value))
     }
 
@@ -201,7 +245,7 @@ impl OwnedTokens {
         self.balances_dict.set(&key_to_str(owner), value);
     }
 
-    pub fn set_token(&self, owner: &Key, value: &TokenId) {
+    pub fn set_token(&self, owner: &Key, value: &MarketItemId) {
         let length = self.get_balances(owner);
         self.indexes_dict
             .set(&key_and_value_to_str(owner, value), length);
@@ -210,13 +254,13 @@ impl OwnedTokens {
         self.set_balances(owner, length + 1);
     }
 
-    pub fn remove_token(&self, owner: &Key, value: &TokenId) {
+    pub fn remove_token(&self, owner: &Key, value: &MarketItemId) {
         let length = self.get_balances(owner);
         let index = self.get_index_by_token(owner, value).unwrap_or_revert();
         match length.cmp(&(index + 1)) {
             core::cmp::Ordering::Equal => {
                 self.tokens_dict
-                    .remove::<TokenId>(&key_and_value_to_str(owner, &(length - 1)));
+                    .remove::<MarketItemId>(&key_and_value_to_str(owner, &(length - 1)));
                 self.set_balances(owner, length - 1);
             }
             core::cmp::Ordering::Greater => {
@@ -230,7 +274,7 @@ impl OwnedTokens {
                     last.unwrap_or_revert(),
                 );
                 self.tokens_dict
-                    .remove::<TokenId>(&key_and_value_to_str(owner, &(length - 1)));
+                    .remove::<MarketItemId>(&key_and_value_to_str(owner, &(length - 1)));
                 self.set_balances(owner, length - 1);
             }
             core::cmp::Ordering::Less => {}
@@ -255,19 +299,19 @@ impl Allowances {
         Dict::init(ALLOWANCES_DICT)
     }
 
-    pub fn get(&self, owner: &Key, item_id: &TokenId) -> Option<Key> {
+    pub fn get(&self, owner: &Key, item_id: &MarketItemId) -> Option<Key> {
         self.dict
             .get(&key_and_value_to_str::<String>(owner, &item_id.to_string()))
     }
 
-    pub fn set(&self, owner: &Key, item_id: &TokenId, value: Key) {
+    pub fn set(&self, owner: &Key, item_id: &MarketItemId, value: Key) {
         self.dict.set(
             &key_and_value_to_str::<String>(owner, &item_id.to_string()),
             value,
         );
     }
 
-    pub fn remove(&self, owner: &Key, item_id: &TokenId) {
+    pub fn remove(&self, owner: &Key, item_id: &MarketItemId) {
         self.dict
             .remove::<Key>(&key_and_value_to_str::<String>(owner, &item_id.to_string()));
     }
