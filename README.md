@@ -37,7 +37,7 @@ Using Next.js for marketplace users to interact with. A rust Market contract to 
 - [x] Implement list owned nfts
 - [x] Link front end with cep47 contract - Retrieve NFT info
 - [x] Link front end with cep47 contract - Mint NFT
-- [x] Link front end with cep47 contract - Approve Sale of NFT
+- [ ] Link front end with cep47 contract - Approve Sale of NFT
 - [ ] Link front end with cep47 contract - Burn NFT
 - [x] Link front end with market contract - List NFT for sale
 - [ ] Link front end with market contract - Check NFT is for sale
