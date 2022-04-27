@@ -1,9 +1,14 @@
-import {config} from "dotenv";
-import {getAccountInfo, getAccountNamedKeyValue, getDeploy, parseTokenMeta,} from "../utils";
+import { config } from "dotenv";
+import {
+  getAccountInfo,
+  getAccountNamedKeyValue,
+  getDeploy,
+  parseTokenMeta,
+} from "../utils";
 import * as fs from "fs";
 
-import {Keys} from "casper-js-sdk";
-import {MARKETClient} from "../../packages/market-client/src";
+import { Keys } from "casper-js-sdk";
+import { MARKETClient } from "../../packages/market-client/src";
 
 config({ path: ".env" });
 
@@ -80,6 +85,12 @@ const test = async () => {
     `contract_package_hash`
   );
   console.log(`... Market Contract Package Hash: ${contractPackageHash}`);
+
+  const marketPackageHash = await getAccountNamedKeyValue(
+    accountInfo,
+    `market_item_hash`
+  );
+  console.log(`... Market Item Hash: ${marketPackageHash}`);
 };
 
 test();

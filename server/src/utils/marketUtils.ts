@@ -123,7 +123,7 @@ export function retrieveMarketName() {
   });
 }
 
-export function getMarketItem(_item: NFT) {
+export function getMarketItem(item: NFT) {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     // const timeout = setTimeout(reject, 10000);
@@ -140,11 +140,27 @@ export function getMarketItem(_item: NFT) {
 
     try {
       // @ts-ignore
-      const name = await marketClient.name();
-      console.log({ name });
+      const marketItemIds = await marketClient.getMarketItemIds(item.id);
+      console.log({ marketItemIds });
       // clearTimeout(timeout);
+      const lastItem = marketItemIds[marketItemIds.length - 1];
+      if (lastItem) {
+        const status = await marketClient.getMarketItemStatus(lastItem);
+        console.log({ status });
 
-      resolve(name);
+        //TODO
+        // const askingPrice = await marketClient.getMarketItemPrice(lastItem);
+        // console.log({ askingPrice });
+
+        const marketItem: MarketItem = {
+          ...item,
+          available: status === "available",
+          askingPrice: "2000000",
+        };
+        resolve(marketItem);
+      } else {
+        reject();
+      }
     } catch (e) {
       console.log(e);
       reject();

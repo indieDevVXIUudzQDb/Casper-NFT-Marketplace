@@ -87,6 +87,8 @@ export const MARKETEventParser = (
 
 export interface MarketItem extends NFT {
   isApproved: boolean;
+  available: boolean;
+  askingPrice: string;
 }
 
 export class MarketClient {
@@ -129,6 +131,40 @@ export class MarketClient {
 
   public async name() {
     return this.contractClient.queryContractData(["market_name"]);
+  }
+
+  public async getMarketItemIds(itemTokenId: string) {
+    const result = await this.contractClient.queryContractDictionary(
+      "nft_market_item_ids",
+      itemTokenId
+    );
+
+    const maybeValue = result.value().unwrap();
+    const values = maybeValue
+      .value()
+      .map((value: CLValue) =>
+        CLValueParsers.toBytes(value).unwrap().toString()
+      );
+    return values;
+  }
+
+  public async getMarketItemStatus(itemId: string) {
+    const result = await this.contractClient.queryContractDictionary(
+      "item_statuses",
+      itemId
+    );
+    return result.value().unwrap().data;
+  }
+
+  public async getMarketItemPrice(itemId: string) {
+    const result = await this.contractClient.queryContractDictionary(
+      "item_asking_prices",
+      itemId
+    );
+    window.abc = result;
+    window.parsers = CLValueParsers;
+    let value = result.value().unwrap();
+    return CLValueParsers.toBytes(value).unwrap().toString();
   }
 
   public createMarketItem(

@@ -46,6 +46,7 @@ export default function DashboardCyber() {
   const [retrieving, setRetrieving] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
+  // eslint-disable-next-line consistent-return
   const syncMarketNFT = async (itemToSync: NFT) => {
     if (!syncing) {
       setSyncing(true);
@@ -296,7 +297,14 @@ export default function DashboardCyber() {
             </Group>
             {item.isOwner ? (
               <Group position={"apart"} grow>
-                <Button onClick={() => setOpened(true)}>Sell</Button>
+                <Button
+                  onClick={() => {
+                    // setOpened(true);
+                    onSellClick(item, "10000000");
+                  }}
+                >
+                  Sell
+                </Button>
                 <Button color={"red"}>Burn</Button>
               </Group>
             ) : (
@@ -305,11 +313,13 @@ export default function DashboardCyber() {
                 <Group position={"left"}>
                   <p>
                     <b>Price:</b> <br />{" "}
-                    <b className={"text-3xl"}>120000 CSPR</b>
+                    <b className={"text-3xl"}>{marketItem?.askingPrice} CSPR</b>
                   </p>
                 </Group>
                 <Group position={"apart"} grow className={"mt-2"}>
-                  <Button color={"green"}>Buy Now</Button>
+                  <Button color={"green"} disabled={!marketItem?.available}>
+                    Buy Now
+                  </Button>
                 </Group>
               </>
             )}
