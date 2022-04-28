@@ -15,7 +15,6 @@ import { toast, Toaster } from "react-hot-toast";
 
 import { CustomHeader } from "../../components/CustomHeader";
 import { CustomNavbar } from "../../components/CustomNavbar";
-import styles from "../../styles/dashboard-cyber.module.scss";
 import { toastConfig } from "../../toastConfig";
 import {
   getDeployResult,
@@ -23,6 +22,7 @@ import {
   triggerMintDeploy,
 } from "../../utils/cep47_utils";
 import { NFTMeta } from "../../utils/types";
+import { CustomBackground } from "../../components/CustomBackground";
 
 export default function Mint() {
   const [address, setAddress] = useState(null);
@@ -30,14 +30,20 @@ export default function Mint() {
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
 
-  // Without the timeout it doesn't always work properly
-  setTimeout(async () => {
+  const updateState = async (e?: any) => {
     try {
       setConnected(await Signer.isConnected());
     } catch (err) {
       console.error(err);
     }
-  }, 100);
+  };
+
+  useEffect(() => {
+    // Without the timeout it doesn't always work properly
+    setTimeout(async () => {
+      updateState();
+    }, 100);
+  }, []);
 
   // useEffect(() => {
   //   const es = new EventStream(EVENT_STREAM_ADDRESS!);
@@ -231,15 +237,7 @@ export default function Mint() {
           </Group>
         </form>
       </Box>
-      <div className={styles.bg}>
-        <div className={styles.starField}>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-        </div>
-      </div>
+      <CustomBackground />
     </AppShell>
   );
 }

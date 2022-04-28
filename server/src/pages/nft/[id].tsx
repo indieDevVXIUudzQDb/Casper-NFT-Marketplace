@@ -31,6 +31,7 @@ import {
   getMarketItem,
   triggerCreateMarketItemDeploy,
 } from "../../utils/marketUtils";
+import { CustomBackground } from "../../components/CustomBackground";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
@@ -352,13 +353,7 @@ export default function DashboardCyber() {
       ) : null}
 
       <div className={styles.bg}>
-        <div className={styles.starField}>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-        </div>
+        <CustomBackground />
       </div>
     </AppShell>
   );

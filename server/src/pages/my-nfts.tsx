@@ -7,7 +7,6 @@ import { toast } from "react-hot-toast";
 import { CustomCard } from "../components/CustomCard";
 import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
-import styles from "../styles/dashboard-cyber.module.scss";
 import { toastConfig } from "../toastConfig";
 import {
   getOwnedNFTS,
@@ -15,6 +14,7 @@ import {
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
 import { supabaseServerSideClient } from "../utils/supabaseServerSideClient";
+import { CustomBackground } from "../components/CustomBackground";
 
 export async function getServerSideProps(_context: any) {
   const { data: items } = await supabaseServerSideClient
@@ -35,17 +35,22 @@ export default function DashboardCyber() {
   const [locked, setLocked] = useState(false);
 
   const retrieveNFTS = async () => {
-    const result = await toast.promise(
-      getOwnedNFTS(),
-      {
-        loading: "Loading",
-        success: "Loaded NFTs",
-        error: "Error retrieving owned NFTs",
-      },
-      toastConfig
-    );
+    const result = await getOwnedNFTS();
     if (result) {
       setItems(result);
+    }
+  };
+  const updateState = async (e?: any) => {
+    if (e) {
+      // TODO stop event firing twice
+      // e.preventDefault();
+      // e.stopPropagation();
+    }
+    try {
+      await setConnected(await Signer.isConnected());
+      retrieveNFTS();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -54,7 +59,7 @@ export default function DashboardCyber() {
       process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
     );
     subscribeToContractEvents(es, () => {
-      retrieveNFTS();
+      updateState();
       console.log(es);
     });
   }, []);
@@ -62,12 +67,7 @@ export default function DashboardCyber() {
   useEffect(() => {
     // Without the timeout it doesn't always work properly
     setTimeout(async () => {
-      try {
-        setConnected(await Signer.isConnected());
-        retrieveNFTS();
-      } catch (err) {
-        console.error(err);
-      }
+      updateState();
     }, 100);
   }, []);
 
@@ -79,7 +79,7 @@ export default function DashboardCyber() {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
       toast.success("Connected to Signer!", toastConfig);
-      retrieveNFTS();
+      updateState(msg);
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -101,7 +101,7 @@ export default function DashboardCyber() {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
       toast("Active key changed", toastConfig);
-      retrieveNFTS();
+      updateState(msg);
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
@@ -118,7 +118,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      retrieveNFTS();
+      updateState(msg);
     });
     window.addEventListener("signer:initialState", (msg) => {
       // @ts-ignore
@@ -184,15 +184,7 @@ export default function DashboardCyber() {
             />
           ))}
       </SimpleGrid>
-      <div className={styles.bg}>
-        <div className={styles.starField}>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-        </div>
-      </div>
+      <CustomBackground />
     </AppShell>
   );
 }
