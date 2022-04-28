@@ -165,10 +165,8 @@ export class MarketClient {
       "item_asking_prices",
       itemId
     );
-    window.abc = result;
-    window.parsers = CLValueParsers;
-    let value = result.value().unwrap();
-    return CLValueParsers.toBytes(value).unwrap().toString();
+    const value = result.value().unwrap();
+    return value.data.toNumber();
   }
 
   public async marketItemHash() {

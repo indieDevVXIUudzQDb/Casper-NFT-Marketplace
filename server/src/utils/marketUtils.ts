@@ -202,8 +202,7 @@ export function getMarketItem(item: NFT): Promise<MarketItem | null> {
         const marketItem: MarketItem = {
           ...item,
           available: status === "available",
-          // TODO
-          askingPrice: "2000000",
+          askingPrice,
           approvalHash,
         };
         resolve(marketItem);

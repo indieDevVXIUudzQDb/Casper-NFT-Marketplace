@@ -312,8 +312,7 @@ export default function DashboardCyber() {
               <Group position={"left"} grow>
                 <Button
                   onClick={() => {
-                    // setOpened(true);
-                    onSellClick(item, "10000000");
+                    setOpened(true);
                   }}
                 >
                   Sell
