@@ -30,6 +30,7 @@ import {
   approveSell,
   getMarketItem,
   triggerCreateMarketItemDeploy,
+  triggerProcessSale,
 } from "../../utils/marketUtils";
 import { CustomBackground } from "../../components/CustomBackground";
 
@@ -295,7 +296,7 @@ export default function DashboardCyber() {
                 <div />
               </Group>
             ) : // eslint-disable-next-line no-nested-ternary
-            item.isOwner && marketItem ? (
+            item.isOwner && marketItem && marketItem.available ? (
               <Group position={"left"} grow>
                 <Button
                   color={"yellow"}
@@ -332,7 +333,7 @@ export default function DashboardCyber() {
                 </Button>
                 <div />
               </Group>
-            ) : !item.isOwner ? (
+            ) : marketItem && !item.isOwner ? (
               <>
                 <Group position={"left"}>
                   <p>
@@ -341,7 +342,13 @@ export default function DashboardCyber() {
                   </p>
                 </Group>
                 <Group position={"apart"} grow className={"mt-2"}>
-                  <Button color={"green"} disabled={!marketItem?.available}>
+                  <Button
+                    color={"green"}
+                    disabled={!marketItem?.available}
+                    onClick={() => {
+                      triggerProcessSale(marketItem);
+                    }}
+                  >
                     Buy Now
                   </Button>
                 </Group>

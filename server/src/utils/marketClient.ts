@@ -93,6 +93,7 @@ export interface MarketItem extends NFT {
   available: boolean;
   askingPrice: string;
   approvalHash: any;
+  marketItemId: string;
 }
 
 export class MarketClient {
@@ -198,6 +199,14 @@ export class MarketClient {
       // utils.utils.contractHashToByteArray(value)
       contractHashToByteArray(value)
     );
+    const args = {
+      itemIds,
+      itemNFTContractAddresses,
+      itemAskingPrices,
+      itemTokenIds,
+      paymentAmount,
+    };
+    window.createArgs = args;
     console.log({
       itemIds,
       itemNFTContractAddresses,
@@ -227,6 +236,70 @@ export class MarketClient {
       deploySender,
       this.networkName,
       paymentAmount,
+      keys
+    );
+  }
+  private getBinary = async (binaryUrl: string): Promise<Uint8Array> => {
+    return new Promise((resolve, reject) => {
+      try {
+        fetch(binaryUrl)
+          .then((r) => {
+            window.r = r;
+            return r.arrayBuffer();
+          })
+          .then((t) => {
+            window.t = t;
+            return resolve(new Uint8Array(t));
+          });
+      } catch (e) {
+        console.log(e);
+        reject();
+      }
+    });
+  };
+
+  public async processMarketSale(
+    recipient: CLPublicKey,
+    itemId: string,
+    askingAmount: string,
+    paymentAmount: string,
+    deploySender: CLPublicKey,
+    keys?: Keys.AsymmetricKey[]
+  ) {
+    const marketHash = process.env.NEXT_PUBLIC_MARKET_CONTRACT_HASH!;
+    const marketHashAsByteArray = contractHashToByteArray(marketHash.slice(5));
+
+    const binary = await this.getBinary(
+      "http://localhost:3000/assets/bin/market-offer-purse.wasm"
+    );
+    console.log({ binary });
+
+    const args = {
+      recipient,
+      itemId,
+      askingAmount,
+      marketHashAsByteArray,
+    };
+    window.buyArgs = args;
+    console.log("processMarketSale", {
+      recipient,
+      itemId,
+      askingAmount,
+      marketHashAsByteArray,
+    });
+    const runtimeArgs = RuntimeArgs.fromMap({
+      recipient: CLValueBuilder.key(recipient),
+      item_id: CLValueBuilder.u256(itemId),
+      amount: CLValueBuilder.u512(askingAmount),
+      market_contract_hash: CLValueBuilder.byteArray(marketHashAsByteArray),
+    });
+
+    return this.contractClient.install(
+      binary,
+      runtimeArgs,
+      paymentAmount,
+      deploySender,
+      this.networkName,
       keys
     );
   }

@@ -15,6 +15,8 @@ export const CHAIN_NAME =
   process.env.NEXT_PUBLIC_CASPER_CHAIN_NAME || "casper-net-1";
 export const MINT_ONE_PAYMENT_AMOUNT =
   process.env.NEXT_PUBLIC_CASPER_MINT_ONE_PAYMENT_AMOUNT || "2000000000";
+export const PROCESS_SALE_PAYMENT_AMOUNT =
+  process.env.NEXT_PUBLIC_CASPER_MINT_ONE_PAYMENT_AMOUNT || "2000000000000";
 
 // Create Casper client and service to interact with Casper node.
 const casperClient = new CasperClient(NODE_ADDRESS);
@@ -192,6 +194,60 @@ export function approveSell(item: NFT) {
   });
 }
 
+export const triggerProcessSale = async (
+  item: MarketItem
+): Promise<boolean | null> => {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    try {
+      // @ts-ignore
+      const { marketClient } = await initMarketClient();
+      if (marketClient) {
+        const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
+        const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
+
+        const deployItem = await marketClient.processMarketSale(
+          activePublicKey,
+          `${item.marketItemId}`,
+          item.askingPrice,
+          "20000000000",
+          activePublicKey
+        );
+
+        // Turn your transaction data to format JSON
+        const json = DeployUtil.deployToJson(deployItem);
+
+        // Sign transcation using casper-signer.
+        const signature = await window.casperlabsHelper.sign(
+          json,
+          publicKeyHex,
+          publicKeyHex
+        );
+        const deployObject = DeployUtil.deployFromJson(signature);
+        let deployItemHash;
+        if (deployObject.val) {
+          // Here we are sending the signed deploy.
+          deployItemHash = await casperClient.putDeploy(
+            deployObject.val as Deploy
+          );
+          console.log(`...... Process Buy deployed: ${deployItemHash}`);
+
+          await getDeploy(NODE_ADDRESS!, deployItemHash);
+
+          // eslint-disable-next-line consistent-return
+          resolve(true);
+        }
+      } else {
+        console.log("Failed to process buy");
+        reject();
+      }
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+  });
+};
+
 export function getMarketItem(item: NFT): Promise<MarketItem | null> {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
@@ -230,6 +286,7 @@ export function getMarketItem(item: NFT): Promise<MarketItem | null> {
           available: status === "available",
           askingPrice,
           approvalHash,
+          marketItemId: lastItem,
         };
         resolve(marketItem);
       } else {
