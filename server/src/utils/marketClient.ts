@@ -22,6 +22,9 @@ export interface MARKETInstallArgs {
   marketMeta: Map<string, string>;
 }
 
+export const toAccountHashString = (hash: Uint8Array) =>
+  Buffer.from(hash).toString("hex");
+
 export enum MARKETEvents {}
 
 export const MARKETEventParser = (
@@ -89,6 +92,8 @@ export interface MarketItem extends NFT {
   isApproved: boolean;
   available: boolean;
   askingPrice: string;
+  approvalHash: any;
+  marketItemId: string;
 }
 
 export class MarketClient {
@@ -133,6 +138,14 @@ export class MarketClient {
     return this.contractClient.queryContractData(["market_name"]);
   }
 
+  public async totalSupply() {
+    const result = await this.contractClient.queryContractData([
+      "item_total_supply",
+    ]);
+    // @ts-ignore
+    return result.toNumber();
+  }
+
   public async getMarketItemIds(itemTokenId: string) {
     const result = await this.contractClient.queryContractDictionary(
       "nft_market_item_ids",
@@ -142,9 +155,7 @@ export class MarketClient {
     const maybeValue = result.value().unwrap();
     const values = maybeValue
       .value()
-      .map((value: CLValue) =>
-        CLValueParsers.toBytes(value).unwrap().toString()
-      );
+      .map((value: CLValue) => value.data.toString());
     return values;
   }
 
@@ -161,10 +172,17 @@ export class MarketClient {
       "item_asking_prices",
       itemId
     );
-    window.abc = result;
-    window.parsers = CLValueParsers;
-    let value = result.value().unwrap();
-    return CLValueParsers.toBytes(value).unwrap().toString();
+    const value = result.value().unwrap();
+    return value.data.toNumber();
+  }
+
+  public async marketItemHash() {
+    // Used for approving market contract
+    const result = await this.contractClient.queryContractData([
+      "market_item_hash",
+    ]);
+    // return toAccountHashString(result.data);
+    return result;
   }
 
   public createMarketItem(
@@ -181,6 +199,14 @@ export class MarketClient {
       // utils.utils.contractHashToByteArray(value)
       contractHashToByteArray(value)
     );
+    const args = {
+      itemIds,
+      itemNFTContractAddresses,
+      itemAskingPrices,
+      itemTokenIds,
+      paymentAmount,
+    };
+    window.createArgs = args;
     console.log({
       itemIds,
       itemNFTContractAddresses,
@@ -210,6 +236,70 @@ export class MarketClient {
       deploySender,
       this.networkName,
       paymentAmount,
+      keys
+    );
+  }
+  private getBinary = async (binaryUrl: string): Promise<Uint8Array> => {
+    return new Promise((resolve, reject) => {
+      try {
+        fetch(binaryUrl)
+          .then((r) => {
+            window.r = r;
+            return r.arrayBuffer();
+          })
+          .then((t) => {
+            window.t = t;
+            return resolve(new Uint8Array(t));
+          });
+      } catch (e) {
+        console.log(e);
+        reject();
+      }
+    });
+  };
+
+  public async processMarketSale(
+    recipient: CLPublicKey,
+    itemId: string,
+    askingAmount: string,
+    paymentAmount: string,
+    deploySender: CLPublicKey,
+    keys?: Keys.AsymmetricKey[]
+  ) {
+    const marketHash = process.env.NEXT_PUBLIC_MARKET_CONTRACT_HASH!;
+    const marketHashAsByteArray = contractHashToByteArray(marketHash.slice(5));
+
+    const binary = await this.getBinary(
+      "http://localhost:3000/assets/bin/market-offer-purse.wasm"
+    );
+    console.log({ binary });
+
+    const args = {
+      recipient,
+      itemId,
+      askingAmount,
+      marketHashAsByteArray,
+    };
+    window.buyArgs = args;
+    console.log("processMarketSale", {
+      recipient,
+      itemId,
+      askingAmount,
+      marketHashAsByteArray,
+    });
+    const runtimeArgs = RuntimeArgs.fromMap({
+      recipient: CLValueBuilder.key(recipient),
+      item_id: CLValueBuilder.u256(itemId),
+      amount: CLValueBuilder.u512(askingAmount),
+      market_contract_hash: CLValueBuilder.byteArray(marketHashAsByteArray),
+    });
+
+    return this.contractClient.install(
+      binary,
+      runtimeArgs,
+      paymentAmount,
+      deploySender,
+      this.networkName,
       keys
     );
   }

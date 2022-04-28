@@ -15,14 +15,14 @@ import { toast, Toaster } from "react-hot-toast";
 
 import { CustomHeader } from "../../components/CustomHeader";
 import { CustomNavbar } from "../../components/CustomNavbar";
-import styles from "../../styles/dashboard-cyber.module.scss";
 import { toastConfig } from "../../toastConfig";
 import {
   getDeployResult,
-  initClient,
+  initCEP47Client,
   triggerMintDeploy,
 } from "../../utils/cep47_utils";
 import { NFTMeta } from "../../utils/types";
+import { CustomBackground } from "../../components/CustomBackground";
 
 export default function Mint() {
   const [address, setAddress] = useState(null);
@@ -30,14 +30,20 @@ export default function Mint() {
   const [connected, setConnected] = useState(false);
   const [locked, setLocked] = useState(false);
 
-  // Without the timeout it doesn't always work properly
-  setTimeout(async () => {
+  const updateState = async (e?: any) => {
     try {
       setConnected(await Signer.isConnected());
     } catch (err) {
       console.error(err);
     }
-  }, 100);
+  };
+
+  useEffect(() => {
+    // Without the timeout it doesn't always work properly
+    setTimeout(async () => {
+      updateState();
+    }, 100);
+  }, []);
 
   // useEffect(() => {
   //   const es = new EventStream(EVENT_STREAM_ADDRESS!);
@@ -51,7 +57,6 @@ export default function Mint() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!", toastConfig);
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -59,7 +64,6 @@ export default function Mint() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -72,7 +76,6 @@ export default function Mint() {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed", toastConfig);
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
@@ -121,7 +124,7 @@ export default function Mint() {
     },
   });
   const mintNFT = async (item: NFTMeta) => {
-    const { cep47 } = await initClient();
+    const { cep47 } = await initCEP47Client();
     if (!cep47) return;
     const totalSupply = await cep47.totalSupply();
     const startIndex = totalSupply;
@@ -231,15 +234,7 @@ export default function Mint() {
           </Group>
         </form>
       </Box>
-      <div className={styles.bg}>
-        <div className={styles.starField}>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-        </div>
-      </div>
+      <CustomBackground />
     </AppShell>
   );
 }

@@ -27,9 +27,12 @@ import {
 } from "../../utils/cep47_utils";
 import { MarketItem } from "../../utils/marketClient";
 import {
+  approveSell,
   getMarketItem,
   triggerCreateMarketItemDeploy,
+  triggerProcessSale,
 } from "../../utils/marketUtils";
+import { CustomBackground } from "../../components/CustomBackground";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
@@ -43,83 +46,71 @@ export default function DashboardCyber() {
   const router = useRouter();
   const { id } = router.query;
 
-  const [retrieving, setRetrieving] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-
   // eslint-disable-next-line consistent-return
-  const syncMarketNFT = async (itemToSync: NFT) => {
-    if (!syncing) {
-      setSyncing(true);
-      const result = await toast.promise(
-        getMarketItem(itemToSync),
-        {
-          loading: "Loading Market Data",
-          success: "Loaded Market Data",
-          error: "Error retrieving Market Data",
-        },
-        toastConfig
-      );
-      if (result) {
-        console.log(result);
-        setMarketItem(result);
-      }
-      setRetrieving(false);
-      return result;
+  const checkForMarketItem = async (itemToSync: NFT) => {
+    const result = await getMarketItem(itemToSync);
+    if (result) {
+      console.log(result);
+      setMarketItem(result);
     }
+    return result;
   };
 
-  const retrieveNFT = async () => {
-    if (!retrieving) {
-      setRetrieving(true);
-      const result = await toast.promise(
-        getNFT(Number(id)),
-        {
-          loading: "Loading",
-          success: "Loaded NFT",
-          error: "Error retrieving NFT",
-        },
-        toastConfig
-      );
-      if (result) {
-        console.log(result);
-        setItem(result);
+  const retrieveNFT = async (): Promise<NFT | null> => {
+    const result = await getNFT(Number(id));
+    if (result) {
+      console.log(result);
+      setItem(result);
+    }
+    return result;
+  };
+
+  const updateState = async () => {
+    try {
+      setConnected(await Signer.isConnected());
+      const nftItem = await retrieveNFT();
+      if (nftItem) {
+        checkForMarketItem(nftItem);
       }
-      setRetrieving(false);
-      return result;
+    } catch (err) {
+      console.error(err);
     }
   };
 
   const sellNFT = async (sellItem: NFT, amount: string) => {
-    if (!retrieving) {
-      setRetrieving(true);
-      const result = await toast.promise(
-        triggerCreateMarketItemDeploy(sellItem, amount),
-        {
-          loading: "Listing NFT on Market",
-          success: "Listed NFT",
-          error: "Error listing NFT",
-        },
-        toastConfig
-      );
-      if (result) {
-        console.log(result);
-      }
-      setRetrieving(false);
+    const result = await toast.promise(
+      triggerCreateMarketItemDeploy(sellItem, amount),
+      {
+        loading: "Listing NFT on Market",
+        success: "Listed NFT",
+        error: "Error listing NFT",
+      },
+      toastConfig
+    );
+    if (result) {
+      console.log(result);
+    }
+  };
+
+  const approveSellNFT = async (sellItem: NFT) => {
+    const result = await toast.promise(
+      approveSell(sellItem),
+      {
+        loading: "Approving NFT for Selling",
+        success: "Approved NFT for Selling",
+        error: "Error approving NFT",
+      },
+      toastConfig
+    );
+    if (result) {
+      console.log(result);
     }
   };
 
   useEffect(() => {
     // Without the timeout it doesn't always work properly
     setTimeout(async () => {
-      try {
-        setConnected(await Signer.isConnected());
-        const nftItem = await retrieveNFT();
-        if (nftItem) {
-          syncMarketNFT(nftItem);
-        }
-      } catch (err) {
-        console.error(err);
-      }
+      updateState();
     }, 100);
   }, []);
 
@@ -128,7 +119,7 @@ export default function DashboardCyber() {
       process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
     );
     subscribeToContractEvents(es, () => {
-      retrieveNFT();
+      updateState();
       console.log(es);
     });
   }, []);
@@ -140,8 +131,8 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!", toastConfig);
-      retrieveNFT();
+
+      updateState();
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -149,7 +140,6 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -162,8 +152,8 @@ export default function DashboardCyber() {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed", toastConfig);
-      retrieveNFT();
+
+      updateState();
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
@@ -180,7 +170,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      retrieveNFT();
+      updateState();
     });
     window.addEventListener("signer:initialState", (msg) => {
       // @ts-ignore
@@ -193,11 +183,8 @@ export default function DashboardCyber() {
   }, []);
   // const onBurnClick = () => {};
 
-  const onApproveClick = () => {
-    //  TODO approve with cep47 contract
-  };
   const onSellClick = (sellItem: NFT, amount: string) => {
-    if (item) {
+    if (sellItem) {
       sellNFT(sellItem, amount);
     }
   };
@@ -225,13 +212,13 @@ export default function DashboardCyber() {
       }
     >
       <div>
-        {marketItem ? (
+        {item ? (
           <SellModal
             opened={opened}
             setOpened={setOpened}
-            onTransferClick={onApproveClick}
+            onApproveClick={() => approveSell(item)}
             onSellClick={onSellClick}
-            item={marketItem}
+            item={item}
           />
         ) : null}
 
@@ -295,21 +282,58 @@ export default function DashboardCyber() {
                 {item?.meta.get("json_data") || ""}
               </Prism>
             </Group>
-            {item.isOwner ? (
-              <Group position={"apart"} grow>
+            {/* eslint-disable-next-line no-nested-ternary */}
+            {!connected ? (
+              <Group position={"left"} grow>
+                <Button color={"gray"}>Wallet Locked</Button>
+                <div />
+              </Group>
+            ) : /* eslint-disable-next-line no-nested-ternary */
+            locked ? (
+              <Group position={"left"} grow>
+                <Button color={"gray"}>Wallet Locked</Button>
+                <div />
+              </Group>
+            ) : // eslint-disable-next-line no-nested-ternary
+            item.isOwner && marketItem && marketItem.available ? (
+              <Group position={"left"} grow>
                 <Button
+                  color={"yellow"}
                   onClick={() => {
                     // setOpened(true);
-                    onSellClick(item, "10000000");
+                  }}
+                >
+                  Cancel Sale
+                </Button>
+                <div />
+              </Group>
+            ) : // eslint-disable-next-line no-nested-ternary
+            item.isOwner && item.isApproved ? (
+              <Group position={"left"} grow>
+                <Button
+                  onClick={() => {
+                    setOpened(true);
                   }}
                 >
                   Sell
                 </Button>
-                <Button color={"red"}>Burn</Button>
+                <div />
               </Group>
-            ) : (
+            ) : // eslint-disable-next-line no-nested-ternary
+            item.isOwner ? (
+              <Group position={"left"} grow>
+                <Button
+                  color={"green"}
+                  onClick={() => {
+                    approveSellNFT(item);
+                  }}
+                >
+                  Approve for Sale
+                </Button>
+                <div />
+              </Group>
+            ) : marketItem && !item.isOwner ? (
               <>
-                {" "}
                 <Group position={"left"}>
                   <p>
                     <b>Price:</b> <br />{" "}
@@ -317,24 +341,24 @@ export default function DashboardCyber() {
                   </p>
                 </Group>
                 <Group position={"apart"} grow className={"mt-2"}>
-                  <Button color={"green"} disabled={!marketItem?.available}>
+                  <Button
+                    color={"green"}
+                    disabled={!marketItem?.available}
+                    onClick={() => {
+                      triggerProcessSale(marketItem);
+                    }}
+                  >
                     Buy Now
                   </Button>
                 </Group>
               </>
-            )}
+            ) : null}
           </SimpleGrid>
         </Card>
       ) : null}
 
       <div className={styles.bg}>
-        <div className={styles.starField}>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-        </div>
+        <CustomBackground />
       </div>
     </AppShell>
   );

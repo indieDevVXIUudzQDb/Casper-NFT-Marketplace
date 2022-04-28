@@ -2,18 +2,17 @@ import React, { useEffect, useState } from "react";
 
 import { AppShell, SimpleGrid, Title } from "@mantine/core";
 import { EventStream, Signer } from "casper-js-sdk";
-import { toast, Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 
 import { CustomCard } from "../components/CustomCard";
 import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
-import styles from "../styles/dashboard-cyber.module.scss";
-import { toastConfig } from "../toastConfig";
 import {
   getOwnedNFTS,
   NFT,
   subscribeToContractEvents,
 } from "../utils/cep47_utils";
+import { CustomBackground } from "../components/CustomBackground";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
@@ -23,30 +22,24 @@ export default function DashboardCyber() {
   const [items, setItems] = useState<NFT[]>([]);
 
   const retrieveNFTS = async () => {
-    const result = await toast.promise(
-      getOwnedNFTS(),
-      {
-        loading: "Loading",
-        success: "Loaded NFTs",
-        error: "Error retrieving NFTs",
-      },
-      toastConfig
-    );
+    const result = await getOwnedNFTS();
     if (result) {
       setItems(result);
+    }
+  };
+  const updateState = async () => {
+    try {
+      setConnected(await Signer.isConnected());
+      retrieveNFTS();
+    } catch (err) {
+      console.error(err);
     }
   };
 
   useEffect(() => {
     // Without the timeout it doesn't always work properly
     setTimeout(async () => {
-      try {
-        setConnected(await Signer.isConnected());
-        retrieveNFTS();
-        // retrieveMarketName();
-      } catch (err) {
-        console.error(err);
-      }
+      updateState();
     }, 100);
   }, []);
 
@@ -55,7 +48,7 @@ export default function DashboardCyber() {
       process.env.NEXT_PUBLIC_CASPER_EVENT_STREAM_ADDRESS!
     );
     subscribeToContractEvents(es, () => {
-      retrieveNFTS();
+      updateState();
       console.log(es);
     });
   }, []);
@@ -67,8 +60,8 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!", toastConfig);
-      retrieveNFTS();
+
+      updateState();
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -76,7 +69,6 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -89,8 +81,8 @@ export default function DashboardCyber() {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed", toastConfig);
-      retrieveNFTS();
+
+      updateState();
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
@@ -107,7 +99,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      retrieveNFTS();
+      updateState();
     });
     window.addEventListener("signer:initialState", (msg) => {
       // @ts-ignore
@@ -176,15 +168,7 @@ export default function DashboardCyber() {
         ))}
       </SimpleGrid>
 
-      <div className={styles.bg}>
-        <div className={styles.starField}>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-          <div className={styles.layer}></div>
-        </div>
-      </div>
+      <CustomBackground />
     </AppShell>
   );
 }

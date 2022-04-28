@@ -1,8 +1,9 @@
 import { CasperClient, CLPublicKey, DeployUtil } from "casper-js-sdk";
 import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
 
-import { NFT } from "./cep47_utils";
+import { NFT, triggerApproveSellDeploy } from "./cep47_utils";
 import { MarketClient, MarketItem } from "./marketClient";
+import { getDeploy } from "./utils";
 
 export const NODE_ADDRESS =
   process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS ||
@@ -14,11 +15,13 @@ export const CHAIN_NAME =
   process.env.NEXT_PUBLIC_CASPER_CHAIN_NAME || "casper-net-1";
 export const MINT_ONE_PAYMENT_AMOUNT =
   process.env.NEXT_PUBLIC_CASPER_MINT_ONE_PAYMENT_AMOUNT || "2000000000";
+export const PROCESS_SALE_PAYMENT_AMOUNT =
+  process.env.NEXT_PUBLIC_CASPER_MINT_ONE_PAYMENT_AMOUNT || "2000000000000";
 
 // Create Casper client and service to interact with Casper node.
 const casperClient = new CasperClient(NODE_ADDRESS);
 
-export const initClient = async () => {
+export const initMarketClient = async () => {
   let marketClient;
   try {
     marketClient = new MarketClient(NODE_ADDRESS!, CHAIN_NAME!);
@@ -35,15 +38,43 @@ export const initClient = async () => {
   };
 };
 
+export function retrieveMarketTotalSupply() {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(reject, 10000);
+    let marketClient;
+    try {
+      const { marketClient: client } = await initMarketClient();
+      marketClient = client;
+      // eslint-disable-next-line no-plusplus
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+    if (!marketClient) reject();
+
+    try {
+      // @ts-ignore
+      const totalSupply = await marketClient.totalSupply();
+      clearTimeout(timeout);
+
+      resolve(totalSupply);
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+  });
+}
+
 export const triggerCreateMarketItemDeploy = async (
-  item: MarketItem,
+  item: NFT,
   amount: string
-): Promise<unknown> => {
+): Promise<boolean | null> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
       // @ts-ignore
-      const { marketClient } = await initClient();
+      const { marketClient } = await initMarketClient();
       if (marketClient) {
         const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
         const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
@@ -52,9 +83,7 @@ export const triggerCreateMarketItemDeploy = async (
         // Currently only supporting one market contract on the front end
         // const nftContractAddresses = [].fill(nftContractAddress, 0, ids.length);
         const nftContractAddresses = [nftContractAddress.slice(5)];
-        console.log(nftContractAddress, nftContractAddresses);
-        // TODO need to get next item id
-        const marketItemId = 0;
+        const marketItemId = await retrieveMarketTotalSupply();
         const deployItem = marketClient.createMarketItem(
           activePublicKey,
           [`${marketItemId}`],
@@ -81,8 +110,11 @@ export const triggerCreateMarketItemDeploy = async (
             deployObject.val as Deploy
           );
           console.log(`...... Create Market Item deployed: ${deployItemHash}`);
+
+          await getDeploy(NODE_ADDRESS!, deployItemHash);
+
           // eslint-disable-next-line consistent-return
-          resolve(deployItemHash);
+          resolve(true);
         }
       } else {
         console.log("Failed to init market client");
@@ -101,7 +133,7 @@ export function retrieveMarketName() {
     const timeout = setTimeout(reject, 10000);
     let marketClient;
     try {
-      const { marketClient: client } = await initClient();
+      const { marketClient: client } = await initMarketClient();
       marketClient = client;
       // eslint-disable-next-line no-plusplus
     } catch (e) {
@@ -123,13 +155,106 @@ export function retrieveMarketName() {
   });
 }
 
-export function getMarketItem(item: NFT) {
+export function approveSell(item: NFT) {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(reject, 10000);
+    let marketClient: MarketClient;
+    try {
+      const { marketClient: client } = await initMarketClient();
+      // @ts-ignore
+      marketClient = client;
+      // eslint-disable-next-line unused-imports/no-unused-vars
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+
+    try {
+      // @ts-ignore
+      const name = await marketClient.name();
+      // @ts-ignore
+      const marketItemHash = await marketClient.marketItemHash();
+      console.log({ name });
+      console.log({ marketItemHash });
+      // @ts-ignore
+      const approval = await triggerApproveSellDeploy(
+        [item.id],
+        // @ts-ignore
+        marketItemHash
+      );
+      console.log({ approval });
+      clearTimeout(timeout);
+
+      resolve(true);
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+  });
+}
+
+export const triggerProcessSale = async (
+  item: MarketItem
+): Promise<boolean | null> => {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    try {
+      // @ts-ignore
+      const { marketClient } = await initMarketClient();
+      if (marketClient) {
+        const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
+        const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
+
+        const deployItem = await marketClient.processMarketSale(
+          activePublicKey,
+          `${item.marketItemId}`,
+          item.askingPrice,
+          "20000000000",
+          activePublicKey
+        );
+
+        // Turn your transaction data to format JSON
+        const json = DeployUtil.deployToJson(deployItem);
+
+        // Sign transcation using casper-signer.
+        const signature = await window.casperlabsHelper.sign(
+          json,
+          publicKeyHex,
+          publicKeyHex
+        );
+        const deployObject = DeployUtil.deployFromJson(signature);
+        let deployItemHash;
+        if (deployObject.val) {
+          // Here we are sending the signed deploy.
+          deployItemHash = await casperClient.putDeploy(
+            deployObject.val as Deploy
+          );
+          console.log(`...... Process Buy deployed: ${deployItemHash}`);
+
+          await getDeploy(NODE_ADDRESS!, deployItemHash);
+
+          // eslint-disable-next-line consistent-return
+          resolve(true);
+        }
+      } else {
+        console.log("Failed to process buy");
+        reject();
+      }
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+  });
+};
+
+export function getMarketItem(item: NFT): Promise<MarketItem | null> {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     // const timeout = setTimeout(reject, 10000);
     let marketClient;
     try {
-      const { marketClient: client } = await initClient();
+      const { marketClient: client } = await initMarketClient();
       marketClient = client;
       // eslint-disable-next-line no-plusplus
     } catch (e) {
@@ -145,25 +270,33 @@ export function getMarketItem(item: NFT) {
       // clearTimeout(timeout);
       const lastItem = marketItemIds[marketItemIds.length - 1];
       if (lastItem) {
+        // @ts-ignore
         const status = await marketClient.getMarketItemStatus(lastItem);
         console.log({ status });
 
-        //TODO
-        // const askingPrice = await marketClient.getMarketItemPrice(lastItem);
-        // console.log({ askingPrice });
+        // @ts-ignore
+        const askingPrice = await marketClient.getMarketItemPrice(lastItem);
+        console.log({ askingPrice });
+
+        // @ts-ignore
+        const approvalHash = await marketClient.marketItemHash();
 
         const marketItem: MarketItem = {
           ...item,
           available: status === "available",
-          askingPrice: "2000000",
+          askingPrice,
+          approvalHash,
+          marketItemId: lastItem,
         };
         resolve(marketItem);
       } else {
-        reject();
+        resolve(null);
       }
     } catch (e) {
-      console.log(e);
-      reject();
+      if (e) {
+        console.log(e);
+      }
+      resolve(null);
     }
   });
 }
