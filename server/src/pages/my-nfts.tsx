@@ -2,12 +2,10 @@ import React, { useEffect, useState } from "react";
 
 import { AppShell, SimpleGrid, Title } from "@mantine/core";
 import { EventStream, Signer } from "casper-js-sdk";
-import { toast } from "react-hot-toast";
 
 import { CustomCard } from "../components/CustomCard";
 import { CustomHeader } from "../components/CustomHeader";
 import { CustomNavbar } from "../components/CustomNavbar";
-import { toastConfig } from "../toastConfig";
 import {
   getOwnedNFTS,
   NFT,
@@ -78,7 +76,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!", toastConfig);
+
       updateState(msg);
     });
     window.addEventListener("signer:disconnected", (msg) => {
@@ -87,7 +85,6 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -100,7 +97,7 @@ export default function DashboardCyber() {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed", toastConfig);
+
       updateState(msg);
     });
     window.addEventListener("signer:locked", (msg) => {

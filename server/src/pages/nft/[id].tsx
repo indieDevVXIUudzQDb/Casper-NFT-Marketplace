@@ -131,7 +131,7 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!", toastConfig);
+
       updateState();
     });
     window.addEventListener("signer:disconnected", (msg) => {
@@ -140,7 +140,6 @@ export default function DashboardCyber() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -153,7 +152,7 @@ export default function DashboardCyber() {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed", toastConfig);
+
       updateState();
     });
     window.addEventListener("signer:locked", (msg) => {

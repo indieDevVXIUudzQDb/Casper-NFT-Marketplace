@@ -57,7 +57,6 @@ export default function Mint() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast.success("Connected to Signer!", toastConfig);
     });
     window.addEventListener("signer:disconnected", (msg) => {
       setConnected(false);
@@ -65,7 +64,6 @@ export default function Mint() {
       setLocked(!msg.detail.isUnlocked);
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Disconnected from Signer", toastConfig);
     });
     window.addEventListener("signer:tabUpdated", (msg) => {
       // @ts-ignore
@@ -78,7 +76,6 @@ export default function Mint() {
     window.addEventListener("signer:activeKeyChanged", (msg) => {
       // @ts-ignore
       setAddress(msg.detail.activeKey);
-      toast("Active key changed", toastConfig);
     });
     window.addEventListener("signer:locked", (msg) => {
       // @ts-ignore
