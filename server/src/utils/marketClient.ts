@@ -141,6 +141,7 @@ export class MarketClient {
     const result = await this.contractClient.queryContractData([
       "item_total_supply",
     ]);
+    // @ts-ignore
     return result.toNumber();
   }
 
@@ -153,9 +154,7 @@ export class MarketClient {
     const maybeValue = result.value().unwrap();
     const values = maybeValue
       .value()
-      .map((value: CLValue) =>
-        CLValueParsers.toBytes(value).unwrap().toString()
-      );
+      .map((value: CLValue) => value.data.toString());
     return values;
   }
 
