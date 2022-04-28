@@ -137,6 +137,13 @@ export class MarketClient {
     return this.contractClient.queryContractData(["market_name"]);
   }
 
+  public async totalSupply() {
+    const result = await this.contractClient.queryContractData([
+      "item_total_supply",
+    ]);
+    return result.toNumber();
+  }
+
   public async getMarketItemIds(itemTokenId: string) {
     const result = await this.contractClient.queryContractDictionary(
       "nft_market_item_ids",

@@ -36,6 +36,34 @@ export const initMarketClient = async () => {
   };
 };
 
+export function retrieveMarketTotalSupply() {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(reject, 10000);
+    let marketClient;
+    try {
+      const { marketClient: client } = await initMarketClient();
+      marketClient = client;
+      // eslint-disable-next-line no-plusplus
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+    if (!marketClient) reject();
+
+    try {
+      // @ts-ignore
+      const totalSupply = await marketClient.totalSupply();
+      clearTimeout(timeout);
+
+      resolve(totalSupply);
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+  });
+}
+
 export const triggerCreateMarketItemDeploy = async (
   item: NFT,
   amount: string
@@ -53,9 +81,7 @@ export const triggerCreateMarketItemDeploy = async (
         // Currently only supporting one market contract on the front end
         // const nftContractAddresses = [].fill(nftContractAddress, 0, ids.length);
         const nftContractAddresses = [nftContractAddress.slice(5)];
-        console.log(nftContractAddress, nftContractAddresses);
-        // TODO need to get next item id
-        const marketItemId = 0;
+        const marketItemId = await retrieveMarketTotalSupply();
         const deployItem = marketClient.createMarketItem(
           activePublicKey,
           [`${marketItemId}`],
