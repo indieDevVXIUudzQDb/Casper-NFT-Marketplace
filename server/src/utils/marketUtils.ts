@@ -3,6 +3,7 @@ import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
 
 import { NFT, triggerApproveSellDeploy } from "./cep47_utils";
 import { MarketClient, MarketItem } from "./marketClient";
+import { getDeploy } from "./utils";
 
 export const NODE_ADDRESS =
   process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS ||
@@ -36,9 +37,9 @@ export const initMarketClient = async () => {
 };
 
 export const triggerCreateMarketItemDeploy = async (
-  item: MarketItem,
+  item: NFT,
   amount: string
-): Promise<unknown> => {
+): Promise<boolean | null> => {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
@@ -81,8 +82,11 @@ export const triggerCreateMarketItemDeploy = async (
             deployObject.val as Deploy
           );
           console.log(`...... Create Market Item deployed: ${deployItemHash}`);
+
+          await getDeploy(NODE_ADDRESS!, deployItemHash);
+
           // eslint-disable-next-line consistent-return
-          resolve(deployItemHash);
+          resolve(true);
         }
       } else {
         console.log("Failed to init market client");
@@ -162,7 +166,7 @@ export function approveSell(item: NFT) {
   });
 }
 
-export function getMarketItem(item: NFT) {
+export function getMarketItem(item: NFT): Promise<MarketItem | null> {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     // const timeout = setTimeout(reject, 10000);
@@ -198,17 +202,19 @@ export function getMarketItem(item: NFT) {
         const marketItem: MarketItem = {
           ...item,
           available: status === "available",
-          //TODO
+          // TODO
           askingPrice: "2000000",
           approvalHash,
         };
         resolve(marketItem);
       } else {
-        reject();
+        resolve(null);
       }
     } catch (e) {
-      console.log(e);
-      reject();
+      if (e) {
+        console.log(e);
+      }
+      resolve(null);
     }
   });
 }
