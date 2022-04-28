@@ -1,14 +1,13 @@
 import { Button, Group, Modal, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/hooks";
-
-import { MarketItem } from "../utils/marketClient";
+import { NFT } from "../utils/cep47_utils";
 
 interface Props {
   opened: boolean;
   setOpened: (o: boolean) => void;
-  item: MarketItem;
-  onTransferClick: () => void;
-  onSellClick: (item: MarketItem, amount: string) => void;
+  item: NFT;
+  onApproveClick: () => void;
+  onSellClick: (item: NFT, amount: string) => void;
 }
 export function SellModal(props: Props) {
   const { item, opened, setOpened, onSellClick } = props;

@@ -22,6 +22,9 @@ export interface MARKETInstallArgs {
   marketMeta: Map<string, string>;
 }
 
+export const toAccountHashString = (hash: Uint8Array) =>
+  Buffer.from(hash).toString("hex");
+
 export enum MARKETEvents {}
 
 export const MARKETEventParser = (
@@ -89,6 +92,7 @@ export interface MarketItem extends NFT {
   isApproved: boolean;
   available: boolean;
   askingPrice: string;
+  approvalHash: any;
 }
 
 export class MarketClient {
@@ -165,6 +169,15 @@ export class MarketClient {
     window.parsers = CLValueParsers;
     let value = result.value().unwrap();
     return CLValueParsers.toBytes(value).unwrap().toString();
+  }
+
+  public async marketItemHash() {
+    // Used for approving market contract
+    const result = await this.contractClient.queryContractData([
+      "market_item_hash",
+    ]);
+    // return toAccountHashString(result.data);
+    return result;
   }
 
   public createMarketItem(

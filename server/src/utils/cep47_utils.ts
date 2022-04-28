@@ -9,6 +9,7 @@ import {
 import {
   CasperClient,
   CasperServiceByJsonRPC,
+  CLAccountHash,
   CLPublicKey,
   DeployUtil,
   EventName,
@@ -18,6 +19,8 @@ import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
 import { StoredValue } from "casper-js-sdk/dist/lib/StoredValue";
 
 import { getDeploy } from "./utils";
+import { initMarketClient } from "./marketUtils";
+import { toAccountHashString } from "./marketClient";
 
 export const NODE_ADDRESS =
   process.env.NEXT_PUBLIC_CASPER_NODE_ADDRESS ||
@@ -168,7 +171,7 @@ export const sendTransaction = async (
   }
   return tx;
 };
-export const initClient = async () => {
+export const initCEP47Client = async () => {
   let cep47;
   let contractPublicKey;
   try {
@@ -194,7 +197,7 @@ export const triggerMintDeploy = async (
 ): Promise<string | null> => {
   try {
     // @ts-ignore
-    const { cep47 } = await initClient();
+    const { cep47 } = await initCEP47Client();
     if (!cep47) return null;
     const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
     const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
@@ -238,7 +241,7 @@ export const getDeployResult = (deployHash: string) => {
     const timeout = setTimeout(reject, 10000);
     try {
       // @ts-ignore
-      const { cep47 } = await initClient();
+      const { cep47 } = await initCEP47Client();
       if (!cep47) reject();
 
       await getDeploy(
@@ -259,6 +262,7 @@ export interface NFT {
   id: string;
   meta: Map<string, string>;
   isOwner: boolean;
+  isApproved: boolean;
 }
 
 export const getNFT = (id: number): Promise<NFT> => {
@@ -266,10 +270,18 @@ export const getNFT = (id: number): Promise<NFT> => {
   return new Promise(async (resolve, reject) => {
     const timeout = setTimeout(reject, 10000);
     let activeAccountHash = "";
+    let allowedAccount;
     let cep47;
+    let activePublicKey;
+
     try {
-      const { cep47: client } = await initClient();
+      const { cep47: client } = await initCEP47Client();
       cep47 = client;
+      const { marketClient } = await initMarketClient();
+      cep47 = client;
+      // @ts-ignore
+      allowedAccount = await marketClient.marketItemHash();
+      console.log({ allowedAccount });
       // eslint-disable-next-line no-plusplus
     } catch (e) {
       console.log(e);
@@ -279,18 +291,29 @@ export const getNFT = (id: number): Promise<NFT> => {
 
     try {
       const publicKey = await window.casperlabsHelper.getActivePublicKey();
-      const activePublicKey = CLPublicKey.fromHex(publicKey);
+      activePublicKey = CLPublicKey.fromHex(publicKey);
       activeAccountHash = activePublicKey.toAccountHashStr();
     } catch (e) {
       console.log(e);
     }
     let isOwner = false;
+    let isApproved = false;
     try {
       // eslint-disable-next-line no-await-in-loop
       // @ts-ignore
       const ownerOf = await cep47.getOwnerOf(`${id}`);
       if (ownerOf) {
         isOwner = ownerOf === activeAccountHash;
+      }
+      // @ts-ignore
+      const approvedResult = await cep47.getAllowance(activePublicKey, `${id}`);
+      console.log({ approvedResult });
+      if (approvedResult && allowedAccount) {
+        const marketAccountHash = `account-hash-${toAccountHashString(
+          allowedAccount.data
+        )}`;
+        console.log({ marketAccountHash });
+        isApproved = approvedResult === marketAccountHash;
       }
     } catch (e) {
       console.log(e);
@@ -299,11 +322,11 @@ export const getNFT = (id: number): Promise<NFT> => {
       // @ts-ignore
       const tokenMeta = await cep47.getTokenMeta(`${id}`);
 
-      const nft = {
+      const nft: NFT = {
         meta: tokenMeta,
         isOwner,
         id: id.toString(),
-        isApproved: false,
+        isApproved,
       };
       clearTimeout(timeout);
       resolve(nft);
@@ -322,7 +345,7 @@ export const getOwnedNFTS = (): Promise<NFT[]> => {
     let totalSupply = 0 as StoredValue;
     let activeAccountHash = "";
     try {
-      const { cep47: client } = await initClient();
+      const { cep47: client } = await initCEP47Client();
       cep47 = client;
       if (!cep47) return;
       totalSupply = await cep47.totalSupply();
@@ -374,7 +397,7 @@ export const getOwnedNFTS = (): Promise<NFT[]> => {
 export const getActiveAccountBalance = async function (): Promise<number> {
   let activeAccountBalance = 0;
   // @ts-ignore
-  const { contractPublicKey, cep47 } = await initClient();
+  const { contractPublicKey, cep47 } = await initCEP47Client();
   if (!contractPublicKey || !cep47) return 0;
   const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
 
@@ -412,7 +435,7 @@ export const getActiveAccountBalance = async function (): Promise<number> {
 
 export const triggerBurnDeploy = async (ids: string[]) => {
   // @ts-ignore
-  const { cep47 } = await initClient();
+  const { cep47 } = await initCEP47Client();
   if (!cep47) return;
   const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
   const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
@@ -446,4 +469,57 @@ export const triggerBurnDeploy = async (ids: string[]) => {
     await getDeploy(NODE_ADDRESS!, burnDeployHash);
     console.log("... Token burned successfully");
   }
+};
+
+export const triggerApproveSellDeploy = async (
+  ids: string[],
+  allowedAccountString: CLAccountHash
+) => {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    try {
+      // @ts-ignore
+      const { cep47 } = await initCEP47Client();
+      if (!cep47) return;
+      const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
+      const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
+      console.log("\n*************************\n");
+
+      console.log("... Approve token one \n");
+
+      const approveDeploy = await cep47.approve(
+        allowedAccountString,
+        ids,
+        MINT_ONE_PAYMENT_AMOUNT!,
+        activePublicKey
+      );
+      // Turn your transaction data to format JSON
+      const json = DeployUtil.deployToJson(approveDeploy);
+
+      // Sign transcation using casper-signer.
+      const signature = await window.casperlabsHelper.sign(
+        json,
+        publicKeyHex,
+        publicKeyHex
+      );
+      const deployObject = DeployUtil.deployFromJson(signature);
+      let burnDeployHash;
+      if (deployObject.val) {
+        // Here we are sending the signed deploy.
+        burnDeployHash = await casperClient.putDeploy(
+          deployObject.val as Deploy
+        );
+        console.log("... Approval deploy hash: ", burnDeployHash);
+
+        await getDeploy(NODE_ADDRESS!, burnDeployHash);
+        console.log("... Approved successfully");
+        resolve(deployObject.val);
+      } else {
+        reject();
+      }
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+  });
 };

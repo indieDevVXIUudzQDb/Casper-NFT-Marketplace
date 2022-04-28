@@ -1,7 +1,7 @@
 import { CasperClient, CLPublicKey, DeployUtil } from "casper-js-sdk";
 import { Deploy } from "casper-js-sdk/dist/lib/DeployUtil";
 
-import { NFT } from "./cep47_utils";
+import { NFT, triggerApproveSellDeploy } from "./cep47_utils";
 import { MarketClient, MarketItem } from "./marketClient";
 
 export const NODE_ADDRESS =
@@ -18,7 +18,7 @@ export const MINT_ONE_PAYMENT_AMOUNT =
 // Create Casper client and service to interact with Casper node.
 const casperClient = new CasperClient(NODE_ADDRESS);
 
-export const initClient = async () => {
+export const initMarketClient = async () => {
   let marketClient;
   try {
     marketClient = new MarketClient(NODE_ADDRESS!, CHAIN_NAME!);
@@ -43,7 +43,7 @@ export const triggerCreateMarketItemDeploy = async (
   return new Promise(async (resolve, reject) => {
     try {
       // @ts-ignore
-      const { marketClient } = await initClient();
+      const { marketClient } = await initMarketClient();
       if (marketClient) {
         const publicKeyHex = await window.casperlabsHelper.getActivePublicKey();
         const activePublicKey = CLPublicKey.fromHex(publicKeyHex);
@@ -101,7 +101,7 @@ export function retrieveMarketName() {
     const timeout = setTimeout(reject, 10000);
     let marketClient;
     try {
-      const { marketClient: client } = await initClient();
+      const { marketClient: client } = await initMarketClient();
       marketClient = client;
       // eslint-disable-next-line no-plusplus
     } catch (e) {
@@ -123,13 +123,52 @@ export function retrieveMarketName() {
   });
 }
 
+export function approveSell(item: NFT) {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
+    const timeout = setTimeout(reject, 10000);
+    let marketClient: MarketClient;
+    try {
+      const { marketClient: client } = await initMarketClient();
+      // @ts-ignore
+      marketClient = client;
+      // eslint-disable-next-line unused-imports/no-unused-vars
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+
+    try {
+      // @ts-ignore
+      const name = await marketClient.name();
+      // @ts-ignore
+      const marketItemHash = await marketClient.marketItemHash();
+      console.log({ name });
+      console.log({ marketItemHash });
+      // @ts-ignore
+      const approval = await triggerApproveSellDeploy(
+        [item.id],
+        // @ts-ignore
+        marketItemHash
+      );
+      console.log({ approval });
+      clearTimeout(timeout);
+
+      resolve(true);
+    } catch (e) {
+      console.log(e);
+      reject();
+    }
+  });
+}
+
 export function getMarketItem(item: NFT) {
   // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     // const timeout = setTimeout(reject, 10000);
     let marketClient;
     try {
-      const { marketClient: client } = await initClient();
+      const { marketClient: client } = await initMarketClient();
       marketClient = client;
       // eslint-disable-next-line no-plusplus
     } catch (e) {
@@ -145,17 +184,23 @@ export function getMarketItem(item: NFT) {
       // clearTimeout(timeout);
       const lastItem = marketItemIds[marketItemIds.length - 1];
       if (lastItem) {
+        // @ts-ignore
         const status = await marketClient.getMarketItemStatus(lastItem);
         console.log({ status });
 
-        //TODO
-        // const askingPrice = await marketClient.getMarketItemPrice(lastItem);
-        // console.log({ askingPrice });
+        // @ts-ignore
+        const askingPrice = await marketClient.getMarketItemPrice(lastItem);
+        console.log({ askingPrice });
+
+        // @ts-ignore
+        const approvalHash = await marketClient.marketItemHash();
 
         const marketItem: MarketItem = {
           ...item,
           available: status === "available",
+          //TODO
           askingPrice: "2000000",
+          approvalHash,
         };
         resolve(marketItem);
       } else {

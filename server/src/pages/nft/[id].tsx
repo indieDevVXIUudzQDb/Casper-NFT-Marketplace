@@ -17,7 +17,6 @@ import { toast, Toaster } from "react-hot-toast";
 
 import { CustomHeader } from "../../components/CustomHeader";
 import { CustomNavbar } from "../../components/CustomNavbar";
-import { SellModal } from "../../components/SellModal";
 import styles from "../../styles/dashboard-cyber.module.scss";
 import { toastConfig } from "../../toastConfig";
 import {
@@ -27,9 +26,11 @@ import {
 } from "../../utils/cep47_utils";
 import { MarketItem } from "../../utils/marketClient";
 import {
+  approveSell,
   getMarketItem,
   triggerCreateMarketItemDeploy,
 } from "../../utils/marketUtils";
+import { SellModal } from "../../components/SellModal";
 
 export default function DashboardCyber() {
   const [address, setAddress] = useState(null);
@@ -71,6 +72,7 @@ export default function DashboardCyber() {
   const retrieveNFT = async () => {
     if (!retrieving) {
       setRetrieving(true);
+
       const result = await toast.promise(
         getNFT(Number(id)),
         {
@@ -108,6 +110,25 @@ export default function DashboardCyber() {
     }
   };
 
+  const approveSellNFT = async (sellItem: NFT) => {
+    if (!retrieving) {
+      setRetrieving(true);
+      const result = await toast.promise(
+        approveSell(sellItem),
+        {
+          loading: "Approving NFT for Selling",
+          success: "Approved NFT for Selling",
+          error: "Error approving NFT",
+        },
+        toastConfig
+      );
+      if (result) {
+        console.log(result);
+      }
+      setRetrieving(false);
+    }
+  };
+
   useEffect(() => {
     // Without the timeout it doesn't always work properly
     setTimeout(async () => {
@@ -121,7 +142,7 @@ export default function DashboardCyber() {
         console.error(err);
       }
     }, 100);
-  }, []);
+  }, [item]);
 
   useEffect(() => {
     const es = new EventStream(
@@ -193,11 +214,8 @@ export default function DashboardCyber() {
   }, []);
   // const onBurnClick = () => {};
 
-  const onApproveClick = () => {
-    //  TODO approve with cep47 contract
-  };
   const onSellClick = (sellItem: NFT, amount: string) => {
-    if (item) {
+    if (sellItem) {
       sellNFT(sellItem, amount);
     }
   };
@@ -225,13 +243,13 @@ export default function DashboardCyber() {
       }
     >
       <div>
-        {marketItem ? (
+        {item ? (
           <SellModal
             opened={opened}
             setOpened={setOpened}
-            onTransferClick={onApproveClick}
+            onApproveClick={() => approveSell(item)}
             onSellClick={onSellClick}
-            item={marketItem}
+            item={item}
           />
         ) : null}
 
@@ -295,21 +313,45 @@ export default function DashboardCyber() {
                 {item?.meta.get("json_data") || ""}
               </Prism>
             </Group>
-            {item.isOwner ? (
-              <Group position={"apart"} grow>
+            {/* eslint-disable-next-line no-nested-ternary */}
+            {marketItem ? (
+              <Group position={"left"} grow>
                 <Button
+                  color={"yellow"}
                   onClick={() => {
                     // setOpened(true);
-                    onSellClick(item, "10000000");
+                  }}
+                >
+                  Cancel Sale
+                </Button>
+                <div />
+              </Group>
+            ) : item.isOwner && item.isApproved ? (
+              <Group position={"left"} grow>
+                <Button
+                  onClick={() => {
+                    setOpened(true);
+                    // onSellClick(item, "10000000");
                   }}
                 >
                   Sell
                 </Button>
-                <Button color={"red"}>Burn</Button>
+                <div />
               </Group>
-            ) : (
+            ) : item.isOwner ? (
+              <Group position={"left"} grow>
+                <Button
+                  color={"green"}
+                  onClick={() => {
+                    approveSellNFT(item);
+                  }}
+                >
+                  Approve for Sale
+                </Button>
+                <div />
+              </Group>
+            ) : !item.isOwner ? (
               <>
-                {" "}
                 <Group position={"left"}>
                   <p>
                     <b>Price:</b> <br />{" "}
@@ -322,7 +364,7 @@ export default function DashboardCyber() {
                   </Button>
                 </Group>
               </>
-            )}
+            ) : null}
           </SimpleGrid>
         </Card>
       ) : null}

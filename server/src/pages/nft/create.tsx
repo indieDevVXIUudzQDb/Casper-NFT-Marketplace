@@ -19,7 +19,7 @@ import styles from "../../styles/dashboard-cyber.module.scss";
 import { toastConfig } from "../../toastConfig";
 import {
   getDeployResult,
-  initClient,
+  initCEP47Client,
   triggerMintDeploy,
 } from "../../utils/cep47_utils";
 import { NFTMeta } from "../../utils/types";
@@ -121,7 +121,7 @@ export default function Mint() {
     },
   });
   const mintNFT = async (item: NFTMeta) => {
-    const { cep47 } = await initClient();
+    const { cep47 } = await initCEP47Client();
     if (!cep47) return;
     const totalSupply = await cep47.totalSupply();
     const startIndex = totalSupply;
